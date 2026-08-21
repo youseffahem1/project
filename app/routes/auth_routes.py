@@ -9,6 +9,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..auth import hash_password, verify_password, create_access_token
 from .. import email_service
+from . import email_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -29,8 +30,15 @@ def signup(payload: schemas.SignupRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     # NEW: notify admin of the new registration. Never allowed to fail signup.
-   
 
+    try:
+        email_service.send_registration_email(
+        user_name=user.full_name,
+        user_email=user.email,
+        signup_time=datetime.utcnow(),
+    )
+    except Exception as e:
+        print("[auth_routes] registration email failed: " + str(e))
     token = create_access_token({"sub": user.id})
     return schemas.TokenResponse(access_token=token)
 
