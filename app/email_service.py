@@ -181,34 +181,43 @@ def _render_email_html(eyebrow, headline, subheadline, rows_html, footer_note):
 
 
 def _send_admin_event_email(subject, text_body, html_body):
-    """Shared safe-send helper for the three new notification emails below.
-    SMTP mechanics are identical to send_withdrawal_request_email() above:
-    same connect/starttls/login/sendmail sequence. The message is now a
-    multipart/alternative (plain text + premium HTML) instead of plain text."""
     if not SMTP_USER or not SMTP_PASSWORD:
-        print("[email_service] SMTP not configured, skipping email")
+        print("[email_service] SMTP NOT CONFIGURED", flush=True)
+        print(f"[email_service] SMTP_USER exists: {bool(SMTP_USER)}", flush=True)
+        print(f"[email_service] SMTP_PASSWORD exists: {bool(SMTP_PASSWORD)}", flush=True)
+        print(f"[email_service] ADMIN_EVENTS_EMAIL: {ADMIN_EVENTS_EMAIL}", flush=True)
         return
+
+    print(
+        f"[email_service] Sending '{subject}' to {ADMIN_EVENTS_EMAIL}",
+        flush=True
+    )
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = SMTP_FROM
     msg["To"] = ADMIN_EVENTS_EMAIL
-    # Plain-text part first, HTML part second — email clients render the last
-    # part they understand, so HTML is preferred where supported and the
-    # plain-text part remains as a readable fallback.
+
     msg.attach(MIMEText(text_body, "plain"))
     msg.attach(MIMEText(html_body, "html"))
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_FROM, [ADMIN_EVENTS_EMAIL], msg.as_string())
+            server.sendmail(
+                SMTP_FROM,
+                [ADMIN_EVENTS_EMAIL],
+                msg.as_string()
+            )
+
+        print("[email_service] EMAIL SENT SUCCESSFULLY", flush=True)
+
     except Exception as e:
-        # Never log the exception at DEBUG-with-args level or repr(e) on the SMTP
-        # object itself — str(e) from smtplib auth errors does not include the
-        # password, only a server response code/message.
-        print("[email_service] failed to send admin event email (" + subject + "): " + str(e))
+        print(
+            f"[email_service] EMAIL FAILED: {type(e).__name__}: {e}",
+            flush=True
+        )
 
 
 def send_registration_email(user_name, user_email, signup_time=None):
