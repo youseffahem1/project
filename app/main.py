@@ -61,8 +61,13 @@ async def add_security_headers(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    # ما نكشف تفاصيل الأخطاء الداخلية للمستخدم (حماية من information leakage)
-    return JSONResponse(status_code=500, content={"detail": "An unexpected error occurred, please try again"})
+    import traceback
+    traceback.print_exc()
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)}
+    )
 
 
 app.include_router(auth_routes.router)
