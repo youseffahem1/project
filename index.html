@@ -1,0 +1,3674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LuckySpin — Premium Web3 Rewards</title>
+<style>
+:root{
+  --bg: #f3f4fb;
+  --bg-2: #eceefb;
+  --glass: rgba(255,255,255,0.62);
+  --glass-strong: rgba(255,255,255,0.82);
+  --glass-light: rgba(255,255,255,0.4);
+  --glass-border: rgba(15,23,42,0.08);
+  --glass-border-strong: rgba(124,58,237,0.35);
+  --purple: #7c3aed;
+  --purple-2: #a855f7;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+  --gold: #f59e0b;
+  --gold-2: #d97706;
+  --text: #14121f;
+  --text-dim: #61607a;
+  --text-dimmer: #9493ab;
+  --green: #16a34a;
+  --green-bg: rgba(22,163,74,.1);
+  --red: #dc2626;
+  --red-bg: rgba(220,38,38,.09);
+  --radius: 22px;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --ease-soft: cubic-bezier(.4,0,.2,1);
+  --shadow-sm: 0 2px 10px rgba(30,20,60,.06);
+  --shadow-md: 0 10px 34px rgba(30,20,60,.09);
+  --shadow-lg: 0 24px 64px rgba(30,20,60,.14);
+  --shadow-glow: 0 0 0 1px rgba(124,58,237,.12), 0 20px 60px rgba(124,58,237,.18);
+}
+*{box-sizing:border-box; margin:0; padding:0; min-width:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,Arial,sans-serif;
+  background:
+    radial-gradient(1100px 620px at 8% -8%, rgba(124,58,237,.10), transparent 60%),
+    radial-gradient(900px 560px at 96% 0%, rgba(236,72,153,.09), transparent 55%),
+    radial-gradient(1000px 700px at 50% 110%, rgba(6,182,212,.07), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  width:100%;
+}
+a{color:inherit; text-decoration:none;}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+[onclick]:not(input):not(textarea){cursor:pointer;}
+input,select{font-family:inherit;}
+img{max-width:100%; display:block;}
+::selection{background:var(--purple-2); color:white;}
+::-webkit-scrollbar{width:10px; height:10px;}
+::-webkit-scrollbar-thumb{background:rgba(124,58,237,.25); border-radius:99px;}
+
+.bg-orb{position:fixed; border-radius:50%; filter:blur(110px); z-index:0; pointer-events:none; opacity:.55;}
+.bg-orb-1{width:520px; height:520px; top:-160px; left:-140px; background:radial-gradient(circle,var(--purple) 0%, transparent 70%); animation:float1 26s ease-in-out infinite;}
+.bg-orb-2{width:480px; height:480px; bottom:-180px; right:-120px; background:radial-gradient(circle,var(--pink) 0%, transparent 70%); animation:float2 30s ease-in-out infinite;}
+.bg-orb-3{width:400px; height:400px; top:32%; right:10%; background:radial-gradient(circle,var(--cyan) 0%, transparent 70%); animation:float3 34s ease-in-out infinite; opacity:.28;}
+@keyframes float1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(60px,40px) scale(1.08);}}
+@keyframes float2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-50px,-30px) scale(1.1);}}
+@keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,50px);}}
+
+.app-wrap{position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column;}
+
+/* ===== Header ===== */
+.topnav{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px clamp(16px,4vw,36px); position:sticky; top:0; z-index:60;
+  background:rgba(255,255,255,.72); backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid var(--glass-border);
+}
+.brand{display:flex; align-items:center; gap:9px; font-weight:800; font-size:19px; letter-spacing:-.3px; flex-shrink:0;}
+.brand .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--pink)); box-shadow:0 0 14px 2px rgba(168,85,247,.5); animation:pulse 2.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 10px 1px rgba(168,85,247,.45);}50%{box-shadow:0 0 18px 5px rgba(236,72,153,.55);}}
+.nav-links{display:flex; gap:2px; font-size:13.5px; color:var(--text-dim); flex-wrap:wrap;}
+.nav-links a{padding:9px 14px; border-radius:999px; transition:.25s var(--ease); font-weight:600; white-space:nowrap;}
+.nav-links a:hover{color:var(--text); background:rgba(124,58,237,.08);}
+.nav-links a.active{color:var(--purple); background:rgba(124,58,237,.1);}
+.nav-right{display:flex; align-items:center; gap:10px; flex-shrink:0;}
+.balance-chip{
+  display:flex; align-items:center; gap:7px; background:var(--glass);
+  backdrop-filter:blur(12px); border:1px solid var(--glass-border);
+  padding:8px 14px; border-radius:999px; font-size:13px; font-weight:700; transition:.25s var(--ease);
+  box-shadow:var(--shadow-sm); position:relative;
+}
+.balance-chip:hover{border-color:var(--glass-border-strong); box-shadow:var(--shadow-md); transform:translateY(-1px);}
+.balance-chip .pt{color:var(--gold-2); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.balance-chip .gem{filter:drop-shadow(0 0 4px rgba(245,158,11,.5));}
+.hamburger{display:none; width:38px; height:38px; border-radius:12px; align-items:center; justify-content:center; background:var(--glass-light); border:1px solid var(--glass-border);}
+.hamburger svg{width:19px; height:19px;}
+
+@media(max-width:980px){
+  .nav-links{display:none;}
+  .hamburger{display:flex;}
+}
+
+/* Mobile drawer */
+.drawer-bg{position:fixed; inset:0; background:rgba(20,18,31,.4); backdrop-filter:blur(4px); z-index:180; display:none;}
+.drawer-bg.show{display:block; animation:fadeIn .25s ease;}
+.drawer{
+  position:fixed; top:0; right:0; height:100%; width:min(300px,84vw); z-index:190;
+  background:rgba(255,255,255,.92); backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:-14px 0 50px rgba(20,18,40,.18); padding:22px 18px; transform:translateX(100%);
+  transition:transform .35s var(--ease); display:flex; flex-direction:column; gap:4px;
+}
+.drawer.show{transform:translateX(0);}
+.drawer a, .drawer button{display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; font-weight:700; font-size:14.5px; color:var(--text);}
+.drawer a:hover, .drawer button:hover{background:rgba(124,58,237,.08);}
+.drawer .drawer-close{position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:10px; background:rgba(15,23,42,.05); display:flex; align-items:center; justify-content:center;}
+.drawer-title{font-weight:800; font-size:16px; margin:8px 6px 12px;}
+
+/* Bottom nav (mobile) */
+.bottom-nav{
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:70;
+  background:rgba(255,255,255,.86); backdrop-filter:blur(22px) saturate(180%);
+  border-top:1px solid var(--glass-border); padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 30px rgba(20,18,40,.08);
+}
+.bottom-nav-inner{display:flex; justify-content:space-around; align-items:center;}
+.bn-item{display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 8px; border-radius:12px; color:var(--text-dimmer); font-size:10.5px; font-weight:700; flex:1; min-width:0;}
+.bn-item svg{width:21px; height:21px;}
+.bn-item.active{color:var(--purple);}
+.bn-item span{max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+@media(max-width:700px){
+  .bottom-nav{display:block;}
+  body{padding-bottom:70px;}
+}
+
+/* Balance popover */
+.popover-bg{position:fixed; inset:0; z-index:170; display:none;}
+.popover-bg.show{display:block;}
+.balance-popover{
+  position:fixed; z-index:171; width:300px; max-width:92vw;
+  background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:22px;
+  padding:22px; backdrop-filter:blur(26px) saturate(180%); -webkit-backdrop-filter:blur(26px) saturate(180%);
+  box-shadow:var(--shadow-lg), var(--shadow-glow);
+  opacity:0; transform:scale(.92) translateY(-8px); pointer-events:none; transition:.22s var(--ease-soft);
+}
+.balance-popover.show{opacity:1; transform:scale(1) translateY(0); pointer-events:auto;}
+.bp-label{font-size:12px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.4px;}
+.bp-amount{font-size:30px; font-weight:900; margin:6px 0 2px; letter-spacing:-.6px;
+  background:linear-gradient(135deg,var(--purple),var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.bp-usd{font-size:13px; color:var(--text-dim); margin-bottom:16px;}
+.bp-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
+.bp-stat{background:rgba(124,58,237,.06); border:1px solid var(--glass-border); border-radius:14px; padding:10px 12px;}
+.bp-stat .v{font-size:14.5px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bp-stat .l{font-size:10.5px; color:var(--text-dim); margin-top:2px;}
+.bp-last{font-size:12px; color:var(--text-dim); background:rgba(15,23,42,.03); border-radius:12px; padding:10px 12px; margin-bottom:14px; overflow-wrap:anywhere;}
+.bp-actions{display:flex; gap:8px;}
+
+/* ===== Buttons ===== */
+.btn{padding:12px 22px; border-radius:14px; font-weight:700; font-size:14px; transition:.25s var(--ease); position:relative; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; gap:8px;}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--pink)); color:#fff; box-shadow:0 6px 20px rgba(124,58,237,.28);}
+.btn-primary::before{content:""; position:absolute; inset:0; background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%); transform:translateX(-120%); transition:.6s var(--ease-soft);}
+.btn-primary:hover::before{transform:translateX(120%);}
+.btn-primary:hover{filter:brightness(1.06); transform:translateY(-2px); box-shadow:0 14px 34px rgba(124,58,237,.36);}
+.btn-ghost{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); color:var(--text); backdrop-filter:blur(10px);}
+.btn-ghost:hover{background:#fff; border-color:var(--glass-border-strong); transform:translateY(-1px); box-shadow:var(--shadow-sm);}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow:0 6px 20px rgba(220,38,38,.25);}
+.btn-danger:hover{filter:brightness(1.05); transform:translateY(-2px);}
+.btn-block{width:100%;}
+.btn-sm{padding:9px 15px; font-size:12.5px; border-radius:11px;}
+.btn:disabled{opacity:.5; cursor:not-allowed; transform:none !important; filter:none !important;}
+.btn:active:not(:disabled){transform:scale(.96);}
+.btn-content{display:inline-flex; align-items:center; justify-content:center; gap:8px;}
+.btn-spinner{width:15px; height:15px; border-radius:50%; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; display:none;}
+.btn-ghost .btn-spinner{border:2px solid rgba(124,58,237,.25); border-top-color:var(--purple);}
+.btn.is-loading .btn-spinner{display:inline-block;}
+.btn.is-loading .btn-label{opacity:.85;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== Layout / pages ===== */
+.page{display:none; animation:pageIn .45s var(--ease); position:relative; z-index:1; flex:1;}
+.page.active{display:block;}
+@keyframes pageIn{from{opacity:0; transform:translateY(12px);}to{opacity:1; transform:translateY(0);}}
+.container{max-width:1180px; margin:0 auto; padding:var(--sp-7) 20px 90px; width:100%;}
+@media(max-width:700px){.container{padding:28px 14px 90px;}}
+
+.page-head{margin-bottom:26px;}
+.page-head h1{font-size:clamp(24px,4vw,32px); font-weight:800; letter-spacing:-.5px;}
+.page-head p{color:var(--text-dim); margin-top:6px; font-size:14px;}
+
+.card{
+  background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius);
+  padding:var(--sp-6); backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.5);
+  transition:.3s var(--ease); animation:cardIn .5s var(--ease) backwards; min-width:0; max-width:100%;
+}
+@keyframes cardIn{from{opacity:0; transform:translateY(14px) scale(.985);}to{opacity:1; transform:translateY(0) scale(1);}}
+.card:hover{border-color:var(--glass-border-strong); box-shadow:var(--shadow-lg);}
+@media(max-width:600px){.card{padding:20px;}}
+
+.grid-2{display:grid; grid-template-columns:1.1fr .9fr; gap:var(--sp-6); min-width:0;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-4); min-width:0;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--sp-4); min-width:0;}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr;} .grid-4{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:700px){.grid-3{grid-template-columns:1fr;}}
+@media(max-width:520px){.grid-4{grid-template-columns:1fr 1fr;}}
+
+h1{font-size:32px; font-weight:800; letter-spacing:-.5px;}
+h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.2px;}
+.muted{color:var(--text-dim); font-size:14px; line-height:1.6; overflow-wrap:anywhere;}
+.hero-title{font-size:clamp(30px,5.2vw,50px); font-weight:800; line-height:1.14; letter-spacing:-1.2px;
+  background:linear-gradient(135deg,var(--text) 15%,var(--purple-2) 60%,var(--pink));
+  -webkit-background-clip:text; background-clip:text; color:transparent;}
+
+.pill{display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border-radius:999px; background:var(--glass); border:1px solid var(--glass-border); backdrop-filter:blur(10px); font-size:12.5px; color:var(--purple); font-weight:700; margin-bottom:20px; box-shadow:var(--shadow-sm); max-width:100%;}
+
+/* skeleton loading */
+.skel{background:linear-gradient(90deg, rgba(15,23,42,.05) 25%, rgba(15,23,42,.09) 37%, rgba(15,23,42,.05) 63%); background-size:400% 100%; animation:skelShimmer 1.4s ease infinite; border-radius:10px;}
+@keyframes skelShimmer{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
+
+/* ===== Landing ===== */
+.landing-hero{padding:72px 20px 50px; max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.1fr .9fr; gap:48px; align-items:center; position:relative; z-index:1;}
+@media(max-width:860px){.landing-hero{grid-template-columns:1fr; padding-top:44px; text-align:center;}}
+.landing-hero .hero-cta{display:flex; gap:14px; flex-wrap:wrap;}
+@media(max-width:860px){.landing-hero .hero-cta{justify-content:center;}}
+.landing-section{max-width:1180px; margin:0 auto; padding:56px 20px; position:relative; z-index:1;}
+.section-title{font-size:clamp(22px,3.4vw,28px); font-weight:800; margin-bottom:8px; letter-spacing:-.5px;}
+.feature-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:28px;}
+@media(max-width:860px){.feature-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.feature-grid{grid-template-columns:1fr;}}
+.feature-card{background:var(--glass); border:1px solid var(--glass-border); border-radius:18px; padding:22px; transition:.3s var(--ease); backdrop-filter:blur(16px); box-shadow:var(--shadow-sm);}
+.feature-card:hover{transform:translateY(-5px); border-color:var(--glass-border-strong); box-shadow:var(--shadow-md);}
+.feature-card .icon{font-size:26px; margin-bottom:10px; display:inline-block;}
+.steps-row{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:28px;}
+@media(max-width:700px){.steps-row{grid-template-columns:1fr;}}
+.step-num{width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--pink)); display:flex; align-items:center; justify-content:center; font-weight:800; margin-bottom:10px; box-shadow:0 4px 16px rgba(124,58,237,.3); color:#fff;}
+.footer-mini{text-align:center; padding:34px 20px; color:var(--text-dim); font-size:12.5px; border-top:1px solid var(--glass-border); margin-top:20px; position:relative; z-index:1;}
+
+.hero-wheel-stage{position:relative; width:320px; height:320px; display:flex; align-items:center; justify-content:center; margin:0 auto;}
+.hero-halo{position:absolute; width:360px; height:360px; border-radius:50%;
+  background:radial-gradient(circle, rgba(124,58,237,.3) 0%, rgba(236,72,153,.14) 45%, transparent 72%);
+  filter:blur(8px); animation:haloPulse 4s ease-in-out infinite;}
+@keyframes haloPulse{0%,100%{opacity:.75; transform:scale(1);}50%{opacity:1; transform:scale(1.05);}}
+.hero-orbit{position:absolute; width:334px; height:334px; border-radius:50%; border:1.5px dashed rgba(124,58,237,.28); animation:spinSlow 40s linear infinite;}
+.hero-orbit-2{position:absolute; width:372px; height:372px; border-radius:50%; border:1px dashed rgba(236,72,153,.18); animation:spinSlow 60s linear infinite reverse;}
+@keyframes spinSlow{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.hero-badge{position:absolute; display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:999px;
+  background:var(--glass-strong); border:1px solid var(--glass-border-strong); backdrop-filter:blur(14px);
+  font-size:12px; font-weight:700; box-shadow:var(--shadow-md); white-space:nowrap; z-index:7;}
+.hero-badge-1{top:2px; left:-30px; animation:floatBadge 5s ease-in-out infinite;}
+.hero-badge-2{bottom:30px; right:-40px; animation:floatBadge 5.5s ease-in-out infinite 1s;}
+.hero-badge-3{top:42%; right:-52px; animation:floatBadge 4.5s ease-in-out infinite .5s;}
+@keyframes floatBadge{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+@media(max-width:860px){.hero-wheel-stage{width:280px; height:280px;} .hero-badge{display:none;} .hero-halo{width:320px;height:320px;} .hero-orbit{width:294px;height:294px;} .hero-orbit-2{width:332px;height:332px;}}
+
+/* ===== Auth ===== */
+.auth-shell{max-width:980px; margin:44px auto; padding:0 20px; display:grid; grid-template-columns:1fr .92fr; gap:26px; align-items:stretch;}
+@media(max-width:860px){.auth-shell{grid-template-columns:1fr; max-width:460px; margin:24px auto;}}
+.auth-card{
+  background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px;
+  padding:clamp(28px,4vw,44px); backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.6);
+  transition:.35s var(--ease); animation:cardIn .55s var(--ease) backwards; display:flex; flex-direction:column; justify-content:center; position:relative; min-width:0;
+}
+.auth-logo{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px;}
+.auth-logo .dot{width:13px; height:13px; border-radius:50%; background:linear-gradient(135deg,var(--purple-2),var(--pink)); box-shadow:0 0 16px 3px rgba(168,85,247,.5);}
+.auth-logo span{font-weight:800; font-size:18px; letter-spacing:-.3px;}
+.auth-info{
+  background:linear-gradient(160deg, rgba(124,58,237,.14), rgba(236,72,153,.06));
+  border:1px solid var(--glass-border); border-radius:26px; padding:clamp(26px,4vw,38px);
+  backdrop-filter:blur(20px); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; justify-content:center;
+  position:relative; overflow:hidden; animation:cardIn .55s var(--ease) .08s backwards; min-width:0;
+}
+@media(max-width:860px){.auth-info{display:none;}}
+.auth-info::before{content:""; position:absolute; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle, rgba(124,58,237,.32), transparent 70%); top:-90px; right:-90px; filter:blur(40px);}
+.auth-info-title{font-size:22px; font-weight:800; margin-bottom:8px; letter-spacing:-.4px; position:relative;}
+.auth-info-sub{color:var(--text-dim); font-size:13.5px; line-height:1.7; margin-bottom:26px; position:relative; max-width:320px;}
+.auth-perk{display:flex; align-items:flex-start; gap:13px; margin-bottom:20px; position:relative;}
+.auth-perk .perk-icon{width:36px; height:36px; min-width:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); border:1px solid var(--glass-border); font-size:16px;}
+.auth-perk .perk-text b{display:block; font-size:13.5px; margin-bottom:2px;}
+.auth-perk .perk-text span{font-size:12px; color:var(--text-dim); line-height:1.5;}
+.auth-stats-row{display:flex; gap:16px; margin-top:6px; position:relative;}
+.auth-stats-row div{flex:1; text-align:center; background:rgba(255,255,255,.5); border:1px solid var(--glass-border); border-radius:12px; padding:11px 4px; min-width:0;}
+.auth-stats-row .num{font-size:16px; font-weight:800; color:var(--purple);}
+.auth-stats-row .lbl2{font-size:10px; color:var(--text-dim); margin-top:2px;}
+
+.field{margin-bottom:18px; position:relative; min-width:0;}
+.field label{display:block; font-size:12.5px; color:var(--text-dim); margin-bottom:7px; font-weight:700; letter-spacing:.2px;}
+.field-input-wrap{position:relative;}
+.field input,.field select{
+  width:100%; padding:13px 15px; border-radius:13px; border:1px solid var(--glass-border);
+  background:rgba(255,255,255,.65); color:var(--text); font-size:14px; outline:none; transition:.22s var(--ease-soft);
+}
+.field input.has-toggle{padding-right:44px;}
+.field input:focus,.field select:focus{border-color:var(--purple-2); background:#fff; box-shadow:0 0 0 4px rgba(124,58,237,.12);}
+.field input.field-ok{border-color:rgba(22,163,74,.5);}
+.field input.field-bad{border-color:rgba(220,38,38,.5);}
+.field input::placeholder{color:var(--text-dimmer);}
+.field-toggle{position:absolute; top:50%; right:6px; transform:translateY(-50%); width:32px; height:32px; border-radius:8px; background:transparent; color:var(--text-dimmer); display:flex; align-items:center; justify-content:center; transition:.2s;}
+.field-toggle:hover{color:var(--text); background:rgba(15,23,42,.05);}
+.eye-icon .eye-slash{stroke-dasharray:32; stroke-dashoffset:0; transition:stroke-dashoffset .25s var(--ease-soft);}
+.field-toggle.is-revealed{color:var(--purple);}
+.field-toggle.is-revealed .eye-slash{stroke-dashoffset:32;}
+.field-hint{font-size:11.5px; margin-top:6px; color:var(--text-dimmer); min-height:14px; transition:.2s;}
+.field-hint.ok{color:var(--green);}
+.field-hint.bad{color:var(--red);}
+
+.pw-strength{margin-top:9px; display:flex; align-items:center; gap:8px;}
+.pw-strength-track{flex:1; height:4px; border-radius:99px; background:rgba(15,23,42,.08); overflow:hidden;}
+.pw-strength-fill{height:100%; width:0%; border-radius:99px; transition:.3s var(--ease-soft); background:var(--red);}
+.pw-strength-label{font-size:11px; color:var(--text-dimmer); min-width:56px; text-align:right;}
+.pw-rules{list-style:none; margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:6px 10px;}
+.pw-rules li{font-size:11.5px; color:var(--text-dimmer); display:flex; align-items:center; gap:6px; transition:.2s;}
+.pw-rules li .chk{width:14px; height:14px; border-radius:50%; border:1.5px solid var(--text-dimmer); display:flex; align-items:center; justify-content:center; font-size:9px; flex-shrink:0; transition:.2s;}
+.pw-rules li.met{color:var(--text);}
+.pw-rules li.met .chk{background:var(--green); border-color:var(--green); color:#fff;}
+
+.form-error,.form-success{font-size:13px; margin-bottom:16px; display:none; padding:12px 14px; border-radius:12px; align-items:center; gap:9px; animation:fadeUp .3s var(--ease-soft); overflow-wrap:anywhere;}
+.form-error{color:#991b1b; background:var(--red-bg); border:1px solid rgba(220,38,38,.22);}
+.form-success{color:#166534; background:var(--green-bg); border:1px solid rgba(22,163,74,.22);}
+@keyframes fadeUp{from{opacity:0; transform:translateY(10px);}to{opacity:1; transform:translateY(0);}}
+
+.auth-row-between{display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; font-size:13px; gap:10px; flex-wrap:wrap;}
+.checkbox-row{display:flex; align-items:center; gap:8px; color:var(--text-dim); cursor:pointer; user-select:none;}
+.checkbox-row input[type=checkbox]{appearance:none; width:17px; height:17px; border-radius:5px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,.7); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:.2s; flex-shrink:0;}
+.checkbox-row input[type=checkbox]:checked{background:linear-gradient(135deg,var(--purple),var(--pink)); border-color:transparent;}
+.checkbox-row input[type=checkbox]:checked::after{content:"✓"; color:#fff; font-size:11px; font-weight:800;}
+.link-inline{color:var(--purple); font-weight:700; font-size:13px; transition:.2s;}
+.link-inline:hover{text-decoration:underline; color:var(--pink);}
+.switch-line{text-align:center; margin-top:22px; font-size:14px; color:var(--text-dim);}
+.switch-line a{color:var(--purple); font-weight:700;}
+.switch-line a:hover{text-decoration:underline;}
+
+/* ===== Spin page ===== */
+.spin-shell{max-width:1180px; margin:0 auto; padding:var(--sp-7) 20px 100px; position:relative; z-index:1;}
+@media(max-width:700px){.spin-shell{padding:26px 14px 100px;}}
+.spin-heading{text-align:center; margin-bottom:38px;}
+.spin-currency-toggle{display:inline-flex; gap:6px; background:rgba(15,23,42,.04); border:1px solid var(--glass-border); border-radius:14px; padding:5px; margin-top:16px;}
+.sc-btn{padding:10px 18px; border-radius:10px; font-weight:700; font-size:13px; color:var(--text-dim); transition:.25s var(--ease); white-space:nowrap;}
+.sc-btn.active{background:#fff; color:var(--purple); box-shadow:var(--shadow-sm);}
+@media(max-width:480px){.spin-currency-toggle{display:flex; width:100%;} .sc-btn{flex:1; padding:10px 8px; font-size:12px;}}
+.spin-heading h1{font-size:clamp(26px,4.4vw,40px); margin-bottom:8px; letter-spacing:-.6px;}
+.spin-layout{display:grid; grid-template-columns:1fr 380px; gap:32px; align-items:start;}
+@media(max-width:980px){.spin-layout{grid-template-columns:1fr;}}
+
+.spin-stage-card{
+  background:radial-gradient(circle at 50% 15%, rgba(124,58,237,.14), transparent 60%), var(--glass);
+  border:1px solid var(--glass-border); border-radius:30px; padding:clamp(28px,5vw,56px) 24px 40px;
+  backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.6);
+  display:flex; flex-direction:column; align-items:center; gap:26px; position:relative; overflow:hidden; min-width:0;
+}
+.spin-stage-card::after{content:""; position:absolute; inset:0; pointer-events:none; border-radius:30px; background:radial-gradient(circle at 50% 0%, rgba(255,255,255,.4), transparent 40%);}
+
+.spin-fee-badge{display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,rgba(245,158,11,.14),rgba(236,72,153,.1)); border:1px solid rgba(245,158,11,.35); color:var(--gold-2); padding:8px 16px; border-radius:999px; font-size:13px; font-weight:800; position:relative; z-index:1;}
+
+/* ===== Play Amount picker (Smart Dynamic Wheel) ===== */
+.spin-balance-row{display:flex; justify-content:center; margin-bottom:18px; position:relative; z-index:1;}
+.spin-balance-chip{display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:16px; padding:10px 22px; box-shadow:var(--shadow-sm);}
+.spin-balance-chip .l{font-size:10.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.4px;}
+.spin-balance-chip .v{font-size:19px; font-weight:900; color:var(--text); overflow-wrap:anywhere;}
+.play-amount-section{width:100%; max-width:420px; margin:0 auto 16px; position:relative; z-index:1;}
+.play-amount-label{font-size:12.5px; font-weight:800; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; text-align:center; margin-bottom:10px;}
+.play-amount-grid{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+.play-amount-chip{flex:1 1 auto; min-width:78px; text-align:center; padding:10px 8px; border-radius:14px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,.5); cursor:pointer; transition:.2s var(--ease); box-sizing:border-box;}
+.play-amount-chip .amt{font-size:14px; font-weight:800; display:block;}
+.play-amount-chip .ngn{font-size:10px; color:var(--text-dim); display:block; margin-top:1px;}
+.play-amount-chip:hover{border-color:var(--purple-2); transform:translateY(-1px);}
+.play-amount-chip.active{border-color:var(--purple); background:linear-gradient(135deg,rgba(124,58,237,.14),rgba(236,72,153,.08)); box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.play-amount-chip.active .amt{color:var(--purple);}
+.play-amount-chip.custom-chip{border-style:dashed;}
+.play-amount-chip.disabled{opacity:.4; cursor:not-allowed; pointer-events:none;}
+.play-amount-custom{margin-top:10px; display:flex; justify-content:center;}
+.play-amount-custom input{width:100%; max-width:220px; padding:10px 14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,.65); font-size:13.5px; text-align:center; outline:none; box-sizing:border-box;}
+.play-amount-custom input:focus{border-color:var(--purple-2); box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.playing-with-badge{text-align:center; font-size:12.5px; font-weight:700; color:var(--purple); background:rgba(124,58,237,.08); border-radius:999px; padding:6px 16px; margin:2px auto 14px; display:inline-block; position:relative; left:50%; transform:translateX(-50%); transition:.2s var(--ease); max-width:90%; overflow-wrap:anywhere; z-index:1;}
+.spin-inline-error{color:var(--red); font-size:12.5px; font-weight:700; text-align:center; min-height:16px; margin-top:6px; position:relative; z-index:1;}
+@media(max-width:420px){
+  .play-amount-chip{min-width:70px; padding:9px 6px;}
+  .play-amount-chip .amt{font-size:12.5px;}
+}
+
+.spin-stage{position:relative; width:340px; height:340px; display:flex; align-items:center; justify-content:center; z-index:1;}
+@media(max-width:480px){.spin-stage{width:270px; height:270px;}}
+.spin-halo{position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle, rgba(124,58,237,.32) 0%, rgba(236,72,153,.14) 45%, transparent 72%); filter:blur(10px); animation:haloPulse 3.6s ease-in-out infinite; transition:.4s;}
+@media(max-width:480px){.spin-halo{width:320px;height:320px;}}
+.spin-orbit{position:absolute; width:372px; height:372px; border-radius:50%; border:1.5px dashed rgba(124,58,237,.3); animation:spinSlow 36s linear infinite;}
+.spin-orbit-2{position:absolute; width:410px; height:410px; border-radius:50%; border:1px dashed rgba(236,72,153,.2); animation:spinSlow 55s linear infinite reverse;}
+@media(max-width:480px){.spin-orbit{width:296px;height:296px;} .spin-orbit-2{width:326px;height:326px;}}
+.spin-stage.is-spinning .spin-halo{animation-duration:.9s; filter:blur(16px);}
+.spin-stage.is-spinning .spin-orbit{animation-duration:6s;}
+.spin-stage.is-spinning .spin-orbit-2{animation-duration:9s;}
+
+.wheel-pointer{position:absolute; top:-16px; left:50%; transform:translateX(-50%); width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:24px solid var(--gold); z-index:5; filter:drop-shadow(0 4px 8px rgba(120,80,20,.35)); animation:pointerBounce 1.8s ease-in-out infinite;}
+@keyframes pointerBounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(3px);}}
+#wheelCanvas,#wheelCanvasPreview{border-radius:50%; box-shadow:0 0 0 9px rgba(255,255,255,.7), 0 0 60px rgba(124,58,237,.35), inset 0 0 30px rgba(0,0,0,.08); transition:transform 4.6s cubic-bezier(.15,.65,.15,1); border:1px solid var(--glass-border);}
+.spin-center-btn{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:96px; height:96px; border-radius:50%;
+  background:radial-gradient(circle at 35% 28%, #e9d5ff, var(--purple) 55%, #5b21b6);
+  color:#fff; font-weight:800; font-size:14px; letter-spacing:1.4px;
+  box-shadow:0 0 30px rgba(124,58,237,.55), inset 0 2px 8px rgba(255,255,255,.35), inset 0 -6px 14px rgba(0,0,0,.15);
+  z-index:6; transition:.2s var(--ease); border:3px solid rgba(255,255,255,.7); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+}
+.spin-center-btn small{font-size:9.5px; opacity:.85; font-weight:700; letter-spacing:.5px;}
+@media(max-width:480px){.spin-center-btn{width:76px; height:76px; font-size:11.5px;}}
+.spin-center-btn:hover:not(:disabled){transform:translate(-50%,-50%) scale(1.06); box-shadow:0 0 40px rgba(236,72,153,.6);}
+.spin-center-btn:active:not(:disabled){transform:translate(-50%,-50%) scale(.96);}
+.spin-center-btn:disabled{filter:grayscale(.5); opacity:.6;}
+.spin-status{font-size:14px; color:var(--text-dim); text-align:center; min-height:20px; font-weight:600; position:relative; z-index:1;}
+.spin-status.is-ready{color:var(--green); font-weight:800;}
+
+.prize-ticker{display:flex; align-items:center; gap:10px; overflow:hidden; max-width:100%; padding:8px 4px; position:relative; z-index:1;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);}
+.prize-ticker-track{display:flex; gap:10px; animation:tickerScroll 18s linear infinite;}
+@keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.prize-chip{flex-shrink:0; padding:7px 14px; border-radius:999px; background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25); font-size:12px; font-weight:700; color:var(--gold-2); white-space:nowrap;}
+
+.spin-side-card{margin-bottom:18px;}
+.spin-side-card:last-child{margin-bottom:0;}
+.streak-row{display:flex; gap:6px; margin-top:14px;}
+.streak-dot{flex:1; height:6px; border-radius:99px; background:rgba(15,23,42,.08); transition:.3s var(--ease-soft);}
+.streak-dot.filled{background:linear-gradient(135deg,var(--gold),var(--gold-2)); box-shadow:0 0 8px rgba(245,158,11,.4);}
+.stat-box{background:rgba(255,255,255,.5); border:1px solid var(--glass-border); border-radius:16px; padding:18px; text-align:center; transition:.25s var(--ease); min-width:0;}
+.stat-box:hover{border-color:var(--glass-border-strong); background:#fff;}
+.stat-box .val{font-size:22px; font-weight:800; letter-spacing:-.3px; overflow:hidden; text-overflow:ellipsis;}
+.stat-box .lbl{font-size:12px; color:var(--text-dim); margin-top:5px;}
+
+/* Deposit-required / insufficient overlays */
+.spin-gate{position:relative; z-index:1; text-align:center; max-width:340px; padding:10px 6px;}
+.spin-gate .gate-icon{width:68px; height:68px; margin:0 auto 16px; border-radius:22px; display:flex; align-items:center; justify-content:center; font-size:30px;
+  background:linear-gradient(135deg, rgba(124,58,237,.14), rgba(236,72,153,.1)); border:1px solid var(--glass-border-strong); box-shadow:var(--shadow-md);}
+.spin-gate h3{font-size:19px; font-weight:800; margin-bottom:8px; letter-spacing:-.3px;}
+.spin-gate p{font-size:13.5px; color:var(--text-dim); line-height:1.6; margin-bottom:16px;}
+.gate-info-row{display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; justify-content:center;}
+.gate-info-chip{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:14px; padding:9px 14px; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:100px;}
+.gate-info-chip .l{font-size:10.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.3px;}
+.gate-info-chip .v{font-size:14px; font-weight:800;}
+
+/* Confetti + particles */
+.confetti-layer{position:fixed; inset:0; z-index:250; pointer-events:none; overflow:hidden;}
+.confetti-piece{position:absolute; top:-12px; opacity:0; border-radius:2px; animation:confettiFall linear forwards;}
+@keyframes confettiFall{
+  0%{opacity:1; transform:translateY(0) rotate(0deg);}
+  100%{opacity:0; transform:translateY(105vh) rotate(600deg);}
+}
+.particle{position:absolute; border-radius:50%; pointer-events:none; animation:particleBurst .9s var(--ease) forwards; z-index:260;}
+@keyframes particleBurst{0%{opacity:1; transform:translate(0,0) scale(1);}100%{opacity:0; transform:var(--pend) scale(.3);}}
+
+/* ===== Wallet ===== */
+.wallet-tabs{display:flex; gap:8px; background:rgba(15,23,42,.04); border:1px solid var(--glass-border); border-radius:16px; padding:5px; margin-bottom:22px; max-width:340px;}
+.wallet-tab{flex:1; text-align:center; padding:11px 10px; border-radius:12px; font-weight:700; font-size:13.5px; color:var(--text-dim); transition:.25s var(--ease);}
+.wallet-tab.active{background:#fff; color:var(--purple); box-shadow:var(--shadow-sm);}
+.wallet-panel{display:none;}
+.wallet-panel.active{display:block; animation:fadeUp .3s var(--ease-soft);}
+
+.currency-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;}
+.currency-chip{display:flex; align-items:center; gap:8px; padding:11px 16px; border-radius:14px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,.5); font-weight:700; font-size:13px; transition:.2s var(--ease); cursor:pointer;}
+.currency-chip.active{border-color:var(--purple); background:rgba(124,58,237,.08); color:var(--purple); box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.currency-chip.locked{opacity:.6; cursor:default;}
+.currency-chip .lock{font-size:11px; color:var(--text-dimmer);}
+
+.network-badge{display:inline-flex; align-items:center; gap:8px; background:rgba(6,182,212,.08); border:1px solid rgba(6,182,212,.3); color:#0891b2; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:700; margin-bottom:16px;}
+.network-badge.testnet{background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.35); color:var(--gold-2);}
+.network-badge .dot-live{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 2s ease-in-out infinite; flex-shrink:0;}
+
+.address-box{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:20px; padding:22px; text-align:center; transition:.3s var(--ease); min-width:0; max-width:100%;}
+.address-box img{width:170px; height:170px; border-radius:16px; background:#fff; padding:10px; margin:0 auto 16px; box-shadow:var(--shadow-md);}
+.address-text-full{font-family:'SF Mono',Consolas,monospace; font-size:12px; overflow-wrap:anywhere; word-break:break-word; background:rgba(15,23,42,.04); border:1px solid var(--glass-border); padding:12px 14px; border-radius:12px; margin-bottom:12px; letter-spacing:.2px; max-width:100%; min-width:0;}
+.address-actions{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+.coming-soon-box{text-align:center; padding:38px 16px; color:var(--text-dim);}
+.coming-soon-box .lock-icon{font-size:30px; margin-bottom:10px;}
+
+.coin-select{display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(15,23,42,.03); border:1px solid var(--glass-border); border-radius:14px; padding:11px 14px; margin-bottom:14px; cursor:pointer;}
+.max-btn{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:rgba(124,58,237,.1); color:var(--purple); font-size:11px; font-weight:800; padding:6px 10px; border-radius:8px;}
+.field-input-wrap.with-max input{padding-right:60px;}
+
+.withdraw-summary{background:rgba(15,23,42,.03); border:1px solid var(--glass-border); border-radius:16px; padding:16px 18px; margin:16px 0; display:flex; flex-direction:column; gap:9px;}
+.withdraw-summary .row{display:flex; justify-content:space-between; align-items:center; font-size:13px; gap:10px;}
+.withdraw-summary .row span:first-child{color:var(--text-dim);}
+.withdraw-summary .row b{overflow-wrap:anywhere; text-align:right; max-width:70%;}
+
+.status-badge{display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:800;}
+.status-PENDING,.status-PENDING_REVIEW{background:rgba(245,158,11,.12); color:var(--gold-2);}
+.status-PROCESSING{background:rgba(6,182,212,.12); color:#0891b2;}
+.status-COMPLETED{background:var(--green-bg); color:var(--green);}
+.status-REJECTED,.status-FAILED{background:var(--red-bg); color:var(--red);}
+.status-APPROVED{background:var(--green-bg); color:var(--green);}
+
+/* ===== Transactions ===== */
+.tx-toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:18px;}
+.tx-filters{display:flex; gap:8px; flex-wrap:wrap;}
+.tx-filter{padding:9px 16px; border-radius:999px; border:1px solid var(--glass-border); background:rgba(255,255,255,.5); font-size:13px; font-weight:700; color:var(--text-dim); transition:.2s;}
+.tx-filter.active{background:linear-gradient(135deg,var(--purple),var(--pink)); color:#fff; border-color:transparent;}
+.tx-search{flex:1; min-width:180px; max-width:280px; padding:10px 14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,.6); font-size:13px; outline:none;}
+.tx-search:focus{border-color:var(--purple-2); box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+.tx-row{display:flex; align-items:center; gap:14px; padding:15px 6px; border-bottom:1px solid var(--glass-border); transition:.2s; min-width:0;}
+.tx-row:last-child{border-bottom:none;}
+.tx-row:hover{background:rgba(124,58,237,.03); border-radius:12px;}
+.tx-icon{width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; background:rgba(124,58,237,.08);}
+.tx-body{flex:1; min-width:0;}
+.tx-type{font-weight:700; font-size:13.5px;}
+.tx-desc{font-size:12px; color:var(--text-dim); overflow-wrap:anywhere; word-break:break-word; margin-top:2px;}
+.tx-date{font-size:11px; color:var(--text-dimmer); margin-top:3px;}
+.tx-amount{font-weight:800; font-size:14px; white-space:nowrap; flex-shrink:0;}
+.tx-amount.pos{color:var(--green);}
+.tx-amount.neg{color:var(--red);}
+.tx-copy{flex-shrink:0; width:30px; height:30px; border-radius:9px; background:rgba(15,23,42,.04); display:flex; align-items:center; justify-content:center; color:var(--text-dim); transition:.2s;}
+.tx-copy:hover{background:rgba(124,58,237,.1); color:var(--purple);}
+
+/* ===== Shop ===== */
+.item-row{display:flex; align-items:center; justify-content:space-between; padding:13px 4px; border-bottom:1px solid var(--glass-border); transition:.2s; gap:10px;}
+.item-row:last-child{border-bottom:none;}
+.item-row:hover{background:rgba(124,58,237,.03); border-radius:8px;}
+.shop-card{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:20px; padding:22px; text-align:center; transition:.3s var(--ease); min-width:0;}
+.shop-card:hover{transform:translateY(-6px); border-color:var(--glass-border-strong); box-shadow:var(--shadow-lg);}
+.shop-card .icon{font-size:30px; margin-bottom:10px;}
+.shop-card .cat{font-size:11px; color:var(--text-dimmer); text-transform:uppercase; letter-spacing:.4px; margin-top:2px;}
+.shop-card .price{font-size:22px; font-weight:800; color:var(--gold-2); margin:10px 0 14px;}
+
+/* ===== Leaderboard ===== */
+.lb-podium{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-bottom:24px; align-items:end;}
+@media(max-width:600px){.lb-podium{grid-template-columns:1fr; gap:10px;}}
+.lb-place{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:20px; padding:22px 14px; text-align:center; position:relative; transition:.3s var(--ease); min-width:0;}
+.lb-place:hover{transform:translateY(-4px);}
+.lb-place .medal{font-size:34px; margin-bottom:8px;}
+.lb-place .name{font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.lb-place .xp{font-size:13px; color:var(--text-dim); margin-top:4px;}
+.lb-place-1{background:linear-gradient(160deg, rgba(245,158,11,.16), rgba(255,255,255,.6)); border-color:rgba(245,158,11,.4); box-shadow:0 16px 40px rgba(245,158,11,.18); transform:scale(1.06);}
+@media(max-width:600px){.lb-place-1{transform:scale(1);}}
+.lb-place-1 .medal{font-size:44px;}
+
+/* ===== Profile ===== */
+.profile-head{display:flex; align-items:center; gap:16px; margin-bottom:20px;}
+.profile-avatar{width:64px; height:64px; border-radius:20px; background:linear-gradient(135deg,var(--purple),var(--pink)); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff; flex-shrink:0; box-shadow:var(--shadow-md);}
+.vip-row{display:flex; align-items:center; justify-content:space-between; padding:11px 2px; border-bottom:1px solid var(--glass-border); font-size:14px; gap:10px;}
+.vip-row b{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%; text-align:right;}
+.badge{padding:4px 11px; border-radius:999px; font-size:11px; font-weight:700;}
+.badge-win{background:var(--green-bg); color:var(--green);}
+.badge-out{background:var(--red-bg); color:var(--red);}
+.vip-badge{display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:999px; font-size:11.5px; font-weight:800; background:linear-gradient(135deg, rgba(245,158,11,.15), rgba(236,72,153,.1)); color:var(--gold-2); border:1px solid rgba(245,158,11,.3);}
+
+/* ===== Admin ===== */
+.admin-card{position:relative; overflow:hidden;}
+.admin-card::before{content:""; position:absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle, rgba(124,58,237,.14), transparent 70%);}
+.admin-stat-val{font-size:26px; font-weight:900; letter-spacing:-.5px; margin:8px 0 4px;}
+.admin-stat-lbl{font-size:12.5px; color:var(--text-dim); font-weight:600;}
+.access-denied{text-align:center; padding:60px 20px;}
+.access-denied .icon{font-size:44px; margin-bottom:14px;}
+
+/* ===== Nigerian Bank Deposit ===== */
+.ngn-card{background:linear-gradient(160deg, rgba(22,163,74,.08), rgba(255,255,255,.6)); border:1px solid rgba(22,163,74,.25); border-radius:20px; padding:22px; min-width:0;}
+.ngn-info-banner{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;}
+.ngn-info-chip{flex:1 1 auto; min-width:130px; display:flex; flex-direction:column; gap:2px; background:rgba(22,163,74,.1); border:1px solid rgba(22,163,74,.3); border-radius:14px; padding:10px 14px;}
+.ngn-info-chip-l{font-size:11px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px;}
+.ngn-info-chip-v{font-size:16px; font-weight:800; color:var(--green);}
+.ngn-amount-error{color:#dc2626 !important; font-weight:700;}
+.ngn-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px solid rgba(15,23,42,.06); min-width:0;}
+.ngn-row:last-child{border-bottom:none;}
+.ngn-row .l{font-size:11.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.3px; flex-shrink:0;}
+.ngn-row .v{font-weight:800; font-size:14px; overflow-wrap:anywhere; word-break:break-word; min-width:0; text-align:right; flex:1;}
+.ngn-copy-btn{flex-shrink:0; width:34px; height:34px; border-radius:10px; background:rgba(22,163,74,.1); color:var(--green); display:flex; align-items:center; justify-content:center; font-size:14px; transition:.2s;}
+.ngn-copy-btn:hover{background:rgba(22,163,74,.18); transform:translateY(-1px);}
+.ngn-copy-btn.copied{background:var(--green); color:#fff;}
+
+.upload-zone{border:2px dashed var(--glass-border); border-radius:16px; padding:26px 16px; text-align:center; cursor:pointer; transition:.25s var(--ease); background:rgba(255,255,255,.4);}
+.upload-zone:hover{border-color:var(--purple-2); background:rgba(124,58,237,.04);}
+.upload-zone .icon{font-size:26px; margin-bottom:8px;}
+.upload-preview-box{border:1px solid var(--glass-border); border-radius:16px; padding:14px; background:rgba(255,255,255,.5); min-width:0; max-width:100%;}
+.upload-preview-img-wrap{width:100%; max-height:260px; overflow:hidden; border-radius:12px; background:rgba(15,23,42,.04); display:flex; align-items:center; justify-content:center;}
+.upload-preview-img-wrap img{max-width:100%; max-height:260px; object-fit:contain; display:block;}
+.upload-preview-actions{display:flex; gap:8px; margin-top:12px;}
+
+.dep-status-card{text-align:center; padding:30px 16px;}
+.dep-status-card .icon{font-size:38px; margin-bottom:12px;}
+
+/* ===== Admin deposit request cards ===== */
+.dep-filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+.deposit-card{background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:18px; padding:18px; margin-bottom:14px; min-width:0;}
+.deposit-card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
+.deposit-card-head .who{min-width:0;}
+.deposit-card-head .who b{display:block; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px;}
+.deposit-card-head .who span{font-size:12px; color:var(--text-dim); overflow-wrap:anywhere;}
+.deposit-card-body{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-bottom:14px;}
+.deposit-card-body .mini{background:rgba(15,23,42,.03); border-radius:12px; padding:9px 12px; min-width:0;}
+.deposit-card-body .mini .l{font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.3px;}
+.deposit-card-body .mini .v{font-size:13.5px; font-weight:800; overflow-wrap:anywhere;}
+.deposit-card-actions{display:flex; gap:8px; flex-wrap:wrap;}
+.deposit-card-note{font-size:12px; color:var(--text-dim); overflow-wrap:anywhere; margin-top:10px; background:rgba(15,23,42,.03); border-radius:10px; padding:8px 12px;}
+
+/* ===== Proof viewer modal ===== */
+.proof-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:20px; width:min(560px,94vw); max-width:100%; backdrop-filter:blur(26px) saturate(160%); box-shadow:var(--shadow-lg); animation:winPop .3s var(--ease);}
+.proof-close{position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:10px; background:rgba(15,23,42,.06); color:var(--text); display:flex; align-items:center; justify-content:center; z-index:2;}
+.proof-img-wrap{width:100%; max-height:70vh; overflow:auto; border-radius:16px; background:rgba(15,23,42,.04); display:flex; align-items:center; justify-content:center; padding:8px;}
+.proof-img-wrap img{max-width:100%; max-height:66vh; object-fit:contain; display:block; border-radius:10px; transition:.3s var(--ease);}
+.proof-img-wrap.zoomed{align-items:flex-start; justify-content:flex-start;}
+.proof-img-wrap.zoomed img{max-width:none; max-height:none; width:180%;}
+.proof-actions{display:flex; gap:8px; justify-content:center; margin-top:14px;}
+
+/* ===== Toast ===== */
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%); background:rgba(20,18,31,.92); color:#fff; border:1px solid rgba(255,255,255,.1); padding:14px 22px; border-radius:14px; font-size:13.5px; z-index:300; display:none; box-shadow:0 14px 40px rgba(20,18,40,.3); backdrop-filter:blur(20px); animation:slideUp .3s var(--ease); max-width:90vw; overflow-wrap:anywhere; text-align:center;}
+@keyframes slideUp{from{opacity:0; transform:translate(-50%,14px);}to{opacity:1; transform:translate(-50%,0);}}
+
+/* ===== Apple-style top-center notifications ===== */
+.notif-stack{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:280; display:flex; flex-direction:column; gap:10px; width:min(380px,92vw); align-items:center;}
+.notif-card{
+  width:100%; background:rgba(255,255,255,.86); border:1px solid rgba(255,255,255,.6); border-radius:20px; padding:14px 16px;
+  box-shadow:0 20px 50px rgba(20,18,40,.16), 0 0 0 1px rgba(124,58,237,.06); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  position:relative; display:flex; gap:12px; align-items:flex-start; animation:notifIn .45s var(--ease) forwards; overflow:hidden; min-width:0; max-width:100%;
+}
+.notif-card.leaving{animation:notifOut .35s var(--ease-soft) forwards;}
+@keyframes notifIn{from{opacity:0; transform:translateY(-18px) scale(.9); filter:blur(6px);}to{opacity:1; transform:translateY(0) scale(1); filter:blur(0);}}
+@keyframes notifOut{from{opacity:1; transform:translateY(0) scale(1); filter:blur(0);}to{opacity:0; transform:translateY(-14px) scale(.92); filter:blur(4px);}}
+.notif-card::before{content:""; position:absolute; inset:0; border-radius:20px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.5); pointer-events:none;}
+.notif-glow{position:absolute; inset:-1px; border-radius:20px; background:linear-gradient(135deg, rgba(34,197,94,.25), transparent 60%); opacity:.5; pointer-events:none; filter:blur(6px);}
+.notif-icon{width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(6,182,212,.12)); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;}
+.notif-content{flex:1; min-width:0;}
+.notif-card .title{font-weight:800; color:var(--text); margin-bottom:2px; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.notif-card .msg{font-size:12px; color:var(--text-dim); overflow-wrap:anywhere; word-break:break-word; line-height:1.5; white-space:pre-line;}
+.notif-card .close-x{position:absolute; top:9px; right:10px; color:var(--text-dimmer); font-size:13px; background:none; padding:3px; border-radius:6px; transition:.2s; flex-shrink:0;}
+.notif-card .close-x:hover{color:var(--text); background:rgba(15,23,42,.06);}
+@media(max-width:480px){.notif-stack{top:10px; width:94vw;}}
+
+/* ===== Modals ===== */
+.modal-bg{position:fixed; inset:0; background:rgba(20,18,31,.35); backdrop-filter:blur(10px); display:none; align-items:center; justify-content:center; z-index:220; padding:20px; box-sizing:border-box;}
+.modal-bg.show{display:flex; animation:fadeIn .25s ease;}
+.modal-bg.closing{animation:modalBgFadeOut .32s ease forwards;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes modalBgFadeOut{from{opacity:1;}to{opacity:0;}}
+
+.win-modal{
+  position:relative; background:var(--glass-strong); border:1px solid var(--glass-border-strong); border-radius:28px;
+  padding:38px 28px 30px; text-align:center; width:min(380px,92vw); max-width:100%; box-sizing:border-box;
+  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%); overflow:hidden;
+  box-shadow:var(--shadow-lg), var(--shadow-glow); animation:winPop .45s var(--ease);
+}
+.win-modal.closing{animation:winPopOut .32s var(--ease-soft) forwards;}
+@keyframes winPop{from{opacity:0; transform:scale(.92) translateY(20px); filter:blur(6px);}to{opacity:1; transform:scale(1) translateY(0); filter:blur(0);}}
+@keyframes winPopOut{from{opacity:1; transform:scale(1) translateY(0); filter:blur(0);}to{opacity:0; transform:scale(.92) translateY(16px); filter:blur(4px);}}
+.win-rays{display:none !important; position:absolute; top:50%; left:50%; width:620px; height:620px; transform:translate(-50%,-50%);
+  background:conic-gradient(from 0deg, transparent 0deg, rgba(245,158,11,.12) 8deg, transparent 16deg, transparent 40deg, rgba(236,72,153,.1) 48deg, transparent 56deg, transparent 80deg, rgba(124,58,237,.12) 88deg, transparent 96deg);
+  animation:raySpin 14s linear infinite; z-index:0; pointer-events:none;}
+@keyframes raySpin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+.win-modal > *{position:relative; z-index:1;}
+.win-trophy{width:60px; height:60px; margin:0 auto 12px; border-radius:50%; background:radial-gradient(circle at 35% 28%, #fff6d8, var(--gold) 55%, var(--gold-2)); display:flex; align-items:center; justify-content:center; font-size:26px;
+  box-shadow:0 0 34px rgba(245,158,11,.5), inset 0 2px 6px rgba(255,255,255,.5); animation:trophyPop .5s var(--ease) .1s backwards;}
+@keyframes trophyPop{from{opacity:0; transform:scale(.4) rotate(-25deg);}to{opacity:1; transform:scale(1) rotate(0);}}
+.win-title{font-size:13px; font-weight:800; color:var(--text-dim); letter-spacing:1.4px; text-transform:uppercase;}
+.win-amount-wrap{position:relative; margin:12px 0 10px; display:flex; align-items:center; justify-content:center;}
+.win-amount-glow{position:absolute; width:220px; height:90px; border-radius:50%; background:radial-gradient(ellipse, rgba(245,158,11,.35), rgba(236,72,153,.16) 55%, transparent 75%); filter:blur(18px); animation:amountGlowPulse 2.2s ease-in-out infinite;}
+@keyframes amountGlowPulse{0%,100%{opacity:.7; transform:scale(1);}50%{opacity:1; transform:scale(1.08);}}
+.win-amount{position:relative; font-size:clamp(34px,9vw,46px); font-weight:900; letter-spacing:-1px; line-height:1.05; max-width:100%; overflow-wrap:anywhere;
+  background:linear-gradient(135deg,var(--gold),var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; animation:fadeUp .4s var(--ease) .2s backwards;}
+.win-subtitle{font-size:17px; font-weight:800; color:var(--text); margin-bottom:6px; animation:fadeUp .4s var(--ease) .26s backwards;}
+.win-desc{font-size:13px; color:var(--text-dim); line-height:1.5; margin-bottom:14px; animation:fadeUp .4s var(--ease) .3s backwards;}
+.win-locked-note{font-size:11.5px; color:var(--text-dim); background:rgba(124,58,237,.06); border:1px solid var(--glass-border); border-radius:12px; padding:8px 12px; margin-bottom:8px; overflow-wrap:anywhere;}
+.win-locked-note b{color:var(--purple);}
+.win-fee-note{font-size:11px; color:var(--text-dimmer); margin-bottom:16px;}
+.win-continue-btn{padding:12px 40px; width:auto; min-width:140px; margin:6px auto 0; display:inline-flex;}
+
+/* ===== Dynamic spin result (win/loss) + receipt — reuses .win-modal/.modal-bg ===== */
+.win-loss-icon{width:60px; height:60px; margin:0 auto 12px; border-radius:50%; background:rgba(15,23,42,.06); border:1px solid var(--glass-border); display:flex; align-items:center; justify-content:center; font-size:26px; animation:trophyPop .5s var(--ease) .1s backwards;}
+.win-actions-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:6px;}
+.spin-receipt{margin-top:18px; background:rgba(255,255,255,.5); border:1px solid var(--glass-border); border-radius:16px; padding:14px 16px; text-align:left;}
+.spin-receipt-title{font-size:11px; font-weight:800; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; text-align:center;}
+.spin-receipt .row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid var(--glass-border); font-size:12.5px;}
+.spin-receipt .row:last-child{border-bottom:none;}
+.spin-receipt .row span:first-child{color:var(--text-dim); flex-shrink:0;}
+.spin-receipt .row b{text-align:right; overflow-wrap:anywhere; word-break:break-word; min-width:0; font-weight:700;}
+
+.confirm-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:32px 28px; width:400px; max-width:100%; backdrop-filter:blur(26px) saturate(160%); box-shadow:var(--shadow-lg); animation:winPop .35s var(--ease); text-align:left;}
+.confirm-modal h3{font-size:18px; font-weight:800; margin-bottom:18px;}
+.confirm-modal .row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(--glass-border); font-size:13.5px;}
+.confirm-modal .row:last-of-type{border-bottom:none;}
+.confirm-modal .row span:first-child{color:var(--text-dim); flex-shrink:0;}
+.confirm-modal .row b{text-align:right; overflow-wrap:anywhere; min-width:0;}
+.confirm-actions{display:flex; gap:10px; margin-top:22px;}
+
+/* Access gate / generic empty state */
+.empty-state{text-align:center; padding:50px 20px; color:var(--text-dim);}
+.empty-state .icon{font-size:36px; margin-bottom:12px;}
+
+@media(max-width:420px){
+  .win-modal{padding:32px 18px 24px;}
+  .confirm-modal{padding:26px 20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<div class="topnav">
+  <div class="brand"><span class="dot"></span> LuckySpin</div>
+  <div class="nav-links" id="navLinksAuthed" style="display:none;">
+    <a href="#" data-page="wheel" onclick="showPage('wheel')">Spin</a>
+    <a href="#" data-page="wallet" onclick="showPage('wallet')">Wallet</a>
+    <a href="#" data-page="transactions" onclick="showPage('transactions')">Transactions</a>
+    <a href="#" data-page="shop" onclick="showPage('shop')">Shop</a>
+    <a href="#" data-page="leaderboard" onclick="showPage('leaderboard')">Leaderboard</a>
+    <a href="#" data-page="profile" onclick="showPage('profile')">Profile</a>
+    <a href="#" data-page="admin" id="navAdminLink" style="display:none;" onclick="showPage('admin')">Admin</a>
+  </div>
+  <div class="nav-right">
+    <div class="balance-chip" id="navBalance" style="display:none;" onclick="toggleBalancePopover(event)">
+      <span class="gem">💎</span> <span class="pt" id="navBalanceVal">₦0</span>
+    </div>
+    <div id="navGuest">
+      <a class="btn btn-ghost btn-sm" href="#" onclick="showPage('login')">Log In</a>
+      <a class="btn btn-primary btn-sm" href="#" onclick="showPage('signup')">Sign Up</a>
+    </div>
+    <button id="navLogoutDesktop" class="btn btn-ghost btn-sm" style="display:none;" onclick="logout()">Log Out</button>
+    <button class="hamburger" id="hamburgerBtn" onclick="openDrawer()" style="display:none;" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Balance popover -->
+<div class="popover-bg" id="popoverBg" onclick="closeBalancePopover()"></div>
+<div class="balance-popover" id="balancePopover">
+  <div class="bp-label">NGN Balance</div>
+  <div class="bp-amount" id="bpAmount">₦0</div>
+  <div class="bp-usd" id="bpUsd">Real Naira balance</div>
+  <div class="bp-stats">
+    <div class="bp-stat"><div class="v" id="bpDeposits">—</div><div class="l">Total Deposits</div></div>
+    <div class="bp-stat"><div class="v" id="bpWithdrawals">—</div><div class="l">Total Won</div></div>
+  </div>
+  <div class="bp-last" id="bpLast">No recent transactions</div>
+
+  <div style="height:1px; background:var(--glass-border); margin:4px 0 14px;"></div>
+
+  <!-- NEW: separate crypto balance block — never combined/summed with NGN above -->
+  <div class="bp-label">Crypto Balance</div>
+  <div class="bp-amount" id="bpCryptoAmount" style="font-size:22px; margin-bottom:2px;">$0.00</div>
+  <div class="bp-usd" id="bpCryptoSub" style="margin-bottom:14px;">0 Points · TRX / USDT</div>
+
+  <div class="bp-actions">
+    <button class="btn btn-ghost btn-sm btn-block" onclick="closeBalancePopover(); showPage('wallet')">View Wallet</button>
+    <button class="btn btn-ghost btn-sm btn-block" onclick="closeBalancePopover(); showPage('transactions')">Transactions</button>
+  </div>
+</div>
+
+<!-- Mobile drawer -->
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div class="drawer-title">Menu</div>
+  <a href="#" onclick="closeDrawer(); showPage('wheel')">🎡 Spin</a>
+  <a href="#" onclick="closeDrawer(); showPage('wallet')">👛 Wallet</a>
+  <a href="#" onclick="closeDrawer(); showPage('transactions')">📜 Transactions</a>
+  <a href="#" onclick="closeDrawer(); showPage('shop')">🛍️ Shop</a>
+  <a href="#" onclick="closeDrawer(); showPage('leaderboard')">🏆 Leaderboard</a>
+  <a href="#" onclick="closeDrawer(); showPage('profile')">👤 Profile</a>
+  <a href="#" id="drawerAdminLink" style="display:none;" onclick="closeDrawer(); showPage('admin')">🛡️ Admin Ledger</a>
+  <button onclick="closeDrawer(); logout()" style="color:var(--red);">🚪 Log Out</button>
+</div>
+
+<!-- Bottom nav (mobile, authed only) -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <div class="bottom-nav-inner">
+    <a href="#" class="bn-item" data-page="wheel" onclick="showPage('wheel')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>
+      <span>Spin</span>
+    </a>
+    <a href="#" class="bn-item" data-page="wallet" onclick="showPage('wallet')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1"/></svg>
+      <span>Wallet</span>
+    </a>
+    <a href="#" class="bn-item" data-page="transactions" onclick="showPage('transactions')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>
+      <span>History</span>
+    </a>
+    <a href="#" class="bn-item" data-page="shop" onclick="showPage('shop')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1.5 4h9L18 2"/><path d="M3.5 6h17l-1.4 12.2a2 2 0 0 1-2 1.8H6.9a2 2 0 0 1-2-1.8L3.5 6z"/><circle cx="9" cy="21.5" r="0.6"/><circle cx="15" cy="21.5" r="0.6"/></svg>
+      <span>Shop</span>
+    </a>
+    <a href="#" class="bn-item" onclick="openDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>More</span>
+    </a>
+  </div>
+</div>
+
+<div class="page active" id="page-landing">
+  <div class="landing-hero">
+    <div>
+      <span class="pill">✨ Pay-per-spin • 100 Points = $1</span>
+      <div class="hero-title">Spin the wheel.<br>Win real points.</div>
+      <p class="muted" style="margin:18px 0 28px; font-size:15.5px; max-width:440px;">
+        LuckySpin is a premium Web3 rewards platform. Deposit crypto, spin for points,
+        redeem them in our shop, or withdraw straight to your own wallet.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#" onclick="showPage('signup')">Create Free Account</a>
+        <a class="btn btn-ghost" href="#" onclick="showPage('login')">Log In</a>
+      </div>
+    </div>
+    <div class="wheel-zone">
+      <div class="hero-wheel-stage">
+        <div class="hero-halo"></div>
+        <div class="hero-orbit-2"></div>
+        <div class="hero-orbit"></div>
+        <span class="hero-badge hero-badge-1">💳 From ₦1,000 / spin</span>
+        <span class="hero-badge hero-badge-2">💎 Real Naira prizes</span>
+        <span class="hero-badge hero-badge-3">🔒 Provably fair</span>
+        <div style="position:relative; width:270px; height:270px;">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheelCanvasPreview" width="270" height="270"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="landing-section">
+    <div class="section-title">Why players choose LuckySpin</div>
+    <p class="muted">Built for speed, transparency, and fair play.</p>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="icon">💳</div><b>Pay-Per-Spin</b><p class="muted" style="margin-top:8px; font-size:13px;">100 Points ($1) per spin — no cooldowns, spin whenever you like.</p></div>
+      <div class="feature-card"><div class="icon">⚡</div><b>Fast Withdrawals</b><p class="muted" style="margin-top:8px; font-size:13px;">Small withdrawals are sent automatically — no waiting around.</p></div>
+      <div class="feature-card"><div class="icon">🔒</div><b>Secure & Fair</b><p class="muted" style="margin-top:8px; font-size:13px;">All outcomes are generated server-side — never in your browser.</p></div>
+      <div class="feature-card"><div class="icon">👛</div><b>Your Own Address</b><p class="muted" style="margin-top:8px; font-size:13px;">Every account gets a personal TRON deposit address.</p></div>
+    </div>
+  </div>
+
+  <div class="landing-section" id="about">
+    <div class="section-title">About Us</div>
+    <p class="muted" style="max-width:640px; line-height:1.8;">
+      LuckySpin was built to make earning and redeeming points effortless. No hidden steps,
+      no confusing rules — deposit, spin, and cash out whenever you're ready.
+      Every deposit address is unique to you, and every withdrawal request is reviewed for your safety.
+    </p>
+    <div class="steps-row">
+      <div><div class="step-num">1</div><b>Create an account</b><p class="muted" style="font-size:13px; margin-top:7px;">Takes less than a minute.</p></div>
+      <div><div class="step-num">2</div><b>Deposit crypto</b><p class="muted" style="font-size:13px; margin-top:7px;">Use your personal TRON (Nile) address.</p></div>
+      <div><div class="step-num">3</div><b>Spin & withdraw</b><p class="muted" style="font-size:13px; margin-top:7px;">100 Points per spin — cash out anytime.</p></div>
+    </div>
+  </div>
+
+  <div class="footer-mini">© 2026 LuckySpin. All rights reserved.</div>
+</div>
+
+<div class="page" id="page-signup">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-logo"><span class="dot"></span><span>LuckySpin</span></div>
+      <h1 style="text-align:center; margin-bottom:6px; font-size:26px;">Create your account</h1>
+      <p class="muted" style="text-align:center; margin-bottom:26px;">Join LuckySpin today — it takes less than a minute</p>
+
+      <div class="form-error" id="signupError"></div>
+      <div class="form-success" id="signupSuccess"></div>
+
+      <div class="field">
+        <label>Full name</label>
+        <div class="field-input-wrap"><input id="suName" type="text" placeholder="Your name" autocomplete="name" oninput="validateSignupLive()"></div>
+        <div class="field-hint" id="suNameHint"></div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <div class="field-input-wrap"><input id="suEmail" type="email" placeholder="you@example.com" autocomplete="email" oninput="validateSignupLive()"></div>
+        <div class="field-hint" id="suEmailHint"></div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-input-wrap">
+          <input id="suPassword" type="password" class="has-toggle" placeholder="Create a strong password" autocomplete="new-password" oninput="validateSignupLive()">
+          <button type="button" class="field-toggle" onclick="togglePasswordVisibility('suPassword', this)" aria-label="Show password">
+            <svg class="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path class="eye-shape" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+              <circle class="eye-pupil" cx="12" cy="12" r="3"></circle>
+              <line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-strength-track"><div class="pw-strength-fill" id="pwStrengthFill"></div></div>
+          <div class="pw-strength-label" id="pwStrengthLabel">Too weak</div>
+        </div>
+        <ul class="pw-rules" id="pwRules">
+          <li data-rule="len"><span class="chk">✓</span> 8+ characters</li>
+          <li data-rule="upper"><span class="chk">✓</span> Uppercase letter</li>
+          <li data-rule="num"><span class="chk">✓</span> A number</li>
+          <li data-rule="sym"><span class="chk">✓</span> Symbol (optional)</li>
+        </ul>
+        <div class="field-hint bad" id="suPasswordHint"></div>
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <div class="field-input-wrap">
+          <input id="suConfirm" type="password" class="has-toggle" placeholder="Re-enter your password" autocomplete="new-password" oninput="validateSignupLive()">
+          <button type="button" class="field-toggle" onclick="togglePasswordVisibility('suConfirm', this)" aria-label="Show password">
+            <svg class="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path class="eye-shape" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+              <circle class="eye-pupil" cx="12" cy="12" r="3"></circle>
+              <line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="field-hint" id="suConfirmHint"></div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="signupBtn" onclick="doSignup()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Create Account</span></span>
+      </button>
+      <div class="switch-line">Already have an account? <a href="#" onclick="showPage('login')">Log in</a></div>
+    </div>
+
+    <div class="auth-info">
+      <div class="auth-info-title">Everything you get, free</div>
+      <p class="auth-info-sub">One account, zero fees to join — deposit anytime and start spinning.</p>
+      <div class="auth-perk">
+        <div class="perk-icon">🎡</div>
+        <div class="perk-text"><b>Pay-per-spin</b><span>100 Points ($1) per spin — no cooldowns, spin as much as you like.</span></div>
+      </div>
+      <div class="auth-perk">
+        <div class="perk-icon">🎁</div>
+        <div class="perk-text"><b>Growing daily bonus</b><span>Log in on a streak and your daily reward gets bigger.</span></div>
+      </div>
+      <div class="auth-perk">
+        <div class="perk-icon">👛</div>
+        <div class="perk-text"><b>Your own TRON address</b><span>A permanent, personal deposit address — no sharing, no mix-ups.</span></div>
+      </div>
+      <div class="auth-stats-row">
+        <div><div class="num">₦1K</div><div class="lbl2">Min play</div></div>
+        <div><div class="num">100%</div><div class="lbl2">Server-side fair</div></div>
+        <div><div class="num">0</div><div class="lbl2">Signup fees</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-login">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-logo"><span class="dot"></span><span>LuckySpin</span></div>
+      <h1 style="text-align:center; margin-bottom:6px; font-size:26px;">Welcome back!</h1>
+      <p class="muted" style="text-align:center; margin-bottom:26px;">Log in to keep spinning</p>
+
+      <div class="form-error" id="loginError"></div>
+
+      <div class="field">
+        <label>Email</label>
+        <div class="field-input-wrap"><input id="liEmail" type="email" placeholder="you@example.com" autocomplete="email"></div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-input-wrap">
+          <input id="liPassword" type="password" class="has-toggle" placeholder="Password" autocomplete="current-password">
+          <button type="button" class="field-toggle" onclick="togglePasswordVisibility('liPassword', this)" aria-label="Show password">
+            <svg class="eye-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path class="eye-shape" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+              <circle class="eye-pupil" cx="12" cy="12" r="3"></circle>
+              <line class="eye-slash" x1="2" y1="2" x2="22" y2="22"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-row-between">
+        <label class="checkbox-row"><input type="checkbox" id="liRemember" checked> Remember me</label>
+        <a href="#" class="link-inline" onclick="showForgotPassword(); return false;">Forgot password?</a>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="loginBtn" onclick="doLogin()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Log In</span></span>
+      </button>
+      <div class="switch-line">Don't have an account? <a href="#" onclick="showPage('signup')">Sign up</a></div>
+    </div>
+
+    <div class="auth-info">
+      <div class="auth-info-title">Your balance is waiting</div>
+      <p class="auth-info-sub">Pick up right where you left off — your points, streak, and wallet are all right here.</p>
+      <div class="auth-perk">
+        <div class="perk-icon">⚡</div>
+        <div class="perk-text"><b>Fast, automatic withdrawals</b><span>Small withdrawals are sent automatically, no waiting around.</span></div>
+      </div>
+      <div class="auth-perk">
+        <div class="perk-icon">🔒</div>
+        <div class="perk-text"><b>Secure by design</b><span>Outcomes are generated server-side — never in your browser.</span></div>
+      </div>
+      <div class="auth-perk">
+        <div class="perk-icon">📈</div>
+        <div class="perk-text"><b>Track everything</b><span>Full history of spins, bonuses, deposits, and withdrawals.</span></div>
+      </div>
+      <div class="auth-stats-row">
+        <div><div class="num">24/7</div><div class="lbl2">Access anytime</div></div>
+        <div><div class="num">1</div><div class="lbl2">Personal address</div></div>
+        <div><div class="num">Live</div><div class="lbl2">Deposit alerts</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-wheel">
+  <div class="spin-shell">
+    <div class="spin-heading">
+      <span class="pill" id="spinPill">💳 Choose your play amount • No cooldown</span>
+      <h1>Spin the Wheel</h1>
+      <p class="muted">Every outcome is generated on the server — the wheel just shows you what already happened.</p>
+      <!-- NEW: currency picker — decides which balance you're spinning with.
+           Never mixed: NGN spins only ever touch ngn_balance, Crypto spins
+           only ever touch points_balance (the shared TRX/USDT balance). -->
+      <div class="spin-currency-toggle" id="spinCurrencyToggle">
+        <button class="sc-btn active" data-currency="NGN" onclick="setSpinCurrency('NGN')">🇳🇬 NGN Balance</button>
+        <button class="sc-btn" data-currency="USD" onclick="setSpinCurrency('USD')">💠 Crypto Balance ($)</button>
+      </div>
+    </div>
+
+    <div class="spin-layout">
+      <div class="spin-stage-card">
+
+        <!-- Gate: deposit required -->
+        <div class="spin-gate" id="spinGateDeposit" style="display:none;">
+          <div class="gate-icon">🔒</div>
+          <h3>Unlock LuckySpin</h3>
+          <p>Make your first deposit to unlock the wheel.</p>
+          <button class="btn btn-primary" onclick="showPage('wallet'); setWalletTab('deposit')">Deposit Now</button>
+        </div>
+
+        <!-- Normal spin view -->
+        <div id="spinNormalView" style="display:none; width:100%;">
+          <div class="spin-balance-row">
+            <div class="spin-balance-chip"><span class="l">Available Balance</span><span class="v" id="spinYourBalance">₦0</span></div>
+          </div>
+
+          <div class="play-amount-section">
+            <div class="play-amount-label">Choose Play Amount</div>
+            <div class="play-amount-grid" id="playAmountGrid"></div>
+            <div class="play-amount-custom" id="playAmountCustomWrap" style="display:none;">
+              <input type="number" id="playAmountCustomInput" placeholder="Custom amount (₦)" oninput="onCustomPlayAmountInput()">
+            </div>
+          </div>
+
+          <div class="playing-with-badge" id="playingWithBadge">Playing with ₦1,000</div>
+
+          <div class="spin-stage" id="spinStage">
+            <div class="spin-halo"></div>
+            <div class="spin-orbit-2"></div>
+            <div class="spin-orbit"></div>
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+            <button class="spin-center-btn" id="spinBtn" onclick="doPlayAmountSpin()"><span id="spinBtnLabel">SPIN</span><small id="spinBtnAmount">₦1,000</small></button>
+          </div>
+          <div class="spin-status" id="spinStatus">Checking status...</div>
+          <div class="spin-inline-error" id="spinInlineError"></div>
+          <div class="prize-ticker">
+            <div class="prize-ticker-track" id="prizeTicker"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card spin-side-card">
+          <h2>Daily Bonus</h2>
+          <p class="muted" style="margin-bottom:14px;" id="dailyBonusText">Checking bonus status...</p>
+          <div class="streak-row" id="streakRow"></div>
+          <button class="btn btn-primary btn-block" id="dailyBonusBtn" onclick="claimDailyBonus()" style="margin-top:16px;">
+            <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Claim Bonus</span></span>
+          </button>
+        </div>
+        <div class="card spin-side-card">
+          <h2>Your Balance</h2>
+          <div class="stat-box"><div class="val" id="statBalance">₦0</div><div class="lbl" id="statBalanceLbl">NGN Balance</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-wallet">
+  <div class="container">
+    <div class="page-head"><h1>Wallet</h1><p>Manage your deposits, withdrawals, and balance.</p></div>
+
+    <div class="grid-2" style="margin-bottom:22px; align-items:stretch;">
+      <div class="card">
+        <div class="muted">🇳🇬 NGN Balance</div>
+        <div style="font-size:32px; font-weight:900; margin:8px 0 4px; letter-spacing:-.5px;" id="walletNgnBalance">₦0</div>
+        <div class="muted" style="font-size:12px;">Real Naira — bank transfer deposits/withdrawals only</div>
+      </div>
+      <div class="card">
+        <div class="muted">💠 Crypto Balance</div>
+        <div style="font-size:32px; font-weight:900; margin:8px 0 4px; letter-spacing:-.5px;" id="walletBalance">$0.00</div>
+        <div class="muted" style="font-size:12px; margin-bottom:12px;" id="walletBalancePts">0 Points</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="stat-box" style="max-width:220px;"><div class="val" id="pointsRate">100 Points = 1 TRX</div><div class="lbl">Conversion rate</div></div>
+          <div class="stat-box" style="max-width:200px;"><div class="val" id="walletLocked">0 Points</div><div class="lbl">Locked rewards</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:12px; margin:-12px 0 22px;">These two balances are always kept separate — a Naira deposit only ever changes NGN Balance, and a TRX/USDT deposit only ever changes Crypto Balance.</p>
+
+    <div class="wallet-tabs">
+      <div class="wallet-tab active" id="tabBtnDeposit" onclick="setWalletTab('deposit')">Deposit</div>
+      <div class="wallet-tab" id="tabBtnWithdraw" onclick="setWalletTab('withdraw')">Withdraw</div>
+    </div>
+
+    <!-- DEPOSIT PANEL -->
+    <div class="wallet-panel active" id="walletPanelDeposit">
+      <div class="card">
+        <h2>Choose a currency</h2>
+        <div class="currency-row" id="depositCurrencyRow">
+          <div class="muted">Loading supported currencies...</div>
+        </div>
+        <div id="depositContent"></div>
+      </div>
+    </div>
+
+    <!-- WITHDRAW PANEL -->
+    <div class="wallet-panel" id="walletPanelWithdraw">
+      <div class="card">
+        <h2>Choose Network</h2>
+        <div class="currency-row" id="withdrawNetworkRow">
+          <div class="currency-chip" data-net="NGN" onclick="selectWithdrawNetwork('NGN')">🇳🇬 NGN · Bank Transfer</div>
+          <div class="currency-chip active" data-net="TRX_NILE" onclick="selectWithdrawNetwork('TRX_NILE')">🟣 TRX · TRON</div>
+          <div class="currency-chip" data-net="USDT_TRC20" onclick="selectWithdrawNetwork('USDT_TRC20')">💠 USDT · TRC20</div>
+        </div>
+
+        <div id="ngnWithdrawForm" style="display:none;"></div>
+
+        <div id="withdrawForm">
+          <div class="stat-box" style="max-width:260px; margin-bottom:18px;">
+            <div class="val" id="withdrawAvailBalance">0 Points</div>
+            <div class="lbl">Available Balance</div>
+          </div>
+
+          <div class="field">
+            <label>Amount (Points)</label>
+            <div class="field-input-wrap with-max">
+              <input id="withdrawAmount" type="number" placeholder="e.g. 500" oninput="updateWithdrawEstimate()">
+              <button type="button" class="max-btn" onclick="setWithdrawMax()">MAX</button>
+            </div>
+          </div>
+          <div class="field">
+            <label id="withdrawAddressLabel">Destination TRON Address</label>
+            <div class="field-input-wrap"><input id="withdrawAddress" type="text" placeholder="T..."></div>
+          </div>
+
+          <div class="withdraw-summary">
+            <div class="row"><span>Network</span><b id="withdrawNetworkLabel">TRON Nile Testnet</b></div>
+            <div class="row"><span>Estimated Amount</span><b id="withdrawEstAmount">0 TRX</b></div>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="openWithdrawReview()">Review Withdrawal</button>
+          <p class="muted" style="margin-top:12px; font-size:12px;">Small withdrawals are sent automatically. Larger ones are reviewed manually for your safety.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-transactions">
+  <div class="container">
+    <div class="page-head"><h1>Transactions</h1><p>Every spin, deposit, withdrawal, and reward in one place.</p></div>
+    <div class="card">
+      <div class="tx-toolbar">
+        <div class="tx-filters" id="txFilters">
+          <div class="tx-filter active" data-filter="all" onclick="setTxFilter('all')">All</div>
+          <div class="tx-filter" data-filter="deposits" onclick="setTxFilter('deposits')">Deposits</div>
+          <div class="tx-filter" data-filter="withdrawals" onclick="setTxFilter('withdrawals')">Withdrawals</div>
+          <div class="tx-filter" data-filter="rewards" onclick="setTxFilter('rewards')">Rewards</div>
+        </div>
+        <input class="tx-search" id="txSearch" type="text" placeholder="Search transactions..." oninput="renderTransactions()">
+      </div>
+      <div id="txList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-shop">
+  <div class="container">
+    <div class="page-head"><h1>Rewards Shop</h1><p>Redeem your points for cash cards and bonuses.</p></div>
+    <div class="grid-3" id="shopGrid"></div>
+  </div>
+</div>
+
+<div class="page" id="page-leaderboard">
+  <div class="container">
+    <div class="page-head"><h1>Leaderboard</h1><p>Top players ranked by lifetime XP.</p></div>
+    <div class="lb-podium" id="lbPodium"></div>
+    <div class="card">
+      <div id="leaderboardList"></div>
+      <div class="muted" style="margin-top:16px;">Your rank: <b id="myRank">—</b> — Total XP: <b id="myXp">0</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-profile">
+  <div class="container grid-2">
+    <div class="card">
+      <div class="profile-head">
+        <div class="profile-avatar" id="profileAvatar">?</div>
+        <div style="min-width:0;">
+          <h2 style="margin-bottom:2px;" id="profileName">—</h2>
+          <p class="muted" id="profileEmail" style="font-size:12.5px;">—</p>
+        </div>
+      </div>
+      <div class="vip-row"><span>Level</span><b><span class="vip-badge" id="profileVip">Bronze</span></b></div>
+      <div class="vip-row"><span>Total XP</span><b id="profileXp">0</b></div>
+      <div class="vip-row"><span>🇳🇬 NGN Balance</span><b id="profileNgnBalance">₦0</b></div>
+      <div class="vip-row"><span>💠 Crypto Balance</span><b id="profileBalance">$0.00</b></div>
+      <div class="vip-row"><span>Locked points</span><b id="profileLocked">0</b></div>
+      <div class="vip-row"><span>Member since</span><b id="profileSince">—</b></div>
+    </div>
+    <div class="card">
+      <h2>Transaction History</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-admin">
+  <div class="container">
+    <div class="page-head"><h1>Admin</h1><p>Platform revenue, withdrawals, and deposit approvals.</p></div>
+    <div class="wallet-tabs" id="adminTabsRow" style="display:none;">
+      <div class="wallet-tab active" id="adminTabBtnLedger" onclick="setAdminTab('ledger')">Ledger</div>
+      <div class="wallet-tab" id="adminTabBtnDeposits" onclick="setAdminTab('deposits')">Deposit Requests</div>
+      <div class="wallet-tab" id="adminTabBtnWithdrawals" onclick="setAdminTab('withdrawals')">Withdrawal Requests</div>
+    </div>
+    <div id="adminLedgerPanel"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
+    <div id="adminDepositsPanel" style="display:none;"></div>
+    <div id="adminWithdrawalsPanel" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="notif-stack" id="notifStack"></div>
+<div class="confetti-layer" id="confettiLayer"></div>
+
+<div class="modal-bg" id="winModalBg">
+  <div class="win-modal">
+    <div class="win-rays"></div>
+    <div class="win-trophy">✨</div>
+    <div class="win-title">You Won</div>
+    <div class="win-amount-wrap">
+      <div class="win-amount-glow"></div>
+      <div class="win-amount" id="winAmount">+0 Points</div>
+    </div>
+    <div class="win-subtitle">Congratulations!</div>
+    <p class="win-desc">Your reward has been added to your balance.</p>
+    <div class="win-locked-note" id="winLockedNote"></div>
+    <div class="win-fee-note" id="winFeeNote"></div>
+    <button class="btn btn-primary win-continue-btn" onclick="closeWinModal()">Continue</button>
+  </div>
+</div>
+
+<!-- Dynamic Play-Amount spin result (WIN or LOSS) + receipt -->
+<div class="modal-bg" id="dynamicResultModalBg">
+  <div class="win-modal" id="dynamicResultModal">
+    <div class="win-rays" id="dynamicResultRays"></div>
+    <div id="dynamicResultIconWrap"></div>
+    <div class="win-title" id="dynamicResultTitle">You Won</div>
+    <div class="win-amount-wrap">
+      <div class="win-amount-glow" id="dynamicResultGlow"></div>
+      <div class="win-amount" id="dynamicResultAmount">+0</div>
+    </div>
+    <div class="win-subtitle" id="dynamicResultSubtitle">Congratulations!</div>
+    <p class="win-desc" id="dynamicResultDesc">Your reward has been added to your balance.</p>
+
+    <div class="spin-receipt">
+      <div class="spin-receipt-title">Winning Receipt</div>
+      <div class="row"><span>Play Amount</span><b id="rcPlayAmount">—</b></div>
+      <div class="row"><span>New Balance</span><b id="rcNewBalance">—</b></div>
+      <div class="row"><span>Transaction ID</span><b id="rcTxId">—</b></div>
+    </div>
+
+    <div class="win-actions-row">
+      <button class="btn btn-primary win-continue-btn" onclick="closeDynamicResultModal()" id="dynamicResultPlayAgainBtn">Play Again</button>
+      <button class="btn btn-ghost win-continue-btn" onclick="goToNgnWithdraw()" id="dynamicResultWithdrawBtn">Withdraw</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="withdrawConfirmBg">
+  <div class="confirm-modal">
+    <h3>Confirm Withdrawal</h3>
+    <div class="row"><span>Amount</span><b id="cfAmount">—</b></div>
+    <div class="row"><span>Network</span><b>TRON Nile Testnet</b></div>
+    <div class="row"><span>Destination</span><b id="cfAddress">—</b></div>
+    <div class="row"><span>Total</span><b id="cfTotal">—</b></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeWithdrawConfirm()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="cfConfirmBtn" onclick="doWithdraw()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Withdrawal</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="ledgerWithdrawConfirmBg">
+  <div class="confirm-modal">
+    <h3>Confirm Ledger Withdrawal</h3>
+    <div class="row"><span>Amount</span><b id="lcfAmount">—</b></div>
+    <div class="row"><span>Currency</span><b id="lcfCurrency">—</b></div>
+    <div class="row"><span>Destination</span><b id="lcfAddress">—</b></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeLedgerWithdrawConfirm()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="lcfConfirmBtn" onclick="doAdminWithdraw()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment proof viewer -->
+<div class="modal-bg" id="proofModalBg" onclick="if(event.target===this) closeProofModal()">
+  <div class="proof-modal">
+    <button class="proof-close" onclick="closeProofModal()">✕</button>
+    <div class="proof-img-wrap" id="proofImgWrap">
+      <img id="proofImg" src="" alt="Payment proof">
+    </div>
+    <div class="proof-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toggleProofZoom()">🔍 Zoom</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeProofModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Approve deposit confirm -->
+<div class="modal-bg" id="approveDepositBg">
+  <div class="confirm-modal">
+    <h3>Approve Deposit?</h3>
+    <div class="row"><span>User</span><b id="apUser">—</b></div>
+    <div class="row"><span>Amount</span><b id="apAmount">—</b></div>
+    <div class="row"><span>Points to Credit</span><b id="apPoints">—</b></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeApproveDepositModal()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="apConfirmBtn" onclick="doApproveDeposit()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Approval</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject deposit -->
+<div class="modal-bg" id="rejectDepositBg">
+  <div class="confirm-modal">
+    <h3>Reject Deposit</h3>
+    <div class="row"><span>User</span><b id="rjUser">—</b></div>
+    <div class="row"><span>Amount</span><b id="rjAmount">—</b></div>
+    <div class="field" style="margin-top:14px;">
+      <label>Reason</label>
+      <textarea id="rjReason" rows="3" placeholder="Why is this deposit being rejected?" style="width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--glass-border); background:rgba(255,255,255,.65); font-family:inherit; font-size:13.5px; resize:vertical; outline:none;"></textarea>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeRejectDepositModal()">Cancel</button>
+      <button class="btn btn-danger btn-block" id="rjConfirmBtn" onclick="doRejectDeposit()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Rejection</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Approve NGN withdrawal -->
+<div class="modal-bg" id="approveWithdrawalBg">
+  <div class="confirm-modal">
+    <h3>Approve Withdrawal?</h3>
+    <div class="row"><span>User</span><b id="awUser">—</b></div>
+    <div class="row"><span>Amount</span><b id="awAmount">—</b></div>
+    <div class="row"><span>Account</span><b id="awAccount">—</b></div>
+    <p class="muted" style="font-size:11.5px; margin-top:10px;">Send the bank transfer yourself first, then confirm — this only marks the request as paid.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeApproveWithdrawalModal()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="awConfirmBtn" onclick="doApproveWithdrawal()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Approval</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject NGN withdrawal -->
+<div class="modal-bg" id="rejectWithdrawalBg">
+  <div class="confirm-modal">
+    <h3>Reject Withdrawal</h3>
+    <div class="row"><span>User</span><b id="rwUser">—</b></div>
+    <div class="row"><span>Amount</span><b id="rwAmount">—</b></div>
+    <p class="muted" style="font-size:11.5px; margin-top:6px;">The amount will be refunded to the user's NGN balance automatically.</p>
+    <div class="field" style="margin-top:14px;">
+      <label>Reason</label>
+      <textarea id="rwReason" rows="3" placeholder="Why is this withdrawal being rejected?" style="width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--glass-border); background:rgba(255,255,255,.65); font-family:inherit; font-size:13.5px; resize:vertical; outline:none;"></textarea>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeRejectWithdrawalModal()">Cancel</button>
+      <button class="btn btn-danger btn-block" id="rwConfirmBtn" onclick="doRejectWithdrawal()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Rejection</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app-wrap -->
+
+<script>
+const API_BASE = "http://localhost:8000/api";
+
+let state = {
+  token: localStorage.getItem("ls_token") || sessionStorage.getItem("ls_token") || null,
+  user: null,
+  isAdmin: false,
+  wheelSegments: ["₦20,000","₦30,000","₦15,000","₦10,000","₦2,500","₦1,000","₦800","₦400","₦350","₦200","₦0"],
+  wheelSegmentValues: [0.5,20,2,3,10,5,1,20],
+  addresses: [],
+  depositCoin: null,
+  withdrawNetwork: "TRX_NILE",
+  pointsPerUsdt: 100,
+  transactions: [],
+  txFilter: "all",
+  currentWithdrawal: null,
+  ledgerCurrency: "TRX_NILE",
+  spinConfig: null,
+  spinCurrency: "NGN",   // NEW: which balance the player is spinning with — "NGN" or "USD"; never mixed
+  selectedPlayAmount: null,
+  seenNotifIds: new Set(JSON.parse(localStorage.getItem("ls_seen_notifs") || "[]")),
+};
+
+function fmtPts(n){ return (Number(n)||0).toFixed(1); }
+function fmtNgn(n){ return "₦" + Math.round(Number(n)||0).toLocaleString(); }
+function fmtUsd(points){ return "$" + (Number(points||0) / (state.pointsPerUsdt || 100)).toFixed(2); }
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(()=> t.style.display="none", 3200);
+}
+
+const FIELD_LABELS = {
+  full_name: "Full name", email: "Email", password: "Password",
+  amount_ngn: "Amount", file: "Payment proof", play_amount: "Play amount",
+};
+
+function humanizeFieldError(field, type, rawMsg){
+  const label = FIELD_LABELS[field] || (field ? field.replace(/_/g," ") : "This field");
+  if(type === "missing" || /required/i.test(rawMsg||"")) return `${label} is required`;
+  if(field === "email" && (type === "value_error" || /email/i.test(rawMsg||""))) return "Please enter a valid email";
+  if(field === "password" && /at least|too_short|short/i.test(rawMsg||"")) return "Password must be at least 8 characters";
+  if(field === "full_name" && /at least|too_short|short/i.test(rawMsg||"")) return "Full name must be at least 2 characters";
+  if(rawMsg) return `${label}: ${rawMsg}`;
+  return `${label} is invalid`;
+}
+
+// Turns any API error response into (a) a single readable string for a
+// banner, and (b) optional per-field messages — never a raw object/array,
+// which is what caused "[object Object]" to render for Pydantic's 422
+// validation responses (detail is an array of {loc, msg, type} there).
+function extractErrorInfo(data){
+  if(!data) return { message: null, fieldErrors: null };
+  if(typeof data.detail === "string") return { message: data.detail, fieldErrors: null };
+  if(typeof data.message === "string") return { message: data.message, fieldErrors: null };
+  if(Array.isArray(data.detail)){
+    const fieldErrors = {};
+    const messages = [];
+    data.detail.forEach(d=>{
+      if(!d || typeof d !== "object") return;
+      const loc = Array.isArray(d.loc) ? d.loc : [];
+      const field = loc.length ? String(loc[loc.length - 1]) : null;
+      const friendly = humanizeFieldError(field, d.type, d.msg);
+      if(field) fieldErrors[field] = friendly;
+      messages.push(friendly);
+    });
+    if(messages.length) return { message: messages.join(" — "), fieldErrors };
+  }
+  return { message: null, fieldErrors: null };
+}
+
+async function api(path, method="GET", body=null, auth=true){
+  const headers = {"Content-Type":"application/json"};
+  if(auth && state.token) headers["Authorization"] = "Bearer " + state.token;
+  let res;
+  try{
+    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : null });
+  }catch(networkErr){
+    // fetch() itself throws on DNS failure / offline / server unreachable / CORS network error —
+    // this is a real connectivity problem, distinct from a normal HTTP error response below.
+    throw new Error("Check your internet connection and try again.");
+  }
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){
+    const info = extractErrorInfo(data);
+    const err = new Error(info.message || "Something went wrong, please try again");
+    if(info.fieldErrors) err.fieldErrors = info.fieldErrors;
+    throw err;
+  }
+  return data;
+}
+
+const PROTECTED_PAGES = ["wheel","wallet","transactions","shop","leaderboard","profile","admin"];
+
+function showPage(id){
+  if(PROTECTED_PAGES.includes(id) && !state.token){
+    showToast("Please log in first");
+    id = "login";
+  }
+  if(id === "admin" && !state.isAdmin){
+    showToast("Admin access required");
+    id = "wheel";
+  }
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  const target = document.getElementById("page-"+id);
+  if(target) target.classList.add("active");
+  window.scrollTo(0,0);
+
+  document.querySelectorAll(".nav-links a[data-page], .bn-item[data-page]").forEach(a=>{
+    a.classList.toggle("active", a.dataset.page === id);
+  });
+
+  if(id === "wheel") refreshSpinStatus();
+  if(id === "wallet"){ refreshWallet(); loadAddresses(); }
+  if(id === "transactions"){ loadTransactions(); }
+  if(id === "shop") refreshShop();
+  if(id === "leaderboard") refreshLeaderboard();
+  if(id === "profile") refreshProfile();
+  if(id === "admin"){ initAdminPage(); }
+}
+
+function setButtonLoading(btnEl, loading){
+  if(!btnEl) return;
+  btnEl.disabled = loading;
+  btnEl.classList.toggle("is-loading", loading);
+}
+
+function togglePasswordVisibility(inputId, btnEl){
+  const input = document.getElementById(inputId);
+  const showing = input.type === "text";
+  input.type = showing ? "password" : "text";
+  btnEl.classList.toggle("is-revealed", !showing);
+  btnEl.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+}
+
+function showForgotPassword(){
+  showToast("Password reset isn't available yet — please contact support to reset your account.");
+}
+
+function validateSignupLive(){
+  const nameEl = document.getElementById("suName");
+  const emailEl = document.getElementById("suEmail");
+  const pwEl = document.getElementById("suPassword");
+  const confirmEl = document.getElementById("suConfirm");
+  const pwHint = document.getElementById("suPasswordHint");
+  if(pwHint && pwHint.textContent) pwHint.textContent = "";
+
+  const nameHint = document.getElementById("suNameHint");
+  if(nameEl.value.trim().length > 0 && nameEl.value.trim().length < 2){
+    nameEl.classList.add("field-bad"); nameEl.classList.remove("field-ok");
+    nameHint.textContent = "Name looks too short"; nameHint.className = "field-hint bad";
+  }else{
+    nameEl.classList.remove("field-bad");
+    if(nameEl.value.trim().length >= 2){ nameEl.classList.add("field-ok"); nameHint.textContent = ""; }
+    else { nameEl.classList.remove("field-ok"); nameHint.textContent = ""; }
+  }
+
+  const emailHint = document.getElementById("suEmailHint");
+  const emailVal = emailEl.value.trim();
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+  if(emailVal.length > 0 && !emailValid){
+    emailEl.classList.add("field-bad"); emailEl.classList.remove("field-ok");
+    emailHint.textContent = "Enter a valid email address"; emailHint.className = "field-hint bad";
+  }else{
+    emailEl.classList.remove("field-bad");
+    if(emailValid){ emailEl.classList.add("field-ok"); emailHint.textContent = ""; }
+    else { emailEl.classList.remove("field-ok"); emailHint.textContent = ""; }
+  }
+
+  const pw = pwEl.value;
+  const rules = { len: pw.length >= 8, upper: /[A-Z]/.test(pw), num: /[0-9]/.test(pw), sym: /[^A-Za-z0-9]/.test(pw) };
+  document.querySelectorAll("#pwRules li").forEach(li=>{
+    const met = rules[li.dataset.rule];
+    li.classList.toggle("met", !!met);
+  });
+  let score = (rules.len?1:0) + (rules.upper?1:0) + (rules.num?1:0) + (rules.sym?1:0);
+  const fill = document.getElementById("pwStrengthFill");
+  const label = document.getElementById("pwStrengthLabel");
+  const levels = [
+    {pct:0,  color:"var(--red)",    text:"Too weak"},
+    {pct:25, color:"var(--red)",    text:"Weak"},
+    {pct:55, color:"var(--gold)",   text:"Fair"},
+    {pct:80, color:"var(--gold-2)", text:"Good"},
+    {pct:100,color:"var(--green)",  text:"Strong"},
+  ];
+  const lvl = pw.length === 0 ? levels[0] : levels[score];
+  fill.style.width = lvl.pct + "%";
+  fill.style.background = lvl.color;
+  label.textContent = pw.length === 0 ? "" : lvl.text;
+
+  const confirmHint = document.getElementById("suConfirmHint");
+  if(confirmEl.value.length > 0){
+    if(confirmEl.value === pw){
+      confirmEl.classList.add("field-ok"); confirmEl.classList.remove("field-bad");
+      confirmHint.textContent = "Passwords match"; confirmHint.className = "field-hint ok";
+    }else{
+      confirmEl.classList.add("field-bad"); confirmEl.classList.remove("field-ok");
+      confirmHint.textContent = "Passwords don't match"; confirmHint.className = "field-hint bad";
+    }
+  }else{
+    confirmEl.classList.remove("field-ok","field-bad"); confirmHint.textContent = "";
+  }
+}
+
+async function doSignup(){
+  const full_name = document.getElementById("suName").value.trim();
+  const email = document.getElementById("suEmail").value.trim();
+  const password = document.getElementById("suPassword").value;
+  const confirm = document.getElementById("suConfirm").value;
+  const err = document.getElementById("signupError");
+  const ok = document.getElementById("signupSuccess");
+  const nameHint = document.getElementById("suNameHint");
+  const emailHint = document.getElementById("suEmailHint");
+  const pwHint = document.getElementById("suPasswordHint");
+  const confirmHint = document.getElementById("suConfirmHint");
+  err.style.display = "none"; ok.style.display = "none";
+  [nameHint, emailHint, pwHint].forEach(h=>{ h.textContent = ""; h.className = "field-hint"; });
+
+  // Client-side check for genuinely empty required fields — gives an
+  // immediate, specific message next to the field instead of a round trip.
+  let hasClientError = false;
+  if(!full_name){ nameHint.textContent = "Full name is required"; nameHint.className = "field-hint bad"; document.getElementById("suName").classList.add("field-bad"); hasClientError = true; }
+  if(!email){ emailHint.textContent = "Email is required"; emailHint.className = "field-hint bad"; document.getElementById("suEmail").classList.add("field-bad"); hasClientError = true; }
+  else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ emailHint.textContent = "Please enter a valid email"; emailHint.className = "field-hint bad"; document.getElementById("suEmail").classList.add("field-bad"); hasClientError = true; }
+  if(!password){ pwHint.textContent = "Password is required"; pwHint.className = "field-hint bad"; hasClientError = true; }
+  if(hasClientError) return;
+
+  if(password !== confirm){
+    confirmHint.textContent = "Passwords don't match"; confirmHint.className = "field-hint bad";
+    document.getElementById("suConfirm").classList.add("field-bad");
+    return;
+  }
+
+  const btn = document.getElementById("signupBtn");
+  setButtonLoading(btn, true);
+  try{
+    const data = await api("/auth/signup", "POST", {full_name, email, password}, false);
+    setToken(data.access_token, true);
+    await loadMe();
+    await checkAdminStatus();
+    ok.textContent = "Account created — welcome to LuckySpin!"; ok.style.display = "flex";
+    showToast("Account created 🎉");
+    setTimeout(()=> showPage("wheel"), 350);
+  }catch(e){
+    if(e.fieldErrors){
+      const map = { full_name: nameHint, email: emailHint, password: pwHint };
+      let shown = false;
+      Object.keys(e.fieldErrors).forEach(f=>{
+        if(map[f]){ map[f].textContent = e.fieldErrors[f]; map[f].className = "field-hint bad"; shown = true; }
+      });
+      if(!shown){ err.textContent = e.message; err.style.display = "flex"; }
+    }else{
+      err.textContent = e.message; err.style.display = "flex";
+    }
+  }
+  finally{ setButtonLoading(btn, false); }
+}
+
+async function doLogin(){
+  const email = document.getElementById("liEmail").value.trim();
+  const password = document.getElementById("liPassword").value;
+  const remember = document.getElementById("liRemember").checked;
+  const err = document.getElementById("loginError");
+  err.style.display = "none";
+
+  if(!email){ err.textContent = "Email is required"; err.style.display = "flex"; return; }
+  if(!password){ err.textContent = "Password is required"; err.style.display = "flex"; return; }
+
+  const btn = document.getElementById("loginBtn");
+  setButtonLoading(btn, true);
+  try{
+    const data = await api("/auth/login", "POST", {email, password}, false);
+    setToken(data.access_token, remember);
+    await loadMe();
+    await checkAdminStatus();
+    showToast("Welcome back!");
+    showPage("wheel");
+  }catch(e){ err.textContent = e.message; err.style.display = "flex"; }
+  finally{ setButtonLoading(btn, false); }
+}
+
+function setToken(tok, persist){
+  state.token = tok;
+  if(persist){
+    localStorage.setItem("ls_token", tok);
+    sessionStorage.removeItem("ls_token");
+  }else{
+    sessionStorage.setItem("ls_token", tok);
+    localStorage.removeItem("ls_token");
+  }
+  updateNavAuthState(true);
+}
+
+function logout(){
+  state.token = null; state.user = null; state.isAdmin = false;
+  localStorage.removeItem("ls_token");
+  sessionStorage.removeItem("ls_token");
+  updateNavAuthState(false);
+  stopNotificationPolling();
+  closeDrawer();
+  showPage("landing");
+}
+
+function updateNavAuthState(authed){
+  document.getElementById("navLinksAuthed").style.display = authed ? "flex" : "none";
+  document.getElementById("navGuest").style.display = authed ? "none" : "block";
+  document.getElementById("navLogoutDesktop").style.display = authed ? "inline-flex" : "none";
+  document.getElementById("navBalance").style.display = authed ? "flex" : "none";
+  document.getElementById("hamburger" + "Btn").style.display = authed ? "flex" : "none";
+  document.getElementById("bottomNav").style.display = authed ? "block" : "none";
+  document.getElementById("navAdminLink").style.display = (authed && state.isAdmin) ? "inline-flex" : "none";
+  document.getElementById("drawerAdminLink").style.display = (authed && state.isAdmin) ? "flex" : "none";
+  if(authed) startNotificationPolling();
+}
+
+async function loadMe(){
+  if(!state.token) return;
+  try{
+    const u = await api("/user/me");
+    state.user = u;
+    document.getElementById("navBalanceVal").textContent = fmtNgn(u.ngn_balance);
+    updateNavAuthState(true);
+    return u;
+  }catch(e){ logout(); }
+}
+
+async function checkAdminStatus(){
+  if(!state.token){ state.isAdmin = false; return; }
+  try{
+    await api("/admin/ledger?currency=" + encodeURIComponent(state.ledgerCurrency));
+    state.isAdmin = true;
+  }catch(e){
+    state.isAdmin = false;
+  }
+  document.getElementById("navAdminLink").style.display = state.isAdmin ? "inline-flex" : "none";
+  document.getElementById("drawerAdminLink").style.display = state.isAdmin ? "flex" : "none";
+}
+
+function drawWheel(canvasId, segments){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const cx = canvas.width/2, cy = canvas.height/2;
+  const r = canvas.width/2 - 4;
+  const n = segments.length;
+  const arc = (2*Math.PI)/n;
+
+  const paletteA = ["#a855f7", "#7c3aed"];
+  const paletteB = ["#ec4899", "#db2777"];
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for(let i=0;i<n;i++){
+    const start = i*arc, end = (i+1)*arc;
+    const [c1, c2] = (i % 2 === 0) ? paletteA : paletteB;
+
+    const grad = ctx.createRadialGradient(cx, cy, r*0.15, cx, cy, r);
+    grad.addColorStop(0, c1);
+    grad.addColorStop(1, c2);
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.fillStyle = grad;
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r*Math.cos(start), cy + r*Math.sin(start));
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc/2);
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    ctx.font = (n >= 9 ? "800 11px" : "800 14px") + " -apple-system, 'Segoe UI', Arial, sans-serif";
+    ctx.shadowColor = "rgba(0,0,0,.25)";
+    ctx.shadowBlur = 4;
+    ctx.fillText(String(segments[i]), r - 18, 1);
+    ctx.restore();
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 1.5, 0, Math.PI*2);
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "rgba(245,158,11,0.9)";
+  ctx.stroke();
+
+  const bulbCount = n * 2;
+  for(let i=0;i<bulbCount;i++){
+    const angle = (i / bulbCount) * Math.PI * 2;
+    const bx = cx + (r - 3) * Math.cos(angle);
+    const by = cy + (r - 3) * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(bx, by, 2.4, 0, Math.PI*2);
+    ctx.fillStyle = "#fde68a";
+    ctx.shadowColor = "rgba(245,158,11,.9)";
+    ctx.shadowBlur = 5;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  const hub = ctx.createRadialGradient(cx, cy, 0, cx, cy, r*0.12);
+  hub.addColorStop(0, "#fff6d8");
+  hub.addColorStop(1, "#f59e0b");
+  ctx.beginPath();
+  ctx.arc(cx, cy, r*0.1, 0, Math.PI*2);
+  ctx.fillStyle = hub;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgba(255,255,255,.8)";
+  ctx.stroke();
+}
+drawWheel("wheelCanvasPreview", state.wheelSegments);
+drawWheel("wheelCanvas", state.wheelSegments);
+
+function initPrizeTicker(){
+  const track = document.getElementById("prizeTicker");
+  if(!track) return;
+  const prizes = state.wheelSegments.map(v => `💎 ${v}`);
+  const doubled = [...prizes, ...prizes];
+  track.innerHTML = doubled.map(p => `<span class="prize-chip">${p}</span>`).join("");
+}
+initPrizeTicker();
+
+let spinning = false;
+let currentRotation = 0;
+
+// NEW: fmtSpin formats an amount using WHICHEVER currency the backend says
+// this spin/config is in — never guessed, never "PT". "USD" -> "$", "NGN"
+// (or anything else, defensively) -> "₦".
+function fmtSpin(amount, currency){
+  return currency === "USD" ? fmtUsdRaw(amount) : fmtNgn(amount);
+}
+function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2}); }
+// NEW: shared formatter for any transaction amount, wherever it's shown
+// (Transactions page, balance popover, admin ledger, etc.) — picks the
+// right symbol from tx.currency instead of assuming NGN/Points, so a
+// Crypto ($) spin transaction never displays as "Points". Falls back to
+// raw Points formatting only for genuinely legacy rows that predate the
+// currency split (old fixed spin, redeem, achievements) which have no
+// real currency of their own.
+function fmtTxAmount(tx){
+  if(tx.currency === "NGN") return fmtNgn(tx.amount);
+  if(tx.currency === "USD") return fmtUsdRaw(tx.amount);
+  return fmtPts(tx.amount) + " Points";
+}
+
+function setSpinCurrency(currency){
+  if(state.spinCurrency === currency) return;
+  state.spinCurrency = currency;
+  document.querySelectorAll("#spinCurrencyToggle .sc-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.currency === currency);
+  });
+  state.selectedPlayAmount = null;   // presets differ per currency — never carry a stale NGN amount into USD or vice versa
+  refreshSpinStatus();
+}
+
+async function refreshSpinStatus(){
+  const u = await loadMe();
+  const currency = state.spinCurrency || "NGN";
+
+  const gateDeposit = document.getElementById("spinGateDeposit");
+  const normal = document.getElementById("spinNormalView");
+
+  try{
+    const cfg = await api("/spin/play-config?currency=" + currency);
+    // Normalize the two differently-shaped responses (NGN vs USD) into one
+    // consistent local shape so nothing downstream has to branch on
+    // currency again — this is the ONLY place that reads cfg's raw field names.
+    state.spinConfig = {
+      currency: cfg.currency,
+      presets: cfg.presets,
+      minPlay: currency === "USD" ? cfg.min_play : cfg.min_play_ngn,
+      maxPlay: currency === "USD" ? cfg.max_play : cfg.max_play_ngn,
+      customAllowed: cfg.custom_allowed,
+      balance: currency === "USD" ? cfg.balance : cfg.ngn_balance,
+      hasDeposited: cfg.has_deposited,
+    };
+
+    document.getElementById("statBalance").textContent = fmtSpin(state.spinConfig.balance, currency);
+    document.getElementById("statBalanceLbl").textContent = currency === "USD" ? "Crypto Balance" : "NGN Balance";
+
+    if(!state.spinConfig.hasDeposited){
+      gateDeposit.style.display = "block"; normal.style.display = "none";
+      const gateText = gateDeposit.querySelector("p");
+      if(gateText){
+        gateText.textContent = currency === "USD"
+          ? "Make a TRX or USDT deposit to unlock the wheel with your Crypto Balance."
+          : "Make your first NGN deposit to unlock the wheel.";
+      }
+    }else{
+      gateDeposit.style.display = "none"; normal.style.display = "block";
+      document.getElementById("spinYourBalance").textContent = fmtSpin(state.spinConfig.balance, currency);
+      const customInput = document.getElementById("playAmountCustomInput");
+      if(customInput) customInput.placeholder = `Custom amount (${currency === "USD" ? "$" : "₦"})`;
+      renderPlayAmountChips();
+      if(!state.selectedPlayAmount || !state.spinConfig.presets.includes(state.selectedPlayAmount)){
+        selectPlayAmount(state.spinConfig.presets[0]);
+      }else{
+        updateSpinButtonState();
+      }
+    }
+  }catch(e){ showToast(e.message); }
+
+  try{
+    const d = await api("/spin/daily-bonus/status");
+    const btn = document.getElementById("dailyBonusBtn");
+    document.getElementById("dailyBonusText").textContent = d.can_claim
+      ? `Your daily bonus is ready! (day ${d.streak+1} of your streak)`
+      : `Today's bonus already claimed. Current streak: ${d.streak} day(s)`;
+    btn.disabled = !d.can_claim;
+
+    const row = document.getElementById("streakRow");
+    if(row){
+      row.innerHTML = "";
+      const activeDays = d.streak;
+      for(let i=0;i<7;i++){
+        const dot = document.createElement("div");
+        dot.className = "streak-dot" + (i < activeDays ? " filled" : "");
+        row.appendChild(dot);
+      }
+    }
+  }catch(e){}
+}
+
+function renderPlayAmountChips(){
+  const cfg = state.spinConfig;
+  if(!cfg) return;
+  const grid = document.getElementById("playAmountGrid");
+  let html = cfg.presets.map(amt=>{
+    const active = amt === state.selectedPlayAmount ? "active" : "";
+    return `<div class="play-amount-chip ${active}" onclick="selectPlayAmount(${amt})">
+      <span class="amt">${fmtSpin(amt, cfg.currency)}</span>
+    </div>`;
+  }).join("");
+  if(cfg.customAllowed){
+    const active = (state.selectedPlayAmount && !cfg.presets.includes(state.selectedPlayAmount)) ? "active" : "";
+    html += `<div class="play-amount-chip custom-chip ${active}" onclick="toggleCustomPlayAmount()">
+      <span class="amt">Custom</span><span class="ngn">Enter amount</span>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function toggleCustomPlayAmount(){
+  const wrap = document.getElementById("playAmountCustomWrap");
+  const show = wrap.style.display === "none";
+  wrap.style.display = show ? "flex" : "none";
+  if(show) document.getElementById("playAmountCustomInput").focus();
+}
+
+function onCustomPlayAmountInput(){
+  const val = parseFloat(document.getElementById("playAmountCustomInput").value);
+  if(!val || val <= 0) return;
+  selectPlayAmount(val);
+}
+
+async function selectPlayAmount(amount){
+  state.selectedPlayAmount = amount;
+  renderPlayAmountChips();
+  const currency = state.spinConfig ? state.spinConfig.currency : state.spinCurrency;
+  document.getElementById("playingWithBadge").textContent = `Playing with ${fmtSpin(amount, currency)}`;
+  document.getElementById("spinBtnAmount").textContent = fmtSpin(amount, currency);
+  updateSpinButtonState();
+  await loadWheelForAmount(amount);
+}
+
+function updateSpinButtonState(){
+  const cfg = state.spinConfig;
+  const btn = document.getElementById("spinBtn");
+  const statusEl = document.getElementById("spinStatus");
+  const errEl = document.getElementById("spinInlineError");
+  if(!cfg || !state.selectedPlayAmount){ return; }
+  const amount = state.selectedPlayAmount;
+  errEl.textContent = "";
+  statusEl.classList.remove("is-ready");
+
+  if(amount < cfg.minPlay || amount > cfg.maxPlay){
+    btn.disabled = true;
+    errEl.textContent = `Play amount must be between ${fmtSpin(cfg.minPlay, cfg.currency)} and ${fmtSpin(cfg.maxPlay, cfg.currency)}`;
+    statusEl.textContent = "Choose a valid play amount";
+    return;
+  }
+  if(cfg.balance < amount){
+    btn.disabled = true;
+    errEl.textContent = "Insufficient balance for this amount";
+    statusEl.textContent = "Insufficient balance";
+    return;
+  }
+  btn.disabled = spinning;
+  statusEl.textContent = "Ready to spin!";
+  statusEl.classList.add("is-ready");
+}
+
+async function loadWheelForAmount(amount){
+  const currency = state.spinConfig ? state.spinConfig.currency : state.spinCurrency;
+  try{
+    const r = await api("/spin/wheel?play_amount=" + encodeURIComponent(amount) + "&currency=" + currency);
+    // The wheel ALWAYS shows the full fixed segment face for THIS currency
+    // from the backend (display_segments) — same graphic no matter the play
+    // amount, never mixed between NGN's set and USD's set. Only the values
+    // <= play_amount are ever reachable as an actual prize (enforced
+    // server-side), but every value on the wheel face is shown regardless,
+    // purely for display. We store both the raw numbers (for exact matching
+    // against the real backend spin result later) and the display labels
+    // (for drawing) — these must always stay in the same order/index.
+    const values = r.display_segments || r.segments.map(s => s.prize);
+    state.wheelSegmentValues = values;
+    state.wheelSegments = values.map(v => fmtSpin(v, r.currency));
+    drawWheel("wheelCanvas", state.wheelSegments);
+    initPrizeTicker();
+  }catch(e){ /* keep previous wheel rendered if this fails */ }
+}
+
+let spinResultRotationLock = false;
+
+// Computes the absolute rotation (in degrees, always spinning FORWARD from
+// the current rotation) needed so the wheel visually lands on the segment
+// whose value matches `winning_amount` exactly — this is the fix for the bug
+// where the wheel used to spin to a purely random angle with NO relationship
+// to the real backend result, so the visible landing segment and the amount
+// shown in the win modal could disagree (e.g. wheel stops near "700" while
+// the modal says "₦0"). segments/segmentValues must be the same array used
+// to draw the wheel (state.wheelSegmentValues), same order, same length.
+function computeWheelRotationForPrize(segmentValues, prize, currentRotationValue){
+  const n = segmentValues.length;
+  if(!n) return currentRotationValue + 5 * 360;
+  const arc = 360 / n;
+
+  let idx = segmentValues.findIndex(v => Math.abs(v - prize) < 0.005);
+  if(idx === -1){
+    // Safety fallback only — should not happen since /spin/wheel and
+    // /spin/play use the exact same server-side table for the same amount+currency.
+    let bestDiff = Infinity;
+    segmentValues.forEach((v, i)=>{
+      const diff = Math.abs(v - prize);
+      if(diff < bestDiff){ bestDiff = diff; idx = i; }
+    });
+  }
+
+  const segMidAngle = idx * arc + arc / 2;          // canvas-angle (0°=east, clockwise+) of segment center
+  const pointerAngle = 270;                          // pointer sits at 12 o'clock = 270° in canvas-angle terms
+  const jitter = (Math.random() - 0.5) * arc * 0.5;  // stay well inside the segment, never crosses into a neighbor
+  const targetMod = ((pointerAngle - (segMidAngle + jitter)) % 360 + 360) % 360;
+
+  const currentMod = ((currentRotationValue % 360) + 360) % 360;
+  const delta = ((targetMod - currentMod) % 360 + 360) % 360;
+  const fullSpins = 5 * 360;
+
+  return currentRotationValue + fullSpins + delta;
+}
+
+async function doPlayAmountSpin(){
+  if(spinning || spinResultRotationLock) return;
+  const cfg = state.spinConfig;
+  const amount = state.selectedPlayAmount;
+  if(!cfg || !amount) return;
+  if(amount < cfg.minPlay || amount > cfg.maxPlay){ showToast("Choose a valid play amount"); return; }
+  if(cfg.balance < amount){ showToast("Insufficient balance"); return; }
+
+  spinning = true;
+  spinResultRotationLock = true;
+  const btn = document.getElementById("spinBtn");
+  const stage = document.getElementById("spinStage");
+  btn.disabled = true;
+  stage.classList.add("is-spinning");
+  try{
+    // currency is decided by the backend from this same field — never
+    // inferred or overridden client-side, and the response always echoes
+    // back exactly which currency was actually used (result.currency).
+    const result = await api("/spin/play", "POST", { play_amount: amount, currency: cfg.currency });
+    const canvas = document.getElementById("wheelCanvas");
+    // Rotate to the EXACT segment matching the real backend prize — never a
+    // random angle. state.wheelSegmentValues was populated by the same
+    // /spin/wheel call that drew the wheel currently on screen for this
+    // amount, so its order matches what the player is looking at.
+    currentRotation = computeWheelRotationForPrize(
+      state.wheelSegmentValues || [], result.winning_amount, currentRotation,
+    );
+    canvas.style.transform = `rotate(${currentRotation}deg)`;
+    setTimeout(()=>{
+      stage.classList.remove("is-spinning");
+      showDynamicResultModal(result);
+      if(state.spinConfig) state.spinConfig.balance = result.new_balance;
+      refreshSpinStatus(); loadMe();
+      spinning = false;
+      spinResultRotationLock = false;
+    }, 4600);
+  }catch(e){
+    showToast(e.message);
+    btn.disabled = false;
+    stage.classList.remove("is-spinning");
+    spinning = false;
+    spinResultRotationLock = false;
+    refreshSpinStatus();
+  }
+}
+
+function showDynamicResultModal(result){
+  // currency and every displayed value here come straight from the
+  // backend's response (result.currency / result.winning_amount /
+  // result.play_amount / result.new_balance) — never assumed from
+  // state.spinCurrency, so the symbol shown always matches what the server
+  // actually charged and paid out.
+  const currency = result.currency;
+  const isWin = result.winning_amount > 0;
+  const iconWrap = document.getElementById("dynamicResultIconWrap");
+  const title = document.getElementById("dynamicResultTitle");
+  const amountEl = document.getElementById("dynamicResultAmount");
+  const subtitle = document.getElementById("dynamicResultSubtitle");
+  const desc = document.getElementById("dynamicResultDesc");
+  const rays = document.getElementById("dynamicResultRays");
+  const glow = document.getElementById("dynamicResultGlow");
+
+  if(isWin){
+    iconWrap.innerHTML = `<div class="win-trophy">🏆</div>`;
+    title.textContent = "You Won";
+    amountEl.textContent = "+" + fmtSpin(result.winning_amount, currency);
+    subtitle.textContent = "Congratulations!";
+    desc.textContent = "Your winnings have been added to your balance.";
+    rays.style.display = "block";
+    glow.style.display = "block";
+    fireConfetti();
+    fireParticles();
+  }else{
+    iconWrap.innerHTML = `<div class="win-loss-icon">🎯</div>`;
+    title.textContent = "No Win";
+    amountEl.textContent = fmtSpin(0, currency);
+    subtitle.textContent = "Try Again";
+    desc.textContent = "You didn't win this spin.";
+    rays.style.display = "none";
+    glow.style.display = "none";
+  }
+
+  // Play Again / Withdraw are always both shown, win or lose — same actions
+  // either way, per spec.
+  document.getElementById("rcPlayAmount").textContent = fmtSpin(result.play_amount, currency);
+  document.getElementById("rcTxId").textContent = result.transaction_id;
+  document.getElementById("rcNewBalance").textContent = fmtSpin(result.new_balance, currency);
+
+  document.getElementById("dynamicResultModalBg").classList.add("show");
+}
+
+function closeDynamicResultModal(){
+  const bg = document.getElementById("dynamicResultModalBg");
+  const modal = document.getElementById("dynamicResultModal");
+  if(!bg.classList.contains("show")) return;
+  bg.classList.add("closing");
+  modal.classList.add("closing");
+  setTimeout(()=>{
+    bg.classList.remove("show", "closing");
+    modal.classList.remove("closing");
+  }, 320);
+}
+
+function animateLockedCountUp(from, to){
+  const el = document.getElementById("winLockedNote");
+  if(!el) return;
+  const duration = 900;
+  const start = performance.now();
+  function tick(now){
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const current = from + (to - from) * eased;
+    el.innerHTML = `Locked Rewards: <b>${fmtPts(current)} Points</b>`;
+    if(t < 1) requestAnimationFrame(tick);
+    else el.innerHTML = `Locked Rewards: <b>${fmtPts(to)} Points</b> <span class="muted" style="font-size:10.5px;">(not yet spendable)</span>`;
+  }
+  requestAnimationFrame(tick);
+}
+
+function fireParticles(){
+  const layer = document.getElementById("confettiLayer");
+  if(!layer) return;
+  const colors = ["#f59e0b","#ec4899","#a855f7","#06b6d4"];
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2 - 40;
+  for(let i=0;i<16;i++){
+    const el = document.createElement("div");
+    el.className = "particle";
+    const size = 4 + Math.random()*5;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 70 + Math.random()*90;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    el.style.width = size + "px";
+    el.style.height = size + "px";
+    el.style.left = cx + "px";
+    el.style.top = cy + "px";
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.boxShadow = `0 0 8px 1px ${colors[Math.floor(Math.random()*colors.length)]}`;
+    el.style.setProperty("--pend", `translate(${dx}px, ${dy}px)`);
+    layer.appendChild(el);
+    setTimeout(()=> el.remove(), 950);
+  }
+}
+
+function closeWinModal(){
+  const bg = document.getElementById("winModalBg");
+  const modal = bg.querySelector(".win-modal");
+  if(!bg.classList.contains("show")) return;
+  bg.classList.add("closing");
+  if(modal) modal.classList.add("closing");
+  setTimeout(()=>{
+    bg.classList.remove("show", "closing");
+    if(modal) modal.classList.remove("closing");
+  }, 320);
+}
+
+async function claimDailyBonus(){
+  const btn = document.getElementById("dailyBonusBtn");
+  setButtonLoading(btn, true);
+  try{
+    const d = await api("/spin/daily-bonus", "POST");
+    showToast(`Claimed ${d.amount} points! (day ${d.streak}) — added to locked rewards`);
+    refreshSpinStatus(); loadMe();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
+}
+
+function fireConfetti(){
+  const layer = document.getElementById("confettiLayer");
+  const colors = ["#a855f7","#ec4899","#f59e0b","#06b6d4","#7c3aed"];
+  const count = 60;
+  for(let i=0;i<count;i++){
+    const el = document.createElement("div");
+    el.className = "confetti-piece";
+    const size = 6 + Math.random()*7;
+    el.style.width = size + "px";
+    el.style.height = (size*0.4) + "px";
+    el.style.left = (Math.random()*100) + "vw";
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (2.2 + Math.random()*1.6) + "s";
+    el.style.animationDelay = (Math.random()*0.4) + "s";
+    layer.appendChild(el);
+    setTimeout(()=> el.remove(), 4200);
+  }
+}
+
+/* ===================== WALLET ===================== */
+
+function setWalletTab(tab){
+  document.getElementById("tabBtnDeposit").classList.toggle("active", tab==="deposit");
+  document.getElementById("tabBtnWithdraw").classList.toggle("active", tab==="withdraw");
+  document.getElementById("walletPanelDeposit").classList.toggle("active", tab==="deposit");
+  document.getElementById("walletPanelWithdraw").classList.toggle("active", tab==="withdraw");
+}
+
+async function refreshWallet(){
+  try{
+    const s = await api("/wallet/summary");
+    state.pointsPerUsdt = s.points_per_usdt;
+
+    // Crypto Balance card — shown in USD (the unit that's actually
+    // meaningful across TRX/USDT, which both share this one balance).
+    document.getElementById("walletBalance").textContent = fmtUsd(s.points_balance);
+    document.getElementById("walletBalancePts").textContent = fmtPts(s.points_balance) + " Points";
+    document.getElementById("pointsRate").textContent = `${s.points_per_usdt} Points = 1 TRX`;
+    if(state.user){ document.getElementById("walletLocked").textContent = fmtPts(state.user.locked_points) + " Points"; }
+    document.getElementById("withdrawAvailBalance").textContent = fmtPts(s.points_balance) + " Points";
+
+    // NGN Balance card — a completely separate figure, never combined with
+    // the Crypto Balance above. Comes straight from the same /wallet/summary
+    // call (s.ngn_balance), which the backend already keeps as its own
+    // dedicated field (see wallet_routes.py / User.ngn_balance).
+    document.getElementById("walletNgnBalance").textContent = fmtNgn(s.ngn_balance);
+
+    // NEW: real native-currency-per-USD rates from the backend's live prices
+    // (same price_service the deposit side already uses) — lets the withdraw
+    // estimate show correct USDT amounts instead of assuming TRX's ratio.
+    const b = s.balances || {};
+    state.currencyRates = {
+      TRX_NILE: (b.TRX_NILE && b.TRX_NILE.usd_equivalent) ? (b.TRX_NILE.native_equivalent / b.TRX_NILE.usd_equivalent) : null,
+      USDT_TRC20: 1,
+    };
+    updateWithdrawEstimate();
+  }catch(e){ showToast(e.message); }
+}
+
+async function loadAddresses(){
+  try{
+    const r = await api("/wallet/addresses");
+    state.addresses = r.addresses || [];
+    if(!state.depositCoin && state.addresses.length){ state.depositCoin = state.addresses[0].currency; }
+    renderDepositCurrencyChips();
+    renderDepositContent();
+  }catch(e){ showToast(e.message); }
+}
+
+function renderDepositCurrencyChips(){
+  const row = document.getElementById("depositCurrencyRow");
+  const knownExtra = [
+    {currency:"USDT_TRC20", label:"💠 USDT · TRC20"},
+  ];
+  let html = `<div class="currency-chip ${state.depositCoin==='NGN'?'active':''}" onclick="selectDepositCoin('NGN')">🇳🇬 NGN · Bank Transfer</div>`;
+  state.addresses.forEach(a=>{
+    const active = a.currency === state.depositCoin;
+    const label = a.currency === "TRX_NILE" ? "🟣 TRX · TRON" : a.currency;
+    html += `<div class="currency-chip ${active?'active':''}" onclick="selectDepositCoin('${a.currency}')">${label}</div>`;
+  });
+  knownExtra.forEach(k=>{
+    if(!state.addresses.find(a=>a.currency===k.currency)){
+      html += `<div class="currency-chip locked">${k.label} <span class="lock">🔒 Coming Soon</span></div>`;
+    }
+  });
+  row.innerHTML = html;
+}
+
+function selectDepositCoin(coin){
+  state.depositCoin = coin;
+  renderDepositCurrencyChips();
+  renderDepositContent();
+}
+
+function renderDepositContent(){
+  const box = document.getElementById("depositContent");
+  if(state.depositCoin === "NGN"){ renderNgnDepositPanel(box); return; }
+  const entry = state.addresses.find(a=>a.currency === state.depositCoin);
+  if(!entry){
+    box.innerHTML = `<div class="coming-soon-box"><div class="lock-icon">🔒</div>This currency isn't supported yet — coming soon.</div>`;
+    return;
+  }
+  const addr = entry.address;
+  const isTestnet = /nile/i.test(entry.network || "");
+  const short = addr.length > 18 ? (addr.slice(0,10) + "…" + addr.slice(-6)) : addr;
+  const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=" + encodeURIComponent(addr);
+  box.innerHTML = `
+    <div class="network-badge ${isTestnet?'testnet':''}"><span class="dot-live"></span> ${entry.network || entry.currency}${isTestnet ? ' — Testnet, not real funds' : ''}</div>
+    <div class="address-box">
+      <img src="${qrUrl}" alt="Deposit QR code">
+      <div class="muted" style="font-size:12px; margin-bottom:6px;">Your permanent deposit address</div>
+      <div class="address-text-full" title="${addr}">${short}</div>
+      <div class="address-actions">
+        <button class="btn btn-ghost btn-sm" onclick="copyDepositAddress()">📋 Copy</button>
+        <button class="btn btn-ghost btn-sm" onclick="shareDepositAddress()">📤 Share</button>
+      </div>
+    </div>
+    <p class="muted" style="font-size:12px; margin-top:14px;">Only send ${entry.currency.replace('_',' ')} to this address on the correct network. Deposits are detected automatically and credited to your points balance.</p>
+  `;
+}
+
+function copyDepositAddress(){
+  const entry = state.addresses.find(a=>a.currency === state.depositCoin);
+  if(!entry) return;
+  navigator.clipboard.writeText(entry.address).then(()=> showToast("Address copied"));
+}
+
+function shareDepositAddress(){
+  const entry = state.addresses.find(a=>a.currency === state.depositCoin);
+  if(!entry) return;
+  if(navigator.share){
+    navigator.share({title:"LuckySpin deposit address", text: entry.address}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(entry.address).then(()=> showToast("Address copied to share"));
+  }
+}
+
+/* ---- Nigerian Bank Transfer deposit ---- */
+
+state.ngnBankDetails = null;
+state.ngnFile = null;
+state.ngnSubmitting = false;
+state.ngnLastResult = null;
+
+async function loadNgnBankDetails(){
+  if(state.ngnBankDetails) return state.ngnBankDetails;
+  const d = await api("/wallet/nigerian-deposit/bank-details");
+  state.ngnBankDetails = d;
+  return d;
+}
+
+async function renderNgnDepositPanel(box){
+  box.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading bank details...</div>`;
+  let d;
+  try{ d = await loadNgnBankDetails(); }
+  catch(e){ box.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`; return; }
+
+  if(state.ngnLastResult && state.ngnLastResult.status === "PENDING"){
+    renderNgnPendingStatus(box);
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="ngn-card">
+      <div class="ngn-row" style="border-bottom:1px solid rgba(15,23,42,.08); margin-bottom:6px; padding-bottom:14px;">
+        <div><div class="l">Available Balance</div><div class="v" style="font-size:22px;">${fmtNgn(state.user ? state.user.ngn_balance : 0)}</div></div>
+      </div>
+      <h2 style="margin-bottom:4px;">Nigerian Bank Transfer</h2>
+      <p class="muted" style="margin-bottom:14px;">Send your payment to the account below, then tell us how much you sent.</p>
+
+      <div class="ngn-info-banner">
+        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
+        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString()}</span></div>
+      </div>
+
+      <div class="ngn-row">
+        <div><div class="l">Bank</div><div class="v">${escapeHtml(d.bank_name)}</div></div>
+        <button class="ngn-copy-btn" onclick="copyNgnField('${escapeHtml(d.bank_name)}', this)">📋</button>
+      </div>
+      <div class="ngn-row">
+        <div><div class="l">Account Name</div><div class="v">${escapeHtml(d.account_name)}</div></div>
+        <button class="ngn-copy-btn" onclick="copyNgnField('${escapeHtml(d.account_name)}', this)">📋</button>
+      </div>
+      <div class="ngn-row" style="border-bottom:none;">
+        <div><div class="l">Account Number</div><div class="v" style="font-size:17px;">${escapeHtml(d.account_number)}</div></div>
+        <button class="ngn-copy-btn" onclick="copyNgnField('${escapeHtml(d.account_number)}', this)">📋</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h2>Amount to Deposit</h2>
+      <div class="field">
+        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString()})</label>
+        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString()} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
+        <p class="muted" id="ngnAmountHint" style="font-size:11.5px; margin-top:6px;">This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.</p>
+      </div>
+
+      <h2 style="margin-top:20px;">Upload Payment Proof</h2>
+      <input type="file" id="ngnFileInput" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleNgnFileSelect(this)">
+      <div id="ngnUploadArea">
+        <div class="upload-zone" onclick="document.getElementById('ngnFileInput').click()">
+          <div class="icon">📸</div>
+          <div style="font-weight:700; font-size:13.5px;">Upload Screenshot / Receipt</div>
+          <div class="muted" style="font-size:12px; margin-top:4px;">JPG, JPEG, PNG or WEBP — max 5MB</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" style="margin-top:18px;" id="ngnSubmitBtn" onclick="submitNigerianDeposit()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Submit Deposit</span></span>
+      </button>
+    </div>
+  `;
+}
+
+function copyNgnField(value, btnEl){
+  navigator.clipboard.writeText(value).then(()=>{
+    showToast("Copied ✓");
+    btnEl.classList.add("copied");
+    const original = btnEl.textContent;
+    btnEl.textContent = "✓";
+    setTimeout(()=>{ btnEl.classList.remove("copied"); btnEl.textContent = original; }, 1400);
+  });
+}
+
+function handleNgnFileSelect(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const allowedTypes = ["image/jpeg","image/png","image/webp"];
+  if(!allowedTypes.includes(file.type)){
+    showToast("Only JPG, JPEG, PNG or WEBP images are allowed");
+    input.value = "";
+    return;
+  }
+  const maxBytes = 5 * 1024 * 1024;
+  if(file.size > maxBytes){
+    showToast("File too large — max 5MB");
+    input.value = "";
+    return;
+  }
+  state.ngnFile = file;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const area = document.getElementById("ngnUploadArea");
+    if(!area) return;
+    area.innerHTML = `
+      <div class="upload-preview-box">
+        <div class="upload-preview-img-wrap"><img src="${e.target.result}" alt="Payment proof preview"></div>
+        <div class="upload-preview-actions">
+          <button type="button" class="btn btn-ghost btn-sm btn-block" onclick="document.getElementById('ngnFileInput').click()">🔄 Replace</button>
+          <button type="button" class="btn btn-ghost btn-sm btn-block" onclick="removeNgnFile()">🗑️ Remove</button>
+        </div>
+      </div>
+    `;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeNgnFile(){
+  state.ngnFile = null;
+  document.getElementById("ngnFileInput").value = "";
+  const area = document.getElementById("ngnUploadArea");
+  if(area){
+    area.innerHTML = `
+      <div class="upload-zone" onclick="document.getElementById('ngnFileInput').click()">
+        <div class="icon">📸</div>
+        <div style="font-weight:700; font-size:13.5px;">Upload Screenshot / Receipt</div>
+        <div class="muted" style="font-size:12px; margin-top:4px;">JPG, JPEG, PNG or WEBP — max 5MB</div>
+      </div>
+    `;
+  }
+}
+
+function validateNgnAmount(minDeposit){
+  const el = document.getElementById("ngnAmount");
+  const hint = document.getElementById("ngnAmountHint");
+  if(!el || !hint) return;
+  const val = parseFloat(el.value);
+  if(el.value && val > 0 && val < minDeposit){
+    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString()} — please enter at least that amount.`;
+    hint.classList.add("ngn-amount-error");
+  }else{
+    hint.textContent = "This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.";
+    hint.classList.remove("ngn-amount-error");
+  }
+}
+
+async function submitNigerianDeposit(){
+  if(state.ngnSubmitting) return;
+  const amountEl = document.getElementById("ngnAmount");
+  const amount = parseFloat(amountEl.value);
+  const minDeposit = Number((state.ngnBankDetails && state.ngnBankDetails.min_deposit_ngn) || 5000);
+  if(!amount || amount <= 0){ showToast("Enter the amount you transferred"); return; }
+  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString()}`); return; }
+  if(!state.ngnFile){ showToast("Upload your payment proof screenshot"); return; }
+
+  state.ngnSubmitting = true;
+  const btn = document.getElementById("ngnSubmitBtn");
+  setButtonLoading(btn, true);
+  try{
+    const form = new FormData();
+    form.append("amount_ngn", amount);
+    form.append("file", state.ngnFile);
+    const res = await fetch(API_BASE + "/wallet/nigerian-deposit", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + state.token },
+      body: form,
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      const info = extractErrorInfo(data);
+      throw new Error(info.message || "Could not submit deposit request");
+    }
+    state.ngnLastResult = data;
+    state.ngnFile = null;
+    showToast("Deposit request submitted");
+    renderDepositContent();
+  }catch(e){
+    showToast(e.message);
+  }finally{
+    state.ngnSubmitting = false;
+    setButtonLoading(btn, false);
+  }
+}
+
+function renderNgnPendingStatus(box){
+  const r = state.ngnLastResult;
+  box.innerHTML = `
+    <div class="card dep-status-card">
+      <div class="icon">⏳</div>
+      <h3 style="font-size:18px; margin-bottom:8px;">Pending Review</h3>
+      <p class="muted" style="margin-bottom:6px;">Your deposit of <b>₦${r.amount_ngn}</b> is being reviewed by an admin.</p>
+      <p class="muted" style="font-size:11.5px; overflow-wrap:anywhere;">Deposit ID: ${r.id}</p>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px;" onclick="state.ngnLastResult=null; renderDepositContent();">Submit Another Deposit</button>
+    </div>
+  `;
+}
+
+/* ---- NGN Withdraw ---- */
+
+async function renderNgnWithdrawPanel(){
+  const box = document.getElementById("ngnWithdrawForm");
+  box.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading...</div>`;
+  try{
+    const [info, mine] = await Promise.all([
+      api("/wallet/nigerian-withdraw/info"),
+      api("/wallet/nigerian-withdraw/mine"),
+    ]);
+    state.ngnWithdrawInfo = info;
+    const pending = mine.find(w => w.status === "PENDING");
+    if(pending){
+      renderNgnWithdrawPendingStatus(box, pending);
+    }else{
+      renderNgnWithdrawForm(box, info);
+    }
+  }catch(e){
+    box.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`;
+  }
+}
+
+function renderNgnWithdrawForm(box, info){
+  const minW = Number(info.min_withdrawal_ngn || 5000);
+  box.innerHTML = `
+    <div class="stat-box" style="max-width:260px; margin-bottom:14px;">
+      <div class="val">${fmtNgn(state.user ? state.user.ngn_balance : 0)}</div>
+      <div class="lbl">Available Balance</div>
+    </div>
+
+    <div class="ngn-info-banner">
+      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
+      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString()}</span></div>
+    </div>
+
+    <div class="field">
+      <label>Account Holder Name</label>
+      <div class="field-input-wrap"><input id="ngnWAccountName" type="text" placeholder="Full name on the bank account"></div>
+    </div>
+    <div class="field">
+      <label>Account Number</label>
+      <div class="field-input-wrap"><input id="ngnWAccountNumber" type="text" inputmode="numeric" placeholder="e.g. 0123456789"></div>
+    </div>
+    <div class="field">
+      <label>Bank Name <span class="muted" style="font-weight:400;">(optional)</span></label>
+      <div class="field-input-wrap"><input id="ngnWBankName" type="text" placeholder="e.g. Moniepoint MFB"></div>
+    </div>
+    <div class="field">
+      <label>Amount (min ₦${minW.toLocaleString()})</label>
+      <div class="field-input-wrap with-max">
+        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString()} or more" oninput="validateNgnWithdrawAmount(${minW})">
+        <button type="button" class="max-btn" onclick="setNgnWithdrawMax()">MAX</button>
+      </div>
+      <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your balance immediately and reviewed by an admin.</p>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="ngnWSubmitBtn" onclick="submitNgnWithdrawal()">
+      <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Request Withdrawal</span></span>
+    </button>
+  `;
+}
+
+function validateNgnWithdrawAmount(minWithdrawal){
+  const el = document.getElementById("ngnWAmount");
+  const hint = document.getElementById("ngnWAmountHint");
+  if(!el || !hint) return;
+  const val = parseFloat(el.value);
+  if(el.value && val > 0 && val < minWithdrawal){
+    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString()} — please enter at least that amount.`;
+    hint.classList.add("ngn-amount-error");
+  }else{
+    hint.textContent = "This amount is deducted from your balance immediately and reviewed by an admin.";
+    hint.classList.remove("ngn-amount-error");
+  }
+}
+
+function setNgnWithdrawMax(){
+  if(!state.user) return;
+  document.getElementById("ngnWAmount").value = state.user.ngn_balance;
+  validateNgnWithdrawAmount(Number((state.ngnWithdrawInfo && state.ngnWithdrawInfo.min_withdrawal_ngn) || 5000));
+}
+
+async function submitNgnWithdrawal(){
+  if(state.ngnWithdrawSubmitting) return;
+  const minW = Number((state.ngnWithdrawInfo && state.ngnWithdrawInfo.min_withdrawal_ngn) || 5000);
+  const account_name = document.getElementById("ngnWAccountName").value.trim();
+  const account_number = document.getElementById("ngnWAccountNumber").value.trim();
+  const bank_name = document.getElementById("ngnWBankName").value.trim();
+  const amount_ngn = parseFloat(document.getElementById("ngnWAmount").value);
+
+  if(!account_name){ showToast("Enter the account holder's name"); return; }
+  if(!account_number){ showToast("Enter the account number"); return; }
+  if(!amount_ngn || amount_ngn <= 0){ showToast("Enter a valid amount"); return; }
+  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString()}`); return; }
+  if(state.user && amount_ngn > state.user.ngn_balance){ showToast("Insufficient balance"); return; }
+
+  state.ngnWithdrawSubmitting = true;
+  const btn = document.getElementById("ngnWSubmitBtn");
+  setButtonLoading(btn, true);
+  try{
+    const body = { amount_ngn, account_name, account_number };
+    if(bank_name) body.bank_name = bank_name;
+    const r = await api("/wallet/nigerian-withdraw", "POST", body);
+    showToast("Withdrawal request submitted");
+    loadMe();
+    const box = document.getElementById("ngnWithdrawForm");
+    renderNgnWithdrawPendingStatus(box, r);
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); state.ngnWithdrawSubmitting = false; }
+}
+
+function renderNgnWithdrawPendingStatus(box, w){
+  box.innerHTML = `
+    <div class="card dep-status-card">
+      <div class="icon">⏳</div>
+      <h3 style="font-size:18px; margin-bottom:8px;">Pending Review</h3>
+      <p class="muted" style="margin-bottom:6px;">Your withdrawal of <b>${fmtNgn(w.amount_ngn)}</b> to <b>${escapeHtml(w.account_name)}</b> is being reviewed by an admin.</p>
+      <p class="muted" style="font-size:11.5px; overflow-wrap:anywhere;">Request ID: ${w.id}</p>
+    </div>
+  `;
+}
+
+/* ---- Withdraw ---- */
+
+// The Withdraw button on the Spin result modal (win OR loss) must always
+// land the user specifically on NGN Bank Withdrawal — never the
+// crypto/TRX withdrawal panel, since the spin's balance/prize is NGN.
+function goToNgnWithdraw(){
+  closeDynamicResultModal();
+  showPage('wallet');
+  setWalletTab('withdraw');
+  selectWithdrawNetwork('NGN');
+}
+
+const WITHDRAW_NETWORK_META = {
+  TRX_NILE:   {label: "TRON Nile Testnet", addressLabel: "Destination TRON Address", placeholder: "T...", unit: "TRX"},
+  USDT_TRC20: {label: "TRON Nile Testnet (TRC20)", addressLabel: "Destination TRON Address", placeholder: "T...", unit: "USDT"},
+};
+
+function selectWithdrawNetwork(net){
+  state.withdrawNetwork = net;
+  document.querySelectorAll("#withdrawNetworkRow .currency-chip").forEach(c=>c.classList.remove("active"));
+  const chip = document.querySelector(`#withdrawNetworkRow .currency-chip[data-net="${net}"]`);
+  if(chip) chip.classList.add("active");
+  const isNgn = net === "NGN";
+  document.getElementById("ngnWithdrawForm").style.display = isNgn ? "block" : "none";
+  document.getElementById("withdrawForm").style.display = isNgn ? "none" : "block";
+  if(isNgn){ renderNgnWithdrawPanel(); return; }
+
+  const meta = WITHDRAW_NETWORK_META[net] || WITHDRAW_NETWORK_META.TRX_NILE;
+  document.getElementById("withdrawNetworkLabel").textContent = meta.label;
+  document.getElementById("withdrawAddressLabel").textContent = meta.addressLabel;
+  document.getElementById("withdrawAddress").placeholder = meta.placeholder;
+  document.getElementById("withdrawAddress").value = "";
+  updateWithdrawEstimate();
+}
+
+function setWithdrawMax(){
+  if(!state.user) return;
+  document.getElementById("withdrawAmount").value = state.user.points_balance;
+  updateWithdrawEstimate();
+}
+
+function estimateNativeAmount(amountPoints, net){
+  const usd = amountPoints / (state.pointsPerUsdt || 100);
+  const rates = state.currencyRates || {};
+  const meta = WITHDRAW_NETWORK_META[net] || WITHDRAW_NETWORK_META.TRX_NILE;
+  const rate = rates[net];
+  if(net === "USDT_TRC20"){
+    return {value: usd, decimals: 6, unit: meta.unit};   // ~1:1 with USD
+  }
+  // TRX_NILE — use the live rate if we have it, otherwise fall back to the
+  // 1:1 testnet convention used everywhere else in this app
+  return {value: rate ? (usd * rate) : usd, decimals: 6, unit: meta.unit};
+}
+
+function updateWithdrawEstimate(){
+  const amt = parseFloat(document.getElementById("withdrawAmount").value) || 0;
+  const est = estimateNativeAmount(amt, state.withdrawNetwork);
+  const el = document.getElementById("withdrawEstAmount");
+  if(!el) return;
+  el.textContent = est ? (est.value.toFixed(est.decimals) + " " + est.unit) : "Price unavailable";
+}
+
+function openWithdrawReview(){
+  const amount_points = parseFloat(document.getElementById("withdrawAmount").value);
+  const address = document.getElementById("withdrawAddress").value.trim();
+  if(!amount_points || amount_points <= 0){ showToast("Enter a valid amount"); return; }
+  if(!address){ showToast("Enter a destination address"); return; }
+  if(state.user && amount_points > state.user.points_balance){ showToast("Insufficient balance"); return; }
+
+  const est = estimateNativeAmount(amount_points, state.withdrawNetwork);
+  document.getElementById("cfAmount").textContent = fmtPts(amount_points) + " Points";
+  document.getElementById("cfAddress").textContent = address;
+  document.getElementById("cfTotal").textContent = est ? (est.value.toFixed(est.decimals) + " " + est.unit) : "Price unavailable";
+  state.currentWithdrawal = { amount_points, address };
+  document.getElementById("withdrawConfirmBg").classList.add("show");
+}
+
+function closeWithdrawConfirm(){ document.getElementById("withdrawConfirmBg").classList.remove("show"); }
+
+async function doWithdraw(){
+  if(!state.currentWithdrawal) return;
+  const { amount_points, address } = state.currentWithdrawal;
+  const btn = document.getElementById("cfConfirmBtn");
+  setButtonLoading(btn, true);
+  const idempotency_key = "wd_" + Date.now() + "_" + Math.random().toString(36).slice(2,10);
+  try{
+    const r = await api("/wallet/withdraw", "POST", {amount_points, address, currency: state.withdrawNetwork, idempotency_key});
+    if(r && r.success === false){
+      showToast(r.message || "This currency isn't available for withdrawal yet");
+      return;
+    }
+    closeWithdrawConfirm();
+    const statusText = r.status ? String(r.status) : "PENDING";
+    showToast(r.message || "Withdrawal submitted");
+    showWithdrawStatusNotification(r, statusText);
+    document.getElementById("withdrawAmount").value = "";
+    document.getElementById("withdrawAddress").value = "";
+    refreshWallet(); loadMe();
+    if(r.withdrawal_id){ pollWithdrawalStatus(r.withdrawal_id); }
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
+}
+
+function showWithdrawStatusNotification(r, statusText){
+  showNotification({
+    id: "wd_local_" + (r.withdrawal_id || Date.now()),
+    title: "Withdrawal " + statusText.replace("_"," ").toLowerCase(),
+    message: r.message || "Your withdrawal request has been submitted.",
+    type: "WITHDRAW_LOCAL",
+  }, true);
+}
+
+async function pollWithdrawalStatus(withdrawalId){
+  setTimeout(async ()=>{
+    try{
+      const s = await api("/wallet/withdraw/status/" + withdrawalId);
+      if(s.status === "COMPLETED"){
+        const unit = (WITHDRAW_NETWORK_META[s.currency] || {}).unit || "";
+        const amountText = (s.amount_native !== undefined && s.amount_native !== null) ? s.amount_native : s.amount;
+        showNotification({
+          id: "wd_status_" + withdrawalId,
+          title: "Withdrawal completed",
+          message: `${amountText} ${unit} sent${s.tx_hash ? ("\nTx: " + s.tx_hash) : ""}`,
+          type: "WITHDRAW_LOCAL",
+        }, true);
+      }
+    }catch(e){}
+  }, 6000);
+}
+
+/* ===================== TRANSACTIONS ===================== */
+
+const TX_META = {
+  SPIN_WIN:      {icon:"🎡", label:"Spin Win"},
+  DAILY_BONUS:   {icon:"🎁", label:"Daily Bonus"},
+  DEPOSIT_UNLOCK:{icon:"💰", label:"Deposit"},
+  REDEEM:        {icon:"🛍️", label:"Redeemed"},
+  WITHDRAW:      {icon:"📤", label:"Withdrawal"},
+  ACHIEVEMENT:   {icon:"🏅", label:"Achievement"},
+  SPIN_FEE:      {icon:"💳", label:"Spin Fee"},
+};
+
+async function loadTransactions(){
+  try{
+    state.transactions = await api("/user/history");
+  }catch(e){ showToast(e.message); state.transactions = []; }
+  renderTransactions();
+}
+
+function setTxFilter(f){
+  state.txFilter = f;
+  document.querySelectorAll("#txFilters .tx-filter").forEach(el=>{
+    el.classList.toggle("active", el.dataset.filter === f);
+  });
+  renderTransactions();
+}
+
+function txMatchesFilter(tx, filter){
+  if(filter === "all") return true;
+  if(filter === "deposits") return tx.type === "DEPOSIT_UNLOCK";
+  if(filter === "withdrawals") return tx.type === "WITHDRAW";
+  if(filter === "rewards") return ["SPIN_WIN","DAILY_BONUS","ACHIEVEMENT"].includes(tx.type);
+  return true;
+}
+
+function renderTransactions(){
+  const list = document.getElementById("txList");
+  if(!list) return;
+  const search = (document.getElementById("txSearch").value || "").toLowerCase().trim();
+  const rows = state.transactions.filter(tx=>{
+    if(!txMatchesFilter(tx, state.txFilter)) return false;
+    if(search){
+      const hay = ((tx.description||"") + " " + tx.type).toLowerCase();
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if(!rows.length){
+    list.innerHTML = `<div class="empty-state"><div class="icon">📭</div>No transactions found</div>`;
+    return;
+  }
+
+  list.innerHTML = rows.map(tx=>{
+    const meta = TX_META[tx.type] || {icon:"•", label:tx.type};
+    const pos = tx.amount >= 0;
+    const desc = (tx.description || meta.label).replace(/</g,"&lt;");
+    const date = new Date(tx.created_at).toLocaleString();
+    return `
+      <div class="tx-row">
+        <div class="tx-icon">${meta.icon}</div>
+        <div class="tx-body">
+          <div class="tx-type">${meta.label}</div>
+          <div class="tx-desc">${desc}</div>
+          <div class="tx-date">${date}</div>
+        </div>
+        <div class="tx-amount ${pos?'pos':'neg'}">${pos?'+':''}${fmtTxAmount(tx)}</div>
+        <button class="tx-copy" title="Copy details" onclick="copyText(${JSON.stringify(desc)})">📋</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=> showToast("Copied to clipboard"));
+}
+
+/* ===================== SHOP ===================== */
+
+const SHOP_ICONS = {Cash:"💵", Bonus:"🎁", Special:"✨"};
+
+async function refreshShop(){
+  try{
+    const items = await api("/wallet/shop", "GET", null, false);
+    document.getElementById("shopGrid").innerHTML = items.map(i => `
+      <div class="shop-card">
+        <div class="icon">${SHOP_ICONS[i.category] || "🎯"}</div>
+        <div style="font-weight:700; font-size:14.5px;">${i.name}</div>
+        <div class="cat">${i.category}</div>
+        <div class="price">${i.cost_points} Points</div>
+        <button class="btn btn-primary btn-block btn-sm" onclick="redeemItem('${i.id}')">Redeem</button>
+      </div>
+    `).join("");
+  }catch(e){ showToast(e.message); }
+}
+
+async function redeemItem(itemId){
+  try{
+    const r = await api("/wallet/redeem", "POST", {item_id: itemId});
+    showToast(r.message);
+    showNotification({id:"redeem_"+Date.now(), title:"Redeemed successfully", message:r.message, type:"REDEEM_LOCAL"}, true);
+    loadMe();
+  }catch(e){ showToast(e.message); }
+}
+
+/* ===================== LEADERBOARD ===================== */
+
+async function refreshLeaderboard(){
+  try{
+    const d = await api("/user/leaderboard");
+    const top3 = d.top.slice(0,3);
+    const medals = ["🥇","🥈","🥉"];
+    const podium = document.getElementById("lbPodium");
+    podium.innerHTML = top3.map((row,i)=>`
+      <div class="lb-place lb-place-${row.rank}">
+        <div class="medal">${medals[i] || ""}</div>
+        <div class="name">${row.full_name}</div>
+        <div class="xp">${row.lifetime_xp.toFixed(1)} XP</div>
+      </div>
+    `).join("");
+    const rest = d.top.slice(3);
+    document.getElementById("leaderboardList").innerHTML = rest.map(row => `
+      <div class="item-row"><span>#${row.rank} ${row.full_name}</span><b>${row.lifetime_xp.toFixed(1)} XP</b></div>
+    `).join("") || (top3.length ? "" : `<div class="empty-state"><div class="icon">🏆</div>No rankings yet</div>`);
+    document.getElementById("myRank").textContent = d.my_rank ?? "—";
+    document.getElementById("myXp").textContent = d.my_xp.toFixed(1);
+  }catch(e){ showToast(e.message); }
+}
+
+/* ===================== PROFILE ===================== */
+
+async function refreshProfile(){
+  const u = await loadMe();
+  if(!u) return;
+  document.getElementById("profileAvatar").textContent = (u.full_name || "?").trim().charAt(0).toUpperCase();
+  document.getElementById("profileName").textContent = u.full_name;
+  document.getElementById("profileEmail").textContent = u.email;
+  document.getElementById("profileVip").textContent = u.vip_level;
+  document.getElementById("profileXp").textContent = u.lifetime_xp.toFixed(1);
+  document.getElementById("profileNgnBalance").textContent = fmtNgn(u.ngn_balance);
+  document.getElementById("profileBalance").textContent = fmtUsd(u.points_balance);
+  document.getElementById("profileLocked").textContent = fmtPts(u.locked_points);
+  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString();
+
+  await loadTransactions();
+  const hist = state.transactions;
+  document.getElementById("historyList").innerHTML = hist.slice(0,12).map(tx => {
+    const meta = TX_META[tx.type] || {label: tx.type};
+    const amtText = fmtTxAmount(tx);
+    return `
+    <div class="item-row">
+      <span style="min-width:0; overflow-wrap:anywhere;">${(tx.description || meta.label)}</span>
+      <span class="badge ${tx.amount >= 0 ? 'badge-win' : 'badge-out'}">${tx.amount >= 0 ? '+' : ''}${amtText}</span>
+    </div>
+  `;}).join("") || `<p class="muted">No transactions yet</p>`;
+}
+
+/* ===================== ADMIN LEDGER ===================== */
+
+state.adminTxSearch = "";
+state.adminTxFilter = "all";
+state.adminTransactions = [];
+
+let adminTab = "ledger";
+
+function initAdminPage(){
+  document.getElementById("adminTabsRow").style.display = "flex";
+  setAdminTab(adminTab);
+}
+
+function setAdminTab(tab){
+  adminTab = tab;
+  document.getElementById("adminTabBtnLedger").classList.toggle("active", tab==="ledger");
+  document.getElementById("adminTabBtnDeposits").classList.toggle("active", tab==="deposits");
+  document.getElementById("adminTabBtnWithdrawals").classList.toggle("active", tab==="withdrawals");
+  document.getElementById("adminLedgerPanel").style.display = tab==="ledger" ? "block" : "none";
+  document.getElementById("adminDepositsPanel").style.display = tab==="deposits" ? "block" : "none";
+  document.getElementById("adminWithdrawalsPanel").style.display = tab==="withdrawals" ? "block" : "none";
+  if(tab === "ledger") loadAdminLedger();
+  if(tab === "deposits") loadDepositRequests();
+  if(tab === "withdrawals") loadWithdrawalRequests();
+}
+
+async function loadAdminLedger(){
+  try{
+    const data = await api("/admin/ledger?currency=" + encodeURIComponent(state.ledgerCurrency));
+    state.adminLedger = data;
+    renderAdminLedgerUI(data);
+  }catch(e){
+    if(e.message === "Admin access required"){
+      renderAdminAccessDenied();
+    }else{
+      showToast(e.message);
+    }
+  }
+}
+
+function renderAdminAccessDenied(){
+  document.getElementById("adminTabsRow").style.display = "none";
+  document.getElementById("adminDepositsPanel").style.display = "none";
+  document.getElementById("adminLedgerPanel").style.display = "block";
+  document.getElementById("adminLedgerPanel").innerHTML = `
+    <div class="card access-denied">
+      <div class="icon">⛔</div>
+      <h3 style="font-size:19px; margin-bottom:8px;">Access Denied</h3>
+      <p class="muted">You don't have permission to view this page.</p>
+    </div>
+  `;
+}
+
+function renderAdminLedgerUI(data){
+  const withdrawable = state.ledgerCurrency === "TRX_NILE";
+  // Admin ledger totals: TRX_NILE is this app's "USD-equivalent platform
+  // revenue" bucket (same convention as fmtLedgerAmount above) — show it in
+  // $ rather than a raw Points-style number next to the literal currency code.
+  const fmtLedgerTotal = (n) => state.ledgerCurrency === "NGN" ? fmtNgn(n) : fmtUsdRaw(n);
+  document.getElementById("adminLedgerPanel").innerHTML = `
+    <div class="currency-row" style="margin-bottom:18px;">
+      <div class="currency-chip ${state.ledgerCurrency==='TRX_NILE'?'active':''}" onclick="setLedgerCurrency('TRX_NILE')">💠 Crypto ($)</div>
+      <div class="currency-chip ${state.ledgerCurrency==='NGN'?'active':''}" onclick="setLedgerCurrency('NGN')">🇳🇬 NGN</div>
+    </div>
+    <div class="grid-4" style="margin-bottom:24px;">
+      <div class="card admin-card"><div class="admin-stat-lbl">Ledger Balance</div><div class="admin-stat-val">${fmtLedgerTotal(data.total_balance)}</div></div>
+      <div class="card admin-card"><div class="admin-stat-lbl">Spin Revenue</div><div class="admin-stat-val">${fmtLedgerTotal(data.total_spin_revenue)}</div></div>
+      <div class="card admin-card"><div class="admin-stat-lbl">Total Deposits</div><div class="admin-stat-val">${fmtLedgerTotal(data.total_deposits)}</div></div>
+      <div class="card admin-card"><div class="admin-stat-lbl">Total Withdrawals</div><div class="admin-stat-val">${fmtLedgerTotal(data.total_withdrawals)}</div></div>
+    </div>
+
+    <div class="grid-2" style="align-items:start;">
+      <div class="card">
+        <h2>Ledger Transactions</h2>
+        <div class="tx-toolbar">
+          <div class="tx-filters" id="adminTxFilters">
+            <div class="tx-filter active" data-filter="all" onclick="setAdminTxFilter('all')">All</div>
+            <div class="tx-filter" data-filter="SPIN_FEE" onclick="setAdminTxFilter('SPIN_FEE')">Spin Fees</div>
+            <div class="tx-filter" data-filter="ADMIN_WITHDRAWAL" onclick="setAdminTxFilter('ADMIN_WITHDRAWAL')">Withdrawals</div>
+            <div class="tx-filter" data-filter="NGN_DEPOSIT" onclick="setAdminTxFilter('NGN_DEPOSIT')">NGN Deposits</div>
+            <div class="tx-filter" data-filter="ADJUSTMENT" onclick="setAdminTxFilter('ADJUSTMENT')">Adjustments</div>
+          </div>
+          <input class="tx-search" id="adminTxSearch" type="text" placeholder="Search..." oninput="setAdminTxSearch(this.value)">
+        </div>
+        <div id="adminTxList"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Withdraw From Ledger</h2>
+        ${withdrawable ? `
+        <div class="field">
+          <label>Currency</label>
+          <div class="field-input-wrap"><input id="ledgerCurrencyInput" type="text" value="USD (sent on-chain as TRX)" disabled></div>
+        </div>
+        <div class="field">
+          <label>Amount (USD)</label>
+          <div class="field-input-wrap"><input id="ledgerWithdrawAmount" type="number" placeholder="e.g. 50"></div>
+        </div>
+        <div class="field">
+          <label>Destination Address</label>
+          <div class="field-input-wrap"><input id="ledgerWithdrawAddress" type="text" placeholder="T..."></div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="openLedgerWithdrawConfirm()">Withdraw</button>
+        <p class="muted" style="margin-top:12px; font-size:12px;">Available balance: <b>${fmtUsdRaw(data.available_balance)}</b></p>
+        ` : `
+        <div class="empty-state" style="padding:30px 10px;">
+          <div class="icon">🏦</div>
+          <p class="muted">NGN revenue is manual bank-transfer cash already sitting in the Moniepoint account — there's no on-chain withdrawal for it here.</p>
+          <p class="muted" style="margin-top:10px;">Available balance: <b>${fmtNgn(data.available_balance)}</b></p>
+        </div>
+        `}
+      </div>
+    </div>
+  `;
+  loadAdminLedgerTransactions();
+}
+
+async function loadAdminLedgerTransactions(){
+  const listEl = document.getElementById("adminTxList");
+  try{
+    const rows = await api("/admin/ledger/transactions?currency=" + encodeURIComponent(state.ledgerCurrency) + "&limit=200");
+    state.adminTransactions = rows;
+    renderAdminTransactions();
+  }catch(e){
+    if(listEl && e.message !== "Admin access required"){ listEl.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`; }
+  }
+}
+
+function setAdminTxFilter(f){
+  state.adminTxFilter = f;
+  document.querySelectorAll("#adminTxFilters .tx-filter").forEach(el=>{
+    el.classList.toggle("active", el.dataset.filter === f);
+  });
+  renderAdminTransactions();
+}
+
+function setAdminTxSearch(v){
+  state.adminTxSearch = v.toLowerCase();
+  renderAdminTransactions();
+}
+
+const LEDGER_TX_ICONS = {SPIN_FEE:"💳", ADMIN_WITHDRAWAL:"📤", ADJUSTMENT:"⚖️", NGN_DEPOSIT:"🇳🇬"};
+
+function setLedgerCurrency(cur){
+  state.ledgerCurrency = cur;
+  loadAdminLedger();
+}
+
+function fmtLedgerAmount(tx){
+  // NEW: LedgerTransaction.currency is a different value set than user-facing
+  // Transaction.currency (TRX_NILE / NGN / USDT_TRC20, not POINTS/NGN/USD) —
+  // TRX_NILE is this app's established "USD-equivalent platform revenue"
+  // bucket (used by both crypto AND the old fixed spin's fee), so it always
+  // displays in $, never as a raw Points/PT number.
+  if(tx.currency === "NGN") return fmtNgn(tx.amount);
+  if(tx.currency === "TRX_NILE") return fmtUsdRaw(tx.amount);
+  return tx.amount + " " + tx.currency;   // any other/future ledger currency — show raw, never guessed
+}
+
+function renderAdminTransactions(){
+  const listEl = document.getElementById("adminTxList");
+  if(!listEl) return;
+  const rows = state.adminTransactions.filter(tx=>{
+    if(state.adminTxFilter !== "all" && tx.type !== state.adminTxFilter) return false;
+    if(state.adminTxSearch){
+      const hay = (tx.type + " " + (tx.tx_hash||"") + " " + tx.status + " " + (tx.reference_id||"")).toLowerCase();
+      if(!hay.includes(state.adminTxSearch)) return false;
+    }
+    return true;
+  });
+  if(!rows.length){ listEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div>No ledger transactions found</div>`; return; }
+  listEl.innerHTML = rows.map(tx=>{
+    const pos = tx.amount >= 0;
+    const hash = tx.tx_hash ? (tx.tx_hash.slice(0,10) + "…" + tx.tx_hash.slice(-6)) : null;
+    return `
+      <div class="tx-row">
+        <div class="tx-icon">${LEDGER_TX_ICONS[tx.type] || "•"}</div>
+        <div class="tx-body">
+          <div class="tx-type">${tx.type.replace(/_/g," ")} <span class="status-badge status-${tx.status}" style="margin-left:6px;">${tx.status}</span></div>
+          <div class="tx-desc">${hash ? ("Tx: " + hash) : (tx.reference_id ? ("Ref: " + tx.reference_id) : "—")}</div>
+          <div class="tx-date">${new Date(tx.created_at).toLocaleString()}</div>
+        </div>
+        <div class="tx-amount ${pos?'pos':'neg'}">${pos?'+':''}${fmtLedgerAmount(tx)}</div>
+        ${tx.tx_hash ? `<button class="tx-copy" title="Copy hash" onclick="copyText('${tx.tx_hash}')">📋</button>` : ""}
+      </div>
+    `;
+  }).join("");
+}
+
+function openLedgerWithdrawConfirm(){
+  const amount = parseFloat(document.getElementById("ledgerWithdrawAmount").value);
+  const address = document.getElementById("ledgerWithdrawAddress").value.trim();
+  const currency = state.ledgerCurrency;   // sent to the backend exactly as-is — "TRX_NILE" (the only withdrawable ledger currency)
+  if(!amount || amount <= 0){ showToast("Enter a valid amount"); return; }
+  if(!address){ showToast("Enter a destination address"); return; }
+  document.getElementById("lcfAmount").textContent = fmtUsdRaw(amount) + " (sent as TRX)";
+  document.getElementById("lcfCurrency").textContent = "USD / TRX";
+  document.getElementById("lcfAddress").textContent = address;
+  state.pendingLedgerWithdraw = {amount, address, currency};
+  document.getElementById("ledgerWithdrawConfirmBg").classList.add("show");
+}
+
+function closeLedgerWithdrawConfirm(){ document.getElementById("ledgerWithdrawConfirmBg").classList.remove("show"); }
+
+async function doAdminWithdraw(){
+  if(!state.pendingLedgerWithdraw) return;
+  const { amount, address, currency } = state.pendingLedgerWithdraw;
+  const btn = document.getElementById("lcfConfirmBtn");
+  setButtonLoading(btn, true);
+  const idempotency_key = "ladm_" + Date.now() + "_" + Math.random().toString(36).slice(2,10);
+  try{
+    const r = await api("/admin/ledger/withdraw", "POST", {currency, amount, destination_address: address, idempotency_key});
+    closeLedgerWithdrawConfirm();
+    if(r.success === false){
+      showToast(r.message || "Withdrawal failed");
+    }else{
+      showToast(r.message || "Withdrawal submitted");
+      showNotification({id:"ladm_"+Date.now(), title:"Ledger withdrawal submitted", message:(r.tx_hash ? ("Tx: " + r.tx_hash) : (r.message||"")), type:"LEDGER_LOCAL"}, true);
+      loadAdminLedger();
+    }
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
+}
+
+/* ===================== ADMIN — DEPOSIT REQUESTS ===================== */
+
+state.depositRequests = [];
+state.depositFilter = "PENDING";
+state.pendingApproveDeposit = null;
+state.pendingRejectDeposit = null;
+let depositActionLock = false; // prevents duplicate Approve/Reject requests from rapid double-clicks
+
+async function loadDepositRequests(){
+  const panel = document.getElementById("adminDepositsPanel");
+  panel.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading deposit requests...</div>`;
+  try{
+    const rows = await api("/admin/nigerian-deposits?status=" + encodeURIComponent(state.depositFilter));
+    state.depositRequests = rows;
+    renderDepositRequestsPanel();
+  }catch(e){
+    if(e.message === "Admin access required"){
+      panel.innerHTML = `<div class="card access-denied"><div class="icon">⛔</div><h3 style="font-size:19px; margin-bottom:8px;">Access Denied</h3><p class="muted">You don't have permission to view this page.</p></div>`;
+    }else{
+      panel.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`;
+    }
+  }
+}
+
+function setDepositFilter(f){
+  state.depositFilter = f;
+  loadDepositRequests();
+}
+
+const DEP_STATUS_ICON = {PENDING:"⏳", APPROVED:"✅", REJECTED:"❌"};
+
+function renderDepositRequestsPanel(){
+  const panel = document.getElementById("adminDepositsPanel");
+  const filters = ["PENDING","APPROVED","REJECTED"];
+  let html = `<div class="dep-filters">`;
+  filters.forEach(f=>{
+    html += `<div class="tx-filter ${state.depositFilter===f?'active':''}" onclick="setDepositFilter('${f}')">${f.charAt(0)+f.slice(1).toLowerCase()}</div>`;
+  });
+  html += `</div>`;
+
+  if(!state.depositRequests.length){
+    html += `<div class="card empty-state"><div class="icon">📭</div>No ${state.depositFilter.toLowerCase()} deposit requests</div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  html += state.depositRequests.map(d=>{
+    const shortId = d.id.length > 14 ? (d.id.slice(0,8) + "…" + d.id.slice(-4)) : d.id;
+    let actions = "";
+    if(d.status === "PENDING"){
+      actions = `
+        <button class="btn btn-ghost btn-sm" onclick='viewDepositProof(${JSON.stringify(d.id)})'>🖼️ View Payment Proof</button>
+        <button class="btn btn-primary btn-sm" onclick='openApproveDepositModal(${JSON.stringify(d)})'>✅ Approve Deposit</button>
+        <button class="btn btn-danger btn-sm" onclick='openRejectDepositModal(${JSON.stringify(d)})'>❌ Reject Deposit</button>
+      `;
+    }else{
+      actions = `<button class="btn btn-ghost btn-sm" onclick='viewDepositProof(${JSON.stringify(d.id)})'>🖼️ View Payment Proof</button>`;
+    }
+    let note = "";
+    if(d.status === "APPROVED"){ note = `<div class="deposit-card-note">Credited <b>${fmtNgn(d.points_credited)}</b></div>`; }
+    if(d.status === "REJECTED" && d.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(d.rejection_reason)}</div>`; }
+
+    return `
+      <div class="deposit-card">
+        <div class="deposit-card-head">
+          <div class="who">
+            <b>${escapeHtml(d.user_name || "Unknown")}</b>
+            <span>${escapeHtml(d.user_email || "")}</span>
+          </div>
+          <span class="status-badge status-${d.status}">${DEP_STATUS_ICON[d.status]||''} ${d.status}</span>
+        </div>
+        <div class="deposit-card-body">
+          <div class="mini"><div class="l">Amount</div><div class="v">₦${d.amount_ngn}</div></div>
+          <div class="mini"><div class="l">Currency</div><div class="v">NGN</div></div>
+          <div class="mini"><div class="l">Deposit ID</div><div class="v" title="${d.id}">${shortId}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString()}</div></div>
+        </div>
+        <div class="deposit-card-actions">${actions}</div>
+        ${note}
+      </div>
+    `;
+  }).join("");
+
+  panel.innerHTML = html;
+}
+
+function viewDepositProof(depositId){
+  const img = document.getElementById("proofImg");
+  const wrap = document.getElementById("proofImgWrap");
+  wrap.classList.remove("zoomed");
+  img.src = API_BASE + "/admin/nigerian-deposits/" + encodeURIComponent(depositId) + "/proof?t=" + Date.now();
+  // Auth: the <img> tag can't send an Authorization header, so we fetch as a
+  // blob first (with the JWT) and swap it into an object URL for display.
+  fetch(API_BASE + "/admin/nigerian-deposits/" + encodeURIComponent(depositId) + "/proof", {
+    headers: { "Authorization": "Bearer " + state.token }
+  }).then(r=>{
+    if(!r.ok) throw new Error("Could not load payment proof");
+    return r.blob();
+  }).then(blob=>{
+    img.src = URL.createObjectURL(blob);
+  }).catch(e=> showToast(e.message));
+  document.getElementById("proofModalBg").classList.add("show");
+}
+
+function closeProofModal(){
+  document.getElementById("proofModalBg").classList.remove("show");
+  document.getElementById("proofImgWrap").classList.remove("zoomed");
+}
+
+function toggleProofZoom(){
+  document.getElementById("proofImgWrap").classList.toggle("zoomed");
+}
+
+function openApproveDepositModal(d){
+  state.pendingApproveDeposit = d;
+  document.getElementById("apUser").textContent = d.user_name || d.user_email || "—";
+  document.getElementById("apAmount").textContent = "₦" + d.amount_ngn;
+  document.getElementById("apPoints").textContent = "Calculated by server on approval";
+  document.getElementById("approveDepositBg").classList.add("show");
+}
+function closeApproveDepositModal(){ document.getElementById("approveDepositBg").classList.remove("show"); }
+
+async function doApproveDeposit(){
+  if(depositActionLock || !state.pendingApproveDeposit) return;
+  depositActionLock = true;
+  const btn = document.getElementById("apConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/nigerian-deposits/" + encodeURIComponent(state.pendingApproveDeposit.id) + "/approve", "POST");
+    closeApproveDepositModal();
+    showToast(r.message || "Deposit approved");
+    showNotification({id:"dep_approve_"+r.deposit_id, title:"Deposit approved", message:`+${fmtNgn(r.ngn_credited)} credited`, type:"DEPOSIT_SUCCESS"}, true);
+    state.pendingApproveDeposit = null;
+    loadDepositRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); depositActionLock = false; }
+}
+
+function openRejectDepositModal(d){
+  state.pendingRejectDeposit = d;
+  document.getElementById("rjUser").textContent = d.user_name || d.user_email || "—";
+  document.getElementById("rjAmount").textContent = "₦" + d.amount_ngn;
+  document.getElementById("rjReason").value = "";
+  document.getElementById("rejectDepositBg").classList.add("show");
+}
+function closeRejectDepositModal(){ document.getElementById("rejectDepositBg").classList.remove("show"); }
+
+async function doRejectDeposit(){
+  if(depositActionLock || !state.pendingRejectDeposit) return;
+  const reason = document.getElementById("rjReason").value.trim();
+  if(!reason){ showToast("Enter a rejection reason"); return; }
+  depositActionLock = true;
+  const btn = document.getElementById("rjConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/nigerian-deposits/" + encodeURIComponent(state.pendingRejectDeposit.id) + "/reject", "POST", {reason});
+    closeRejectDepositModal();
+    showToast(r.message || "Deposit rejected");
+    state.pendingRejectDeposit = null;
+    loadDepositRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); depositActionLock = false; }
+}
+
+/* ===================== ADMIN — NGN WITHDRAWAL REQUESTS ===================== */
+
+state.withdrawalRequests = [];
+state.withdrawalFilter = "PENDING";
+state.pendingApproveWithdrawal = null;
+state.pendingRejectWithdrawal = null;
+let withdrawalActionLock = false; // prevents duplicate Approve/Reject requests from rapid double-clicks
+
+async function loadWithdrawalRequests(){
+  const panel = document.getElementById("adminWithdrawalsPanel");
+  panel.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading withdrawal requests...</div>`;
+  try{
+    const rows = await api("/admin/nigerian-withdrawals?status=" + encodeURIComponent(state.withdrawalFilter));
+    state.withdrawalRequests = rows;
+    renderWithdrawalRequestsPanel();
+  }catch(e){
+    if(e.message === "Admin access required"){
+      panel.innerHTML = `<div class="card access-denied"><div class="icon">⛔</div><h3 style="font-size:19px; margin-bottom:8px;">Access Denied</h3><p class="muted">You don't have permission to view this page.</p></div>`;
+    }else{
+      panel.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`;
+    }
+  }
+}
+
+function setWithdrawalFilter(f){
+  state.withdrawalFilter = f;
+  loadWithdrawalRequests();
+}
+
+function renderWithdrawalRequestsPanel(){
+  const panel = document.getElementById("adminWithdrawalsPanel");
+  const filters = ["PENDING","APPROVED","REJECTED"];
+  let html = `<div class="dep-filters">`;
+  filters.forEach(f=>{
+    html += `<div class="tx-filter ${state.withdrawalFilter===f?'active':''}" onclick="setWithdrawalFilter('${f}')">${f.charAt(0)+f.slice(1).toLowerCase()}</div>`;
+  });
+  html += `</div>`;
+
+  if(!state.withdrawalRequests.length){
+    html += `<div class="card empty-state"><div class="icon">📭</div>No ${state.withdrawalFilter.toLowerCase()} withdrawal requests</div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  html += state.withdrawalRequests.map(w=>{
+    const shortId = w.id.length > 14 ? (w.id.slice(0,8) + "…" + w.id.slice(-4)) : w.id;
+    let actions = "";
+    if(w.status === "PENDING"){
+      actions = `
+        <button class="btn btn-primary btn-sm" onclick='openApproveWithdrawalModal(${JSON.stringify(w)})'>✅ Approve Withdrawal</button>
+        <button class="btn btn-danger btn-sm" onclick='openRejectWithdrawalModal(${JSON.stringify(w)})'>❌ Reject Withdrawal</button>
+      `;
+    }
+    let note = "";
+    if(w.status === "APPROVED"){ note = `<div class="deposit-card-note">Sent ${fmtNgn(w.amount_ngn)}</div>`; }
+    if(w.status === "REJECTED" && w.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(w.rejection_reason)}</div>`; }
+
+    return `
+      <div class="deposit-card">
+        <div class="deposit-card-head">
+          <div class="who">
+            <b>${escapeHtml(w.user_name || "Unknown")}</b>
+            <span>${escapeHtml(w.user_email || "")}</span>
+          </div>
+          <span class="status-badge status-${w.status}">${DEP_STATUS_ICON[w.status]||''} ${w.status}</span>
+        </div>
+        <div class="deposit-card-body">
+          <div class="mini"><div class="l">Amount</div><div class="v">${fmtNgn(w.amount_ngn)}</div></div>
+          <div class="mini"><div class="l">Account Name</div><div class="v">${escapeHtml(w.account_name)}</div></div>
+          <div class="mini"><div class="l">Account Number</div><div class="v">${escapeHtml(w.account_number)}</div></div>
+          <div class="mini"><div class="l">Bank</div><div class="v">${escapeHtml(w.bank_name || "—")}</div></div>
+          <div class="mini"><div class="l">Request ID</div><div class="v" title="${w.id}">${shortId}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString()}</div></div>
+        </div>
+        <div class="deposit-card-actions">${actions}</div>
+        ${note}
+      </div>
+    `;
+  }).join("");
+
+  panel.innerHTML = html;
+}
+
+function openApproveWithdrawalModal(w){
+  state.pendingApproveWithdrawal = w;
+  document.getElementById("awUser").textContent = w.user_name || w.user_email || "—";
+  document.getElementById("awAmount").textContent = fmtNgn(w.amount_ngn);
+  document.getElementById("awAccount").textContent = `${w.account_name} — ${w.account_number}${w.bank_name ? ' (' + w.bank_name + ')' : ''}`;
+  document.getElementById("approveWithdrawalBg").classList.add("show");
+}
+function closeApproveWithdrawalModal(){ document.getElementById("approveWithdrawalBg").classList.remove("show"); }
+
+async function doApproveWithdrawal(){
+  if(withdrawalActionLock || !state.pendingApproveWithdrawal) return;
+  withdrawalActionLock = true;
+  const btn = document.getElementById("awConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/nigerian-withdrawals/" + encodeURIComponent(state.pendingApproveWithdrawal.id) + "/approve", "POST");
+    closeApproveWithdrawalModal();
+    showToast(r.message || "Withdrawal approved");
+    state.pendingApproveWithdrawal = null;
+    loadWithdrawalRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); withdrawalActionLock = false; }
+}
+
+function openRejectWithdrawalModal(w){
+  state.pendingRejectWithdrawal = w;
+  document.getElementById("rwUser").textContent = w.user_name || w.user_email || "—";
+  document.getElementById("rwAmount").textContent = fmtNgn(w.amount_ngn);
+  document.getElementById("rwReason").value = "";
+  document.getElementById("rejectWithdrawalBg").classList.add("show");
+}
+function closeRejectWithdrawalModal(){ document.getElementById("rejectWithdrawalBg").classList.remove("show"); }
+
+async function doRejectWithdrawal(){
+  if(withdrawalActionLock || !state.pendingRejectWithdrawal) return;
+  const reason = document.getElementById("rwReason").value.trim();
+  if(!reason){ showToast("Enter a rejection reason"); return; }
+  withdrawalActionLock = true;
+  const btn = document.getElementById("rwConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/nigerian-withdrawals/" + encodeURIComponent(state.pendingRejectWithdrawal.id) + "/reject", "POST", {reason});
+    closeRejectWithdrawalModal();
+    showToast(r.message || "Withdrawal rejected — refunded to user");
+    state.pendingRejectWithdrawal = null;
+    loadWithdrawalRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); withdrawalActionLock = false; }
+}
+
+/* ===================== BALANCE POPOVER ===================== */
+
+function toggleBalancePopover(e){
+  e.stopPropagation();
+  const pop = document.getElementById("balancePopover");
+  if(pop.classList.contains("show")){ closeBalancePopover(); return; }
+  positionBalancePopover();
+  populateBalancePopover();
+  pop.classList.add("show");
+  document.getElementById("popoverBg").classList.add("show");
+}
+
+function closeBalancePopover(){
+  document.getElementById("balancePopover").classList.remove("show");
+  document.getElementById("popoverBg").classList.remove("show");
+}
+
+function positionBalancePopover(){
+  const chip = document.getElementById("navBalance");
+  const pop = document.getElementById("balancePopover");
+  const rect = chip.getBoundingClientRect();
+  const popWidth = 300;
+  let left = rect.right - popWidth;
+  if(left < 12) left = 12;
+  if(left + popWidth > window.innerWidth - 12) left = window.innerWidth - popWidth - 12;
+  pop.style.top = (rect.bottom + 10) + "px";
+  pop.style.left = left + "px";
+}
+
+async function populateBalancePopover(){
+  const u = state.user;
+  if(!u) return;
+  document.getElementById("bpAmount").textContent = fmtNgn(u.ngn_balance);
+  document.getElementById("bpUsd").textContent = "Real Naira balance";
+
+  // NEW: Crypto Balance — a completely separate figure, never added to or
+  // blended with NGN above. Backed by points_balance (TRX/USDT both
+  // share this one balance already — see wallet_routes.py), shown here in
+  // USD since that's the unit that's actually meaningful across all three.
+  document.getElementById("bpCryptoAmount").textContent = fmtUsd(u.points_balance);
+  document.getElementById("bpCryptoSub").textContent = fmtPts(u.points_balance) + " Points · TRX / USDT";
+
+  if(!state.transactions.length){
+    try{ state.transactions = await api("/user/history"); }catch(e){}
+  }
+  // This popover's TOP stats block is attached to the NGN balance specifically
+  // — only count NGN-denominated transactions here, never Points ones.
+  const ngnTx = state.transactions.filter(t => t.currency === "NGN");
+  const deposits = ngnTx.filter(t=>t.type==="DEPOSIT_UNLOCK").reduce((s,t)=>s+t.amount,0);
+  const winnings = ngnTx.filter(t=>t.type==="SPIN_WIN").reduce((s,t)=>s+t.amount,0);
+  document.getElementById("bpDeposits").textContent = fmtNgn(deposits);
+  document.getElementById("bpWithdrawals").textContent = fmtNgn(winnings);
+
+  if(ngnTx.length){
+    const last = ngnTx[0];
+    const meta = TX_META[last.type] || {label:last.type};
+    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString()}`;
+  }else{
+    document.getElementById("bpLast").textContent = "No recent transactions";
+  }
+}
+
+window.addEventListener("resize", ()=>{
+  if(document.getElementById("balancePopover").classList.contains("show")) positionBalancePopover();
+});
+
+/* ===================== MOBILE DRAWER ===================== */
+
+function openDrawer(){
+  document.getElementById("drawer").classList.add("show");
+  document.getElementById("drawerBg").classList.add("show");
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("drawerBg").classList.remove("show");
+}
+
+/* ===================== NOTIFICATIONS (Apple-style, top-center, deduped) ===================== */
+
+const NOTIF_ICONS = {
+  DEPOSIT_SUCCESS: "💎",
+  DEPOSIT_REJECTED: "⚠️",
+  WITHDRAW_SUBMITTED: "📤",
+  WITHDRAW_LOCAL: "📤",
+  REDEEM_LOCAL: "🛍️",
+  LEDGER_LOCAL: "🏦",
+};
+
+function escapeHtml(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+let notifTimer = null;
+
+function startNotificationPolling(){
+  if(notifTimer) return;
+  pollNotifications();
+  notifTimer = setInterval(pollNotifications, 8000);
+}
+function stopNotificationPolling(){ if(notifTimer){ clearInterval(notifTimer); notifTimer = null; } }
+
+async function pollNotifications(){
+  if(!state.token) return;
+  try{
+    const notifs = await api("/wallet/notifications?unread_only=true");
+    notifs.forEach(n => {
+      if(state.seenNotifIds.has(n.id)){
+        api(`/wallet/notifications/${n.id}/read`, "POST").catch(()=>{});
+        return;
+      }
+      showNotification(n);
+      api(`/wallet/notifications/${n.id}/read`, "POST").catch(()=>{});
+      loadMe();
+    });
+  }catch(e){}
+}
+
+function markNotifSeen(id){
+  state.seenNotifIds.add(id);
+  if(state.seenNotifIds.size > 500){
+    const arr = Array.from(state.seenNotifIds);
+    state.seenNotifIds = new Set(arr.slice(arr.length - 300));
+  }
+  try{ localStorage.setItem("ls_seen_notifs", JSON.stringify(Array.from(state.seenNotifIds))); }catch(e){}
+}
+
+function showNotification(n, skipDedupe){
+  if(!skipDedupe){
+    if(state.seenNotifIds.has(n.id)) return;
+    markNotifSeen(n.id);
+  }
+  const stack = document.getElementById("notifStack");
+  const el = document.createElement("div");
+  el.className = "notif-card";
+  const icon = NOTIF_ICONS[n.type] || "🔔";
+  el.innerHTML = `
+    <div class="notif-glow"></div>
+    <div class="notif-icon">${icon}</div>
+    <div class="notif-content">
+      <div class="title">${escapeHtml(n.title)}</div>
+      <div class="msg">${escapeHtml(n.message)}</div>
+    </div>
+    <button class="close-x" aria-label="Dismiss">✕</button>
+  `;
+  el.querySelector(".close-x").onclick = ()=> dismissNotificationEl(el);
+  stack.appendChild(el);
+  clearTimeout(el._autoTimer);
+  el._autoTimer = setTimeout(()=> dismissNotificationEl(el), 7000);
+}
+
+function dismissNotificationEl(el){
+  if(!el || el.classList.contains("leaving")) return;
+  el.classList.add("leaving");
+  setTimeout(()=> el.remove(), 380);
+}
+
+/* ===================== INIT ===================== */
+
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){
+    closeBalancePopover();
+    closeDrawer();
+    closeWinModal();
+    closeWithdrawConfirm();
+    closeLedgerWithdrawConfirm();
+  }
+});
+
+(async function init(){
+  if(state.token){
+    const u = await loadMe();
+    if(u){
+      await checkAdminStatus();
+      showPage("wheel");
+    }
+  }
+})();
+</script>
+</body>
+</html>
