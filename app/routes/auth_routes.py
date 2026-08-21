@@ -9,7 +9,6 @@ from .. import models, schemas
 from ..database import get_db
 from ..auth import hash_password, verify_password, create_access_token
 from .. import email_service
-from . import email_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
