@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 
 load_dotenv()
+import re
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -10,8 +11,9 @@ from slowapi.errors import RateLimitExceeded
 import asyncio
 
 from .database import Base, engine, SessionLocal
-from .config import DATABASE_URL
+from .config import DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from . import models
+from .auth import hash_password
 from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes
 from . import blockchain_monitor
 from . import withdrawal_monitor
@@ -100,6 +102,79 @@ def seed_shop_items():
             ]
             db.add_all(items)
             db.commit()
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def bootstrap_admin_from_env():
+    """
+    NEW: create-or-promote the very first Admin account from ADMIN_EMAIL /
+    ADMIN_PASSWORD environment variables — for hosts like Render's free tier
+    that have no Shell/SSH access to run create_admin.py interactively.
+
+    Idempotent, safe to run on every single startup/deploy:
+      - ADMIN_EMAIL/ADMIN_PASSWORD unset or blank -> does nothing, logs one
+        line, does not crash the app.
+      - Email that already exists and is already is_admin=True -> no-op.
+      - Email that already exists but is_admin=False -> promotes it to
+        is_admin=True. Existing password_hash is left completely untouched
+        (this never resets a password for a pre-existing account).
+      - Email that doesn't exist yet -> creates a new user with is_admin=True,
+        password hashed with the exact same hash_password() every normal
+        signup already uses.
+
+    The password value itself is NEVER printed/logged, and this has no API
+    endpoint of its own — nothing here is reachable over HTTP, and no
+    existing endpoint or permission check changes.
+    """
+    admin_email = (ADMIN_EMAIL or "").strip().lower()
+    admin_password = ADMIN_PASSWORD or ""
+
+    if not admin_email and not admin_password:
+        # Most common case (env vars simply not set) — stay silent-ish, one line.
+        print("ℹ️  Admin bootstrap: ADMIN_EMAIL/ADMIN_PASSWORD not set — skipping.")
+        return
+
+    if not admin_email or not admin_password:
+        print("⚠️  Admin bootstrap: both ADMIN_EMAIL and ADMIN_PASSWORD must be set together — skipping (neither used).")
+        return
+
+    email_re = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    if not email_re.match(admin_email):
+        print("⚠️  Admin bootstrap: ADMIN_EMAIL doesn't look like a valid email — skipping.")
+        return
+
+    if len(admin_password) < 8:
+        print("⚠️  Admin bootstrap: ADMIN_PASSWORD must be at least 8 characters — skipping.")
+        return
+
+    db = SessionLocal()
+    try:
+        existing = db.query(models.User).filter(models.User.email == admin_email).first()
+        if existing:
+            if existing.is_admin:
+                print(f"ℹ️  Admin bootstrap: {admin_email} is already an admin — nothing to do.")
+            else:
+                existing.is_admin = True
+                db.commit()
+                print(f"✅ Admin bootstrap: promoted existing user {admin_email} to admin.")
+        else:
+            user = models.User(
+                email=admin_email,
+                password_hash=hash_password(admin_password),
+                full_name=ADMIN_FULL_NAME or "Admin",
+                is_admin=True,
+                is_active=True,
+            )
+            db.add(user)
+            db.commit()
+            print(f"✅ Admin bootstrap: created new admin user {admin_email}.")
+    except Exception as exc:
+        # Defensive: a bootstrap failure must never take down the whole app,
+        # and must never leak the password — only the exception message.
+        db.rollback()
+        print(f"⚠️  Admin bootstrap failed: {exc}")
     finally:
         db.close()
 

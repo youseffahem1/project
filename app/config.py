@@ -269,3 +269,16 @@ NIGERIAN_DEPOSIT_UPLOAD_DIR = os.environ.get("NIGERIAN_DEPOSIT_UPLOAD_DIR", "upl
 MAX_PROOF_UPLOAD_MB = 5
 ALLOWED_PROOF_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_PROOF_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+# =========================================================================
+# NEW: bootstrap the very first Admin account from environment variables —
+# for hosts like Render's free tier that have no Shell/SSH access, so
+# create_admin.py (which needs an interactive terminal) can't be run there.
+# No email/password is ever hardcoded here: both come from env only, and
+# both are optional — if either is unset, the bootstrap step in main.py
+# simply does nothing (no crash, no accidental admin). See main.py's
+# bootstrap_admin_from_env() for the actual create-or-promote logic.
+# =========================================================================
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+ADMIN_FULL_NAME = os.environ.get("ADMIN_FULL_NAME", "Admin")
