@@ -52,7 +52,7 @@ def wallet_summary(user: models.User = Depends(get_current_user)):
 
 
 # =========================================================================
-# DEPOSIT ADDRESS — via local TRON HD wallet (Nile testnet), one per user,
+# DEPOSIT ADDRESS — via local TRON HD wallet (Mainnet), one per user,
 # always returns the exact same address on every call (no regeneration).
 # =========================================================================
 
@@ -63,7 +63,7 @@ def get_deposit_addresses(
 ):
     """
     Returns this user's permanent deposit addresses for every currency this
-    deployment actually supports: TRX and USDT-TRC20. TRON (Nile) is
+    deployment actually supports: TRX and USDT-TRC20. TRON (Mainnet) is
     derived once from TRON_MASTER_SEED on first call, stored, and reused
     every time after that. USDT-TRC20 reuses that SAME TRON address (it's a
     token transfer on the same chain, not a separate address). No private
@@ -84,8 +84,8 @@ def get_deposit_addresses(
         raise HTTPException(status_code=502, detail=f"Could not create deposit address: {e}")
 
     addresses = [
-        {"currency": TRON_ADDRESS_CURRENCY_LABEL, "address": trx_address, "network": "TRON Nile Testnet"},
-        {"currency": "USDT_TRC20", "address": trx_address, "network": "TRON Nile Testnet (TRC20)"},
+        {"currency": TRON_ADDRESS_CURRENCY_LABEL, "address": trx_address, "network": "TRON Mainnet"},
+        {"currency": "USDT_TRC20", "address": trx_address, "network": "TRON Mainnet (TRC20)"},
     ]
 
     return {
@@ -126,7 +126,7 @@ def mark_notification_read(
 
 # =========================================================================
 # WITHDRAW — TRX and USDT-TRC20 via the dedicated TRON withdrawal wallet
-# (Nile testnet). Never trusts anything from the frontend: identity,
+# (Mainnet). Never trusts anything from the frontend: identity,
 # balance, and address are all re-verified here against the database and
 # the network. payload.currency picks the rail — TRX_NILE is the default
 # and its exact math/behavior below is UNCHANGED from the original TRX-only
@@ -209,7 +209,7 @@ def withdraw(
     db.commit()
     db.refresh(withdrawal)
 
-    currency_display = {"TRX_NILE": "TRX (Nile)", "USDT_TRC20": "USDT (TRC20)"}[currency]
+    currency_display = {"TRX_NILE": "TRX (TRON Mainnet)", "USDT_TRC20": "USDT (TRC20, TRON Mainnet)"}[currency]
     email_service.send_withdrawal_request_email(
         user_email=user.email, user_name=user.full_name,
         amount_points=payload.amount_points, amount_usdt=float(amount_usd_equivalent),
@@ -301,7 +301,7 @@ def withdrawal_status(
     if not w:
         raise HTTPException(status_code=404, detail="Withdrawal not found")
 
-    # If it's still processing, ask TRON Nile directly for the latest confirmation
+    # If it's still processing, ask TRON directly for the latest confirmation
     # state. Shared with the background poller in withdrawal_monitor.py so the
     # COMPLETED transition + completion email logic lives in exactly one place.
     withdrawal_monitor.check_and_finalize(db, w, user)
@@ -314,7 +314,7 @@ def lookup_transaction(
     tx_hash: str,
     user: models.User = Depends(get_current_user),
 ):
-    """يجلب معلومات معاملة TRON Nile مباشرة من الشبكة بالـ hash"""
+    """يجلب معلومات معاملة TRON مباشرة من الشبكة بالـ hash"""
     try:
         return tron_service.get_transaction_info(tx_hash)
     except tron_service.TronServiceError as e:

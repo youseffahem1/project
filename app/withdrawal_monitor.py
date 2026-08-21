@@ -31,7 +31,7 @@ _monitor_started = False
 
 def check_and_finalize(db, w, user=None):
     """
-    Checks a single withdrawal against TRON Nile and, if it has reached the
+    Checks a single withdrawal against TRON Mainnet and, if it has reached the
     required confirmations, marks it COMPLETED and fires the completion email.
 
     Guarded so the email can only ever fire once per withdrawal:
@@ -75,10 +75,12 @@ def check_and_finalize(db, w, user=None):
         return
 
     from datetime import datetime
+    _CURRENCY_DISPLAY = {"TRX_NILE": "TRX (TRON Mainnet)", "USDT_TRC20": "USDT (TRC20, TRON Mainnet)"}
+    currency_display = _CURRENCY_DISPLAY.get(getattr(w, "currency", None), "TRX (TRON Mainnet)")
     try:
         email_service.send_withdrawal_completed_email(
             user_name=user.full_name, user_email=user.email,
-            currency="TRX (Nile)", amount=str(w.amount_usdt),
+            currency=currency_display, amount=str(w.amount_usdt),
             destination_address=w.address, status=w.status,
             tx_hash=w.tx_hash, event_time=datetime.utcnow(),
         )

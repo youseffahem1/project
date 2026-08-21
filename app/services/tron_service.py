@@ -1,11 +1,11 @@
 """
-طبقة اتصال واحدة مع شبكة TRON (Nile Testnet فقط بهذه المرحلة).
+طبقة اتصال واحدة مع شبكة TRON Mainnet.
 
 مسؤولياته:
 - قراءة معاملات TRX الواردة لعنوان معيّن (لمراقبة الإيداعات)
 - جلب تفاصيل معاملة واحدة بالـ hash (للتحقق ولإندبوينت /transactions/{tx_hash})
 - التحقق من صحة شكل عنوان TRON
-- بناء وتوقيع وبث معاملة سحب TRX فعلية على Nile عبر محفظة السحب المخصصة
+- بناء وتوقيع وبث معاملة سحب TRX فعلية على TRON Mainnet عبر محفظة السحب المخصصة
   (TRON_WITHDRAWAL_PRIVATE_KEY) — محفظة منفصلة تماماً عن عناوين إيداع المستخدمين
 
 *** لا يوجد هنا أي مفتاح خاص لأي مستخدم — فقط مفتاح محفظة السحب الواحدة، من env فقط ***
@@ -22,8 +22,8 @@ class TronServiceError(Exception):
 
 
 def _tron_headers() -> dict:
-    """TronGrid API key header — optional on Nile, effectively required for
-    reasonable Mainnet rate limits. Omitted entirely when not configured."""
+    """TronGrid API key header — effectively required on Mainnet for
+    reasonable rate limits. Omitted entirely when not configured."""
     return {"TRON-PRO-API-KEY": TRONGRID_API_KEY} if TRONGRID_API_KEY else {}
 
 
@@ -72,7 +72,7 @@ def is_valid_tron_address(address: str) -> bool:
 def get_address_transactions(address: str, limit: int = 20) -> list:
     """
     يرجع آخر معاملات (native TRX transfers) واردة/صادرة لعنوان معيّن عبر
-    TronGrid REST API على Nile. كل عنصر يرجع بشكل مُطبّع (normalized):
+    TronGrid REST API على TRON Mainnet. كل عنصر يرجع بشكل مُطبّع (normalized):
     {tx_hash, sender, receiver, amount_trx, block_number, timestamp, success, confirmations}
     """
     url = f"{TRON_API_URL}/v1/accounts/{address}/transactions"
@@ -130,7 +130,7 @@ def get_latest_block_number() -> int:
 
 def get_transaction_info(tx_hash: str) -> dict:
     """
-    يجلب معلومات معاملة TRON Nile ويتحقق من نجاحها بشكل صحيح.
+    يجلب معلومات معاملة TRON (Mainnet) ويتحقق من نجاحها بشكل صحيح.
 
     نستخدم:
     - gettransactioninfobyid للحصول على blockNumber والرسوم.
@@ -148,7 +148,7 @@ def get_transaction_info(tx_hash: str) -> dict:
         info = info_resp.json()
 
         if not info or "id" not in info:
-            raise TronServiceError("Transaction not found on TRON Nile")
+            raise TronServiceError("Transaction not found on TRON Mainnet")
 
         # تفاصيل المعاملة نفسها لمعرفة contractRet
         tx_resp = httpx.post(
@@ -164,7 +164,7 @@ def get_transaction_info(tx_hash: str) -> dict:
         raise TronServiceError(f"TRON network error: {e}") from e
 
     if not tx:
-        raise TronServiceError("Transaction details not found on TRON Nile")
+        raise TronServiceError("Transaction details not found on TRON Mainnet")
 
     # TRON يضع نتيجة العقد هنا:
     # tx["ret"][0]["contractRet"]
@@ -203,7 +203,7 @@ def get_transaction_info(tx_hash: str) -> dict:
 
 def send_trx_withdrawal(to_address: str, amount_sun: int, sequence_id: str) -> dict:
     """
-    يبني ويوقّع ويبث معاملة سحب TRX على TRON Nile.
+    يبني ويوقّع ويبث معاملة سحب TRX على TRON Mainnet.
 
     محفظة السحب منفصلة عن عناوين الإيداع.
     """

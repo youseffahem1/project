@@ -145,16 +145,16 @@ BITGO_POLL_INTERVAL_SECONDS = 30   # كل كم ثانية نفحص محفظة Bi
 BITGO_MIN_CONFIRMATIONS = 1        # عدد التأكيدات المطلوبة قبل ما نحسب الإيداع مؤكد
 BITGO_COIN_DECIMALS = 6            # TRX/TRC20 = 6 خانات عشرية (لتحويل المبلغ لأصغر وحدة عند السحب)
 
-# --- TRON Nile Testnet (Deposit HD Wallet + Withdrawal Wallet) ---
+# --- TRON Mainnet (Deposit HD Wallet + Withdrawal Wallet) ---
 # *** Deposit addresses: derived locally from TRON_MASTER_SEED, no private keys stored in DB ***
 # *** Withdrawal: separate dedicated hot wallet, NOT the same seed as deposit addresses ***
-TRON_NETWORK = os.environ.get("TRON_NETWORK", "nile")
-TRON_API_URL = os.environ.get("TRON_API_URL", "https://nile.trongrid.io")
+TRON_NETWORK = os.environ.get("TRON_NETWORK", "mainnet")
+TRON_API_URL = os.environ.get("TRON_API_URL", "https://api.trongrid.io")
 TRON_RPC_URL = os.environ.get("TRON_RPC_URL", "") or TRON_API_URL
 
 TRON_MASTER_SEED = os.environ.get("TRON_MASTER_SEED", "")  # BIP39 mnemonic, deposit addresses only
 
-# محفظة سحب منفصلة تماماً — للاختبار على Nile فقط، أموال وهمية
+# محفظة سحب منفصلة تماماً — على TRON Mainnet، أموال حقيقية
 TRON_WITHDRAWAL_ADDRESS = os.environ.get("TRON_WITHDRAWAL_ADDRESS", "")
 TRON_WITHDRAWAL_PRIVATE_KEY = os.environ.get("TRON_WITHDRAWAL_PRIVATE_KEY", "")
 
@@ -172,12 +172,13 @@ SUN_PER_TRX = 1_000_000                     # TRX له 6 خانات عشرية (
 # =========================================================================
 
 # --- USDT-TRC20: same TRON address as TRX above, different asset on top ---
-# TronGrid API key (used for BOTH native TRX and USDT-TRC20 calls once set —
-# required for reasonable Mainnet rate limits; optional on Nile testnet).
+# TronGrid API key (used for BOTH native TRX and USDT-TRC20 calls once set) —
+# now that TRON_API_URL defaults to real Mainnet, this is effectively
+# REQUIRED for reasonable rate limits (get one free at https://www.trongrid.io).
 TRONGRID_API_KEY = os.environ.get("TRONGRID_API_KEY", "")
-# Official USDT-TRC20 contract address. This constant is the SAME on Nile
-# and Mainnet only if you deploy/mirror it — on real TRON Mainnet this is
-# the actual, well-known official contract; verify before going live.
+# Official USDT-TRC20 contract address on TRON MAINNET (verified,
+# publicly-documented Tether contract — the same value works correctly now
+# that TRON_API_URL above actually points at Mainnet instead of Nile).
 USDT_TRC20_CONTRACT = os.environ.get("USDT_TRC20_CONTRACT", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
 USDT_TRC20_DECIMALS = 6
 USDT_MIN_CONFIRMATIONS = int(os.environ.get("USDT_MIN_CONFIRMATIONS", str(TRON_MIN_CONFIRMATIONS)))
@@ -206,17 +207,21 @@ PRICE_STALE_MAX_SECONDS = int(os.environ.get("PRICE_STALE_MAX_SECONDS", "3600"))
 # (NGN is separate — see the Nigerian deposit section further below).
 CRYPTO_CURRENCIES = ["TRX", "USDT_TRC20", "BTC"]
 
-# --- إشعارات البريد للأدمن عند طلب سحب ---
-SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER = os.environ.get("SMTP_USER", "")          # حساب gmail يرسل منه (App Password)
-SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")  # App Password وليس كلمة مرور Gmail العادية
+# --- Outbound email: Email API over HTTPS/443 (NOT SMTP — Render Free blocks
+#     outbound SMTP ports like 587/465, which is why this was switched off
+#     smtplib entirely). Uses Resend's HTTPS API (https://api.resend.com/emails).
+#     Get a free API key at https://resend.com — no port 587 involved anywhere.
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+# Sender identity Resend will show as "From". Must be an address on a domain
+# you've verified in Resend, OR Resend's own onboarding sender
+# ("LuckySpin <onboarding@resend.dev>") while testing. Not a secret — just
+# not guessed here since it depends on your Resend account setup.
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "")
 ADMIN_NOTIFICATION_EMAIL = os.environ.get("ADMIN_NOTIFICATION_EMAIL", "vibeainlo@gmail.com")
 
 # --- NEW: admin notification emails for signup / confirmed deposit / withdrawal ---
 # Separate from ADMIN_NOTIFICATION_EMAIL above (which is only for withdrawal *requests*)
 # so the existing withdrawal-request email flow is never touched.
-SMTP_FROM = os.environ.get("SMTP_FROM", "") or SMTP_USER
 ADMIN_EVENTS_EMAIL = os.environ.get("ADMIN_EVENTS_EMAIL", "luckyspin.notifications@gmail.com")
 
 # --- إعدادات اللعبة (نقاط بدل فلوس حقيقية حالياً) ---

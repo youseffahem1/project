@@ -1,25 +1,84 @@
 """
-يرسل إيميل للأدمن (ADMIN_NOTIFICATION_EMAIL) كل ما مستخدم يطلب سحب.
-يستخدم Gmail SMTP — تحتاج App Password من إعدادات أمان حساب Gmail،
-مو كلمة مرور Gmail العادية.
+يرسل إيميل للأدمن (ADMIN_NOTIFICATION_EMAIL / ADMIN_EVENTS_EMAIL) عند signup /
+deposit / withdrawal / Nigerian deposit.
+
+UPDATED: كان يستخدم Gmail SMTP (smtplib, port 587) — Render Free يحجب منافذ
+SMTP الصادرة بالكامل (25/465/587)، فالإرسال ما كان يشتغل على Render Free نهائياً.
+استبدلناه بـ Resend's Email API عبر HTTPS (port 443 العادي) — نفس البروتوكول
+اللي المتصفح/الـ API الحالي يستخدمه أصلاً، ما يحتاج أي منفذ إضافي مفتوح.
+
+لا تغيير على: مين يستلم كل إيميل، الـ subject، محتوى النص/الـ HTML، أو نقاط
+الاستدعاء (auth_routes.py / blockchain_monitor.py / withdrawal_monitor.py /
+wallet_routes.py / nigerian_deposit_routes.py) — فقط طريقة "الإرسال" الفعلية
+تغيّرت من SMTP إلى HTTPS API. كل دالة عامة هنا نفس التوقيع (signature) بالضبط.
+
+Get a free Resend API key at https://resend.com — set RESEND_API_KEY and
+EMAIL_FROM (a sender address on a domain you verified in Resend, or their
+onboarding sender while testing) as environment variables. See config.py.
 """
-import smtplib
+import base64
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+
+import httpx
 
 from .config import (
-    SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, ADMIN_NOTIFICATION_EMAIL,
-    SMTP_FROM, ADMIN_EVENTS_EMAIL,
+    RESEND_API_KEY, EMAIL_FROM, ADMIN_NOTIFICATION_EMAIL,
+    ADMIN_EVENTS_EMAIL,
 )
+
+RESEND_API_URL = "https://api.resend.com/emails"
+
+
+def _resend_send(to_email, subject, text_body, html_body, attachment=None):
+    """Single shared transport: POST to Resend's HTTPS API (443), never SMTP.
+    Never raises — same "log and swallow" contract the old smtplib code had,
+    so a caller's DB transaction/response can never fail because of email.
+    `attachment`, if given, is a dict: {"filename": ..., "path": ...}."""
+    if not RESEND_API_KEY or not EMAIL_FROM:
+        print("[email_service] RESEND_API_KEY / EMAIL_FROM not configured, skipping email", flush=True)
+        print(f"[email_service] RESEND_API_KEY exists: {bool(RESEND_API_KEY)}", flush=True)
+        print(f"[email_service] EMAIL_FROM exists: {bool(EMAIL_FROM)}", flush=True)
+        return
+
+    payload = {
+        "from": EMAIL_FROM,
+        "to": [to_email],
+        "subject": subject,
+        "text": text_body,
+        "html": html_body,
+    }
+
+    if attachment and attachment.get("path") and os.path.isfile(attachment["path"]):
+        try:
+            with open(attachment["path"], "rb") as f:
+                raw = f.read()
+            payload["attachments"] = [{
+                "filename": attachment.get("filename") or os.path.basename(attachment["path"]),
+                "content": base64.b64encode(raw).decode("ascii"),
+            }]
+        except Exception as e:
+            print("[email_service] could not attach file: " + str(e), flush=True)
+
+    try:
+        resp = httpx.post(
+            RESEND_API_URL,
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=20,
+        )
+        if resp.status_code >= 400:
+            print(f"[email_service] EMAIL FAILED: HTTP {resp.status_code}: {resp.text}", flush=True)
+        else:
+            print(f"[email_service] EMAIL SENT SUCCESSFULLY to {to_email} ('{subject}')", flush=True)
+    except Exception as e:
+        print(f"[email_service] EMAIL FAILED: {type(e).__name__}: {e}", flush=True)
 
 
 def send_withdrawal_request_email(user_email, user_name, amount_points,
                                     amount_usdt, currency, address, withdrawal_id):
-    if not SMTP_USER or not SMTP_PASSWORD:
-        print("[email_service] SMTP not configured, skipping email")
-        return
-
     subject = "New withdrawal request - " + str(amount_usdt) + " " + currency
     body = (
         "New withdrawal request on LuckySpin:\n\n"
@@ -29,31 +88,14 @@ def send_withdrawal_request_email(user_email, user_name, amount_points,
         "Withdrawal ID: " + withdrawal_id + "\n\n"
         "Review it before it is auto-processed if it exceeds the auto-withdraw limit.\n"
     )
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = SMTP_USER
-    msg["To"] = ADMIN_NOTIFICATION_EMAIL
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_USER, [ADMIN_NOTIFICATION_EMAIL], msg.as_string())
-    except Exception as e:
-        print("[email_service] failed to send withdrawal email: " + str(e))
+    _resend_send(ADMIN_NOTIFICATION_EMAIL, subject, body, f"<pre>{body}</pre>")
 
 
 # =============================================================================
 # NEW (added): admin notification emails for signup / confirmed deposit /
 # withdrawal completion. These are additive only — nothing above this line
-# was changed. Each function is self-contained, never raises (so a caller's
-# DB transaction/response can never fail because of email), and never logs
-# the SMTP password or any private key/seed material.
-#
-# SMTP SENDING LOGIC IS UNCHANGED from the function above: same SMTP() call,
-# same starttls(), same login(), same sendmail(). The only difference is the
-# message body is now a MIMEMultipart("alternative") carrying a plain-text
-# part (for clients/spam filters that prefer it) plus a premium HTML part.
+# was changed in meaning, only the transport (see _resend_send above). Each
+# function is self-contained and never raises.
 # =============================================================================
 
 # --- Design tokens for the premium HTML templates ---------------------------
@@ -181,43 +223,7 @@ def _render_email_html(eyebrow, headline, subheadline, rows_html, footer_note):
 
 
 def _send_admin_event_email(subject, text_body, html_body):
-    if not SMTP_USER or not SMTP_PASSWORD:
-        print("[email_service] SMTP NOT CONFIGURED", flush=True)
-        print(f"[email_service] SMTP_USER exists: {bool(SMTP_USER)}", flush=True)
-        print(f"[email_service] SMTP_PASSWORD exists: {bool(SMTP_PASSWORD)}", flush=True)
-        print(f"[email_service] ADMIN_EVENTS_EMAIL: {ADMIN_EVENTS_EMAIL}", flush=True)
-        return
-
-    print(
-        f"[email_service] Sending '{subject}' to {ADMIN_EVENTS_EMAIL}",
-        flush=True
-    )
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = SMTP_FROM
-    msg["To"] = ADMIN_EVENTS_EMAIL
-
-    msg.attach(MIMEText(text_body, "plain"))
-    msg.attach(MIMEText(html_body, "html"))
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(
-                SMTP_FROM,
-                [ADMIN_EVENTS_EMAIL],
-                msg.as_string()
-            )
-
-        print("[email_service] EMAIL SENT SUCCESSFULLY", flush=True)
-
-    except Exception as e:
-        print(
-            f"[email_service] EMAIL FAILED: {type(e).__name__}: {e}",
-            flush=True
-        )
+    _resend_send(ADMIN_EVENTS_EMAIL, subject, text_body, html_body)
 
 
 def send_registration_email(user_name, user_email, signup_time=None):
@@ -275,7 +281,7 @@ def send_deposit_confirmed_email(user_name, user_email, currency, amount,
         _row("User", f"{user_name}<br><span style='font-weight:400;color:{_TEXT_MUTED};font-size:13px;'>{user_email}</span>")
         + _row("Amount", f"{amount} <span style='color:{_NEON_PURPLE_DARK};'>{currency}</span>")
         + _row("Currency", currency)
-        + _row("Network", "TRON Nile Testnet")
+        + _row("Network", "TRON Mainnet")
         + _row("Deposit address", f"<span style='font-family:monospace;font-size:13px;'>{deposit_address}</span>")
         + _row("Sender address", f"<span style='font-family:monospace;font-size:13px;'>{sender_address}</span>")
         + _row("Transaction hash", f"<span style='font-family:monospace;font-size:13px;'>{tx_hash}</span>")
@@ -320,7 +326,7 @@ def send_withdrawal_completed_email(user_name, user_email, currency, amount,
         _row("User", f"{user_name}<br><span style='font-weight:400;color:{_TEXT_MUTED};font-size:13px;'>{user_email}</span>")
         + _row("Amount", f"{amount} <span style='color:{_NEON_PURPLE_DARK};'>{currency}</span>")
         + _row("Currency", currency)
-        + _row("Network", "TRON Nile Testnet")
+        + _row("Network", "TRON Mainnet")
         + _row("Destination address", f"<span style='font-family:monospace;font-size:13px;'>{destination_address}</span>")
         + _row("Transaction hash", f"<span style='font-family:monospace;font-size:13px;'>{tx_hash if tx_hash else 'N/A'}</span>")
         + _row("Status", _status_pill(status))
@@ -340,60 +346,9 @@ def send_withdrawal_completed_email(user_name, user_email, currency, amount,
 # =========================================================================
 # NEW: Nigerian Bank Transfer deposit notifications — additive only, does
 # not modify _send_admin_event_email() or any function above. Reuses the
-# exact same SMTP connect/starttls/login/sendmail sequence and the same
-# premium HTML template helpers (_row, _status_pill, _render_email_html).
+# exact same premium HTML template helpers (_row, _status_pill,
+# _render_email_html) and the same _resend_send() HTTPS transport.
 # =========================================================================
-
-def _send_admin_event_email_with_attachment(subject, text_body, html_body,
-                                              attachment_path=None, attachment_filename=None,
-                                              attachment_mime_subtype=None):
-    """Same safe-send pattern as _send_admin_event_email(), plus an optional
-    single image attachment (the payment proof screenshot). If the file is
-    missing or unreadable, the email still sends without it — a missing
-    attachment must never block the admin notification itself.
-
-    attachment_mime_subtype is passed explicitly (jpeg/png/webp) rather than
-    left to MIMEImage's automatic imghdr-based detection: imghdr can fail to
-    recognize some valid JPEG/WEBP files and MIMEImage then raises, which the
-    except below would swallow — silently sending the email with no
-    attachment at all. Passing the subtype we already validated at upload
-    time removes that failure mode entirely."""
-    if not SMTP_USER or not SMTP_PASSWORD:
-        print("[email_service] SMTP not configured, skipping email")
-        return
-
-    from email.mime.image import MIMEImage
-    import os as _os
-
-    msg = MIMEMultipart("mixed")
-    msg["Subject"] = subject
-    msg["From"] = SMTP_FROM
-    msg["To"] = ADMIN_EVENTS_EMAIL
-
-    alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(text_body, "plain"))
-    alt.attach(MIMEText(html_body, "html"))
-    msg.attach(alt)
-
-    if attachment_path and _os.path.isfile(attachment_path):
-        try:
-            with open(attachment_path, "rb") as f:
-                raw = f.read()
-            img = MIMEImage(raw, _subtype=attachment_mime_subtype) if attachment_mime_subtype else MIMEImage(raw)
-            img.add_header("Content-Disposition", "attachment",
-                            filename=attachment_filename or _os.path.basename(attachment_path))
-            msg.attach(img)
-        except Exception as e:
-            print("[email_service] could not attach proof image: " + str(e))
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.sendmail(SMTP_FROM, [ADMIN_EVENTS_EMAIL], msg.as_string())
-    except Exception as e:
-        print("[email_service] failed to send admin event email (" + subject + "): " + str(e))
-
 
 def send_nigerian_deposit_admin_email(user_name, user_email, amount_ngn, bank_name,
                                        account_name, account_number, deposit_id,
@@ -437,16 +392,13 @@ def send_nigerian_deposit_admin_email(user_name, user_email, amount_ngn, bank_na
         footer_note="Nigerian deposit notification. Open the Admin Ledger → Deposit Requests panel to view the proof and approve or reject.",
     )
 
-    # Build a friendly attachment filename + explicit MIME subtype from the
-    # stored file's extension (already validated as jpg/jpeg/png/webp at
-    # upload time in nigerian_deposit_routes.create_nigerian_deposit).
+    # Build a friendly attachment filename from the stored file's extension
+    # (already validated as jpg/jpeg/png/webp at upload time in
+    # nigerian_deposit_routes.create_nigerian_deposit).
     ext = (os.path.splitext(proof_filename or "")[1] or "").lower().lstrip(".")
-    subtype_map = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp"}
-    mime_subtype = subtype_map.get(ext, "jpeg")
     friendly_name = f"payment-proof-{deposit_id}.{'jpg' if ext == 'jpeg' else (ext or 'jpg')}"
 
-    _send_admin_event_email_with_attachment(
-        subject, text_body, html_body,
-        attachment_path=proof_path, attachment_filename=friendly_name,
-        attachment_mime_subtype=mime_subtype,
+    _resend_send(
+        ADMIN_EVENTS_EMAIL, subject, text_body, html_body,
+        attachment={"path": proof_path, "filename": friendly_name} if proof_path else None,
     )
