@@ -1282,11 +1282,13 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <div class="wallet-tab active" id="adminTabBtnLedger" onclick="setAdminTab('ledger')">Ledger</div>
       <div class="wallet-tab" id="adminTabBtnDeposits" onclick="setAdminTab('deposits')">Deposit Requests</div>
       <div class="wallet-tab" id="adminTabBtnWithdrawals" onclick="setAdminTab('withdrawals')">Withdrawal Requests</div>
+      <div class="wallet-tab" id="adminTabBtnPrizeTiers" onclick="setAdminTab('prizetiers')">Prize Tiers</div>
       <div class="wallet-tab" id="adminTabBtnSettings" onclick="setAdminTab('settings')">Settings</div>
     </div>
     <div id="adminLedgerPanel"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
     <div id="adminDepositsPanel" style="display:none;"></div>
     <div id="adminWithdrawalsPanel" style="display:none;"></div>
+    <div id="adminPrizeTiersPanel" style="display:none;"></div>
     <div id="adminSettingsPanel" style="display:none;">
       <div class="card" style="max-width:420px;">
         <h2>Referral Reward</h2>
@@ -2717,7 +2719,7 @@ function renderNgnWithdrawForm(box, info){
       <div class="field-input-wrap"><input id="ngnWAccountNumber" type="text" inputmode="numeric" placeholder="e.g. 0123456789"></div>
     </div>
     <div class="field">
-      <label>Bank Name </label>
+      <label>Bank Name <span class="muted" style="font-weight:400;">(optional)</span></label>
       <div class="field-input-wrap"><input id="ngnWBankName" type="text" placeholder="e.g. Moniepoint MFB"></div>
     </div>
     <div class="field">
@@ -3180,14 +3182,17 @@ function setAdminTab(tab){
   document.getElementById("adminTabBtnLedger").classList.toggle("active", tab==="ledger");
   document.getElementById("adminTabBtnDeposits").classList.toggle("active", tab==="deposits");
   document.getElementById("adminTabBtnWithdrawals").classList.toggle("active", tab==="withdrawals");
+  document.getElementById("adminTabBtnPrizeTiers").classList.toggle("active", tab==="prizetiers");
   document.getElementById("adminTabBtnSettings").classList.toggle("active", tab==="settings");
   document.getElementById("adminLedgerPanel").style.display = tab==="ledger" ? "block" : "none";
   document.getElementById("adminDepositsPanel").style.display = tab==="deposits" ? "block" : "none";
   document.getElementById("adminWithdrawalsPanel").style.display = tab==="withdrawals" ? "block" : "none";
+  document.getElementById("adminPrizeTiersPanel").style.display = tab==="prizetiers" ? "block" : "none";
   document.getElementById("adminSettingsPanel").style.display = tab==="settings" ? "block" : "none";
   if(tab === "ledger") loadAdminLedger();
   if(tab === "deposits") loadDepositRequests();
   if(tab === "withdrawals") loadWithdrawalRequests();
+  if(tab === "prizetiers") loadPrizeTiers();
   if(tab === "settings") loadReferralRewardSetting();
 }
 
@@ -3208,6 +3213,183 @@ async function saveReferralRewardSetting(){
     showToast("Referral reward updated");
   }catch(e){ showToast(e.message); }
   finally{ setButtonLoading(btn, false); }
+}
+
+/* =========================================================================
+   NEW (Prize Tiers): admin management of the NGN Smart Dynamic Wheel's
+   play-amount-bracket prize tables. Every save re-fetches the live list
+   from the backend afterward, so what's shown always reflects exactly
+   what /api/spin/wheel and /api/spin/play will actually use next spin —
+   never a locally-guessed state.
+   ========================================================================= */
+
+async function loadPrizeTiers(){
+  const panel = document.getElementById("adminPrizeTiersPanel");
+  panel.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading prize tiers...</div>`;
+  try{
+    const tiers = await api("/admin/spin-tiers?currency=NGN");
+    state.prizeTiers = tiers;
+    renderPrizeTiersPanel();
+  }catch(e){
+    if(e.message === "Admin access required"){
+      panel.innerHTML = `<div class="card access-denied"><div class="icon">⛔</div><h3 style="font-size:19px; margin-bottom:8px;">Access Denied</h3><p class="muted">You don't have permission to view this page.</p></div>`;
+    }else{
+      panel.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${escapeHtml(e.message)}</div>`;
+    }
+  }
+}
+
+function renderPrizeTiersPanel(){
+  const panel = document.getElementById("adminPrizeTiersPanel");
+  const tiers = (state.prizeTiers || []).slice().sort((a,b)=>a.min_play_amount - b.min_play_amount);
+
+  let html = `
+    <p class="muted" style="margin-bottom:16px; font-size:12.5px;">
+      Each tier applies to any play amount at or above its threshold, up to the next tier's threshold.
+      A prize can never exceed the actual amount played — enforced on the server no matter what's configured here.
+    </p>
+  `;
+
+  html += tiers.map((t, idx) => renderPrizeTierCard(t, idx)).join("");
+
+  html += `
+    <div class="card" style="border-style:dashed;">
+      <h3 style="font-size:15px; margin-bottom:12px;">➕ Add New Tier</h3>
+      ${renderPrizeTierForm(null, "new")}
+    </div>
+  `;
+
+  panel.innerHTML = html;
+}
+
+function renderPrizeTierCard(tier, idx){
+  return `
+    <div class="card" style="margin-bottom:14px;" id="tierCard-${tier.id}">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;">
+        <h3 style="font-size:15px; flex:1;">${escapeHtml(tier.label || ('Tier ' + (idx+1)))} ${tier.is_active ? '' : '<span class="badge badge-out" style="margin-left:6px;">Inactive</span>'}</h3>
+        <button class="btn btn-danger btn-sm" onclick="deletePrizeTier('${tier.id}')">Delete</button>
+      </div>
+      ${renderPrizeTierForm(tier, tier.id)}
+    </div>
+  `;
+}
+
+function renderPrizeTierForm(tier, formId){
+  const minAmt = tier ? tier.min_play_amount : "";
+  const label = tier ? (tier.label || "") : "";
+  const active = tier ? tier.is_active : true;
+  const prizes = tier ? tier.prizes.slice().sort((a,b)=>a.prize_amount - b.prize_amount) : [
+    {prize_amount:0, weight:1}, {prize_amount:"", weight:1},
+  ];
+
+  const prizeRows = prizes.map((p, i) => `
+    <div class="prize-row" data-idx="${i}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="field" style="margin:0; flex:1;">
+        <label style="font-size:10.5px;">Prize Amount (₦)</label>
+        <input type="number" min="0" step="1" class="pt-prize-amount" value="${p.prize_amount}">
+      </div>
+      <div class="field" style="margin:0; flex:1;">
+        <label style="font-size:10.5px;">Weight</label>
+        <input type="number" min="0.01" step="0.01" class="pt-prize-weight" value="${p.weight}">
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px;" onclick="removePrizeRow(this)">✕</button>
+    </div>
+  `).join("");
+
+  return `
+    <div class="grid-2" style="gap:12px; margin-bottom:10px;">
+      <div class="field" style="margin:0;">
+        <label>Play Amount Threshold (₦)</label>
+        <input type="number" min="1" step="1" class="pt-min-amount" value="${minAmt}" placeholder="e.g. 5000">
+      </div>
+      <div class="field" style="margin:0;">
+        <label>Label (optional)</label>
+        <input type="text" class="pt-label" value="${escapeHtml(label)}" placeholder="e.g. ₦5,000 Tier">
+      </div>
+    </div>
+    <label class="checkbox-row" style="margin-bottom:12px;">
+      <input type="checkbox" class="pt-active" ${active ? "checked" : ""}> Active
+    </label>
+    <div class="pt-prize-rows">${prizeRows}</div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="btn btn-ghost btn-sm" onclick="addPrizeRow(this)">+ Add Prize</button>
+      <button class="btn btn-primary btn-sm" style="margin-left:auto;" id="tierSaveBtn-${formId}" onclick="savePrizeTier('${tier ? tier.id : ''}', this)">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">${tier ? "Save Tier" : "Create Tier"}</span></span>
+      </button>
+    </div>
+  `;
+}
+
+function addPrizeRow(btnEl){
+  const container = btnEl.closest(".card").querySelector(".pt-prize-rows");
+  const row = document.createElement("div");
+  row.className = "prize-row";
+  row.style = "display:flex; gap:8px; align-items:center; margin-bottom:8px;";
+  row.innerHTML = `
+    <div class="field" style="margin:0; flex:1;">
+      <label style="font-size:10.5px;">Prize Amount (₦)</label>
+      <input type="number" min="0" step="1" class="pt-prize-amount" value="">
+    </div>
+    <div class="field" style="margin:0; flex:1;">
+      <label style="font-size:10.5px;">Weight</label>
+      <input type="number" min="0.01" step="0.01" class="pt-prize-weight" value="1">
+    </div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:16px;" onclick="removePrizeRow(this)">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function removePrizeRow(btnEl){
+  const container = btnEl.closest(".pt-prize-rows");
+  if(container.querySelectorAll(".prize-row").length <= 1){ showToast("A tier needs at least one prize row"); return; }
+  btnEl.closest(".prize-row").remove();
+}
+
+async function savePrizeTier(tierId, btnEl){
+  const card = btnEl.closest(".card");
+  const minAmount = parseFloat(card.querySelector(".pt-min-amount").value);
+  const label = card.querySelector(".pt-label").value.trim();
+  const isActive = card.querySelector(".pt-active").checked;
+  const rows = Array.from(card.querySelectorAll(".prize-row"));
+
+  if(!minAmount || minAmount <= 0){ showToast("Enter a valid play amount threshold"); return; }
+
+  const prizes = [];
+  for(const row of rows){
+    const amt = parseFloat(row.querySelector(".pt-prize-amount").value);
+    const weight = parseFloat(row.querySelector(".pt-prize-weight").value);
+    if(isNaN(amt) || amt < 0){ showToast("Every prize needs a valid amount (0 or more)"); return; }
+    if(isNaN(weight) || weight <= 0){ showToast("Every prize needs a weight greater than 0"); return; }
+    prizes.push({prize_amount: amt, weight: weight});
+  }
+  if(!prizes.some(p => p.prize_amount === 0)){
+    showToast("Every tier must include a ₦0 (no-win) outcome");
+    return;
+  }
+
+  const payload = {currency: "NGN", min_play_amount: minAmount, label: label || null, is_active: isActive, prizes};
+
+  setButtonLoading(btnEl, true);
+  try{
+    if(tierId){
+      await api(`/admin/spin-tiers/${tierId}`, "PUT", payload);
+      showToast("Tier updated");
+    }else{
+      await api("/admin/spin-tiers", "POST", payload);
+      showToast("Tier created");
+    }
+    loadPrizeTiers();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btnEl, false); }
+}
+
+async function deletePrizeTier(tierId){
+  if(!confirm("Delete this prize tier? This cannot be undone.")) return;
+  try{
+    await api(`/admin/spin-tiers/${tierId}`, "DELETE");
+    showToast("Tier deleted");
+    loadPrizeTiers();
+  }catch(e){ showToast(e.message); }
 }
 
 async function loadAdminLedger(){

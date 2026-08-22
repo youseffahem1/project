@@ -14,9 +14,10 @@ from .database import Base, engine, SessionLocal
 from .config import DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from . import models
 from .auth import hash_password
-from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes, referral_routes
+from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes, referral_routes, admin_spin_routes
 from . import blockchain_monitor
 from . import withdrawal_monitor
+from . import spin_tier_service
 from .startup_migrations import run_startup_column_migrations
 
 # --- تحذير واضح باللوج لو السيرفر شغال بدون DATABASE_URL (يعني sqlite محلي) ---
@@ -90,6 +91,27 @@ app.include_router(nigerian_withdrawal_routes.user_router)
 app.include_router(nigerian_withdrawal_routes.admin_router)
 app.include_router(referral_routes.user_router)
 app.include_router(referral_routes.admin_router)
+app.include_router(admin_spin_routes.router)
+
+
+@app.on_event("startup")
+def seed_default_ngn_prize_tiers():
+    """
+    NEW (Prize Tiers): seeds the exact example tiers from the product spec
+    (₦5,000/₦10,000/₦20,000/₦50,000 brackets) the FIRST time this feature
+    runs — i.e. only if there are zero NGN tiers in the database at all
+    yet. Safe to run on every startup: seed_default_ngn_tiers_if_empty()
+    checks for existing rows first and is a complete no-op once any NGN
+    tier exists, so it never overwrites an admin's own edits.
+    """
+    db = SessionLocal()
+    try:
+        spin_tier_service.seed_default_ngn_tiers_if_empty(db)
+    except Exception as e:
+        db.rollback()
+        print(f"⚠️  Prize Tiers seeding failed, continuing anyway: {e}")
+    finally:
+        db.close()
 
 
 @app.get("/api/health")

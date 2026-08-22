@@ -60,9 +60,9 @@ SPIN_FEE_USD = 1.0
 # a SEPARATE endpoint (POST /api/spin/play) where a Nigerian player picks
 # how much NAIRA to play — no Points, no conversion, real NGN in and out.
 # =========================================================================
-SPIN_PLAY_PRESETS_NGN = [1000, 5000, 10000, 15000, 20000, 30000]
+SPIN_PLAY_PRESETS_NGN = [1000, 5000, 10000, 15000, 20000, 30000, 50000]
 SPIN_MIN_PLAY_NGN = 1000
-SPIN_MAX_PLAY_NGN = 30000
+SPIN_MAX_PLAY_NGN = 50000
 SPIN_CUSTOM_AMOUNT_ALLOWED = True
 
 # The wheel ALWAYS visually shows exactly these 11 segments, in this exact
@@ -76,6 +76,16 @@ SPIN_CUSTOM_AMOUNT_ALLOWED = True
 # spin. The backend is the only place that decides prize; result is always
 # one of THESE exact values, never an arbitrary number, so the frontend can
 # reliably spin the wheel to land on whichever value the backend returned.
+#
+# NOTE (Prize Tiers): this single universal list is now UNUSED for NGN —
+# that's precisely what made every deposit level look almost the same (the
+# same small values were always eligible and always dominated the
+# probability, regardless of play_amount). NGN now uses genuinely different,
+# admin-configurable prize tables per play-amount bracket instead — see
+# models.SpinPrizeTier/SpinPrizeValue and spin_tier_service.py. Left here,
+# unused-but-not-deleted, only because build_dynamic_prize_table() below
+# still needs a default value and is still used by the USD/Crypto spin,
+# which this change does not touch.
 WHEEL_DISPLAY_VALUES_NGN = [20000, 30000, 15000, 10000, 2500, 1000, 800, 400, 350, 200, 0]
 
 # Deposit-tier probability boost — a small, capped nudge toward the bigger

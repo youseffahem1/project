@@ -381,3 +381,53 @@ class ReferralReward(Base):
 
     referrer = relationship("User", foreign_keys=[referrer_user_id])
     referred = relationship("User", foreign_keys=[referred_user_id])
+
+
+# =========================================================================
+# NEW (Prize Tiers): distinct, admin-configurable prize tables per
+# play-amount bracket for the NGN Smart Dynamic Wheel. Replaces the old
+# "one universal WHEEL_DISPLAY_VALUES_NGN list, filtered by <= play_amount"
+# approach for NGN specifically — that old approach is WHY every deposit
+# level looked almost identical: the same small values were always
+# eligible and always dominated the probability mass, no matter how big
+# play_amount was. These two tables are additive only: game_logic.py's
+# build_dynamic_prize_table/resolve_dynamic_spin (and everything in
+# config.py's WHEEL_DISPLAY_VALUES_NGN/USD) are completely untouched and
+# still power the Crypto ($) spin exactly as before — see spin_tier_
+# service.py and spin_routes.py for how NGN was switched over to this.
+# =========================================================================
+
+class SpinPrizeTier(Base):
+    __tablename__ = "spin_prize_tiers"
+
+    id = Column(String, primary_key=True, default=gen_id)
+    currency = Column(String, nullable=False, default="NGN")
+    # This tier applies to any play_amount >= min_play_amount, up to (but
+    # not including) the next active tier's min_play_amount — i.e. the
+    # HIGHEST tier whose min_play_amount a given play_amount still meets.
+    min_play_amount = Column(Float, nullable=False)
+    label = Column(String, nullable=True)   # purely descriptive, e.g. "₦5,000 Tier" — shown in the admin dashboard only
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    prizes = relationship(
+        "SpinPrizeValue", back_populates="tier",
+        cascade="all, delete-orphan", order_by="SpinPrizeValue.prize_amount",
+    )
+
+
+class SpinPrizeValue(Base):
+    """One possible prize amount within a tier, with its own relative
+    probability weight — admin-editable. Weights are RELATIVE, not
+    percentages: they're normalized (weight / sum of all weights in this
+    tier) at resolve-time, so an admin can add/remove/reweight rows without
+    needing every tier's weights to add up to any particular total."""
+    __tablename__ = "spin_prize_values"
+
+    id = Column(String, primary_key=True, default=gen_id)
+    tier_id = Column(String, ForeignKey("spin_prize_tiers.id"), nullable=False)
+    prize_amount = Column(Float, nullable=False)
+    weight = Column(Float, nullable=False, default=1.0)
+
+    tier = relationship("SpinPrizeTier", back_populates="prizes")
