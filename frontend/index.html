@@ -1039,7 +1039,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
           <div class="gate-icon">🔒</div>
           <h3>Unlock LuckySpin</h3>
           <p>Make your first deposit to unlock the wheel.</p>
-          <button class="btn btn-primary" onclick="showPage('wallet'); setWalletTab('deposit')">Deposit Now</button>
+          <button class="btn btn-primary" onclick="showPage('deposit')">Deposit Now</button>
         </div>
 
         <!-- Normal spin view -->
@@ -1094,7 +1094,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
 <div class="page" id="page-wallet">
   <div class="container">
-    <div class="page-head"><h1>Wallet</h1><p>Manage your deposits, withdrawals, and balance.</p></div>
+    <div class="page-head"><h1>Wallet</h1><p>Your balances at a glance.</p></div>
 
     <div class="grid-2" style="margin-bottom:22px; align-items:stretch;">
       <div class="card">
@@ -1123,60 +1123,64 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
     </div>
     <p class="muted" style="font-size:12px; margin:-12px 0 22px;">These two balances are always kept separate — a Naira deposit only ever changes NGN Balance, and a TRX/USDT deposit only ever changes Crypto Balance.</p>
 
-    <div class="wallet-tabs">
-      <div class="wallet-tab active" id="tabBtnDeposit" onclick="setWalletTab('deposit')">Deposit</div>
-      <div class="wallet-tab" id="tabBtnWithdraw" onclick="setWalletTab('withdraw')">Withdraw</div>
+    <div class="grid-2">
+      <button class="btn btn-primary btn-block" onclick="showPage('deposit')" style="padding:16px;">⬇ Go to Deposit</button>
+      <button class="btn btn-ghost btn-block" onclick="showPage('withdraw')" style="padding:16px;">⬆ Go to Withdraw</button>
     </div>
+  </div>
+</div>
 
-    <!-- DEPOSIT PANEL -->
-    <div class="wallet-panel active" id="walletPanelDeposit">
-      <div class="card">
-        <h2>Choose a currency</h2>
-        <div class="currency-row" id="depositCurrencyRow">
-          <div class="muted">Loading supported currencies...</div>
-        </div>
-        <div id="depositContent"></div>
+<div class="page" id="page-deposit">
+  <div class="container">
+    <div class="page-head"><h1>Deposit</h1><p>Add funds to your balance.</p></div>
+    <div class="card">
+      <h2>Choose a currency</h2>
+      <div class="currency-row" id="depositCurrencyRow">
+        <div class="muted">Loading supported currencies...</div>
       </div>
+      <div id="depositContent"></div>
     </div>
+  </div>
+</div>
 
-    <!-- WITHDRAW PANEL -->
-    <div class="wallet-panel" id="walletPanelWithdraw">
-      <div class="card">
-        <h2>Choose Network</h2>
-        <div class="currency-row" id="withdrawNetworkRow">
-          <div class="currency-chip" data-net="NGN" onclick="selectWithdrawNetwork('NGN')">🇳🇬 NGN · Bank Transfer</div>
-          <div class="currency-chip active" data-net="TRX_NILE" onclick="selectWithdrawNetwork('TRX_NILE')">🟣 TRX · TRON</div>
-          <div class="currency-chip" data-net="USDT_TRC20" onclick="selectWithdrawNetwork('USDT_TRC20')">💠 USDT · TRC20</div>
+<div class="page" id="page-withdraw">
+  <div class="container">
+    <div class="page-head"><h1>Withdraw</h1><p>Move funds out to your bank or crypto address.</p></div>
+    <div class="card">
+      <h2>Choose Network</h2>
+      <div class="currency-row" id="withdrawNetworkRow">
+        <div class="currency-chip" data-net="NGN" onclick="selectWithdrawNetwork('NGN')">🇳🇬 NGN · Bank Transfer</div>
+        <div class="currency-chip active" data-net="TRX_NILE" onclick="selectWithdrawNetwork('TRX_NILE')">🟣 TRX · TRON</div>
+        <div class="currency-chip" data-net="USDT_TRC20" onclick="selectWithdrawNetwork('USDT_TRC20')">💠 USDT · TRC20</div>
+      </div>
+
+      <div id="ngnWithdrawForm" style="display:none;"></div>
+
+      <div id="withdrawForm">
+        <div class="stat-box" style="max-width:260px; margin-bottom:18px;">
+          <div class="val" id="withdrawAvailBalance">0 Points</div>
+          <div class="lbl">Available Balance</div>
         </div>
 
-        <div id="ngnWithdrawForm" style="display:none;"></div>
-
-        <div id="withdrawForm">
-          <div class="stat-box" style="max-width:260px; margin-bottom:18px;">
-            <div class="val" id="withdrawAvailBalance">0 Points</div>
-            <div class="lbl">Available Balance</div>
+        <div class="field">
+          <label>Amount (Points)</label>
+          <div class="field-input-wrap with-max">
+            <input id="withdrawAmount" type="number" placeholder="e.g. 500" oninput="updateWithdrawEstimate()">
+            <button type="button" class="max-btn" onclick="setWithdrawMax()">MAX</button>
           </div>
-
-          <div class="field">
-            <label>Amount (Points)</label>
-            <div class="field-input-wrap with-max">
-              <input id="withdrawAmount" type="number" placeholder="e.g. 500" oninput="updateWithdrawEstimate()">
-              <button type="button" class="max-btn" onclick="setWithdrawMax()">MAX</button>
-            </div>
-          </div>
-          <div class="field">
-            <label id="withdrawAddressLabel">Destination TRON Address</label>
-            <div class="field-input-wrap"><input id="withdrawAddress" type="text" placeholder="T..."></div>
-          </div>
-
-          <div class="withdraw-summary">
-            <div class="row"><span>Network</span><b id="withdrawNetworkLabel">TRON Nile Testnet</b></div>
-            <div class="row"><span>Estimated Amount</span><b id="withdrawEstAmount">0 TRX</b></div>
-          </div>
-
-          <button class="btn btn-primary btn-block" onclick="openWithdrawReview()">Review Withdrawal</button>
-          <p class="muted" style="margin-top:12px; font-size:12px;">Small withdrawals are sent automatically. Larger ones are reviewed manually for your safety.</p>
         </div>
+        <div class="field">
+          <label id="withdrawAddressLabel">Destination TRON Address</label>
+          <div class="field-input-wrap"><input id="withdrawAddress" type="text" placeholder="T..."></div>
+        </div>
+
+        <div class="withdraw-summary">
+          <div class="row"><span>Network</span><b id="withdrawNetworkLabel">TRON Nile Testnet</b></div>
+          <div class="row"><span>Estimated Amount</span><b id="withdrawEstAmount">0 TRX</b></div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="openWithdrawReview()">Review Withdrawal</button>
+        <p class="muted" style="margin-top:12px; font-size:12px;">Small withdrawals are sent automatically. Larger ones are reviewed manually for your safety.</p>
       </div>
     </div>
   </div>
@@ -1578,7 +1582,7 @@ async function api(path, method="GET", body=null, auth=true){
   return data;
 }
 
-const PROTECTED_PAGES = ["wheel","wallet","transactions","shop","leaderboard","profile","admin"];
+const PROTECTED_PAGES = ["wheel","wallet","deposit","withdraw","transactions","shop","leaderboard","profile","admin"];
 
 function showPage(id){
   if(PROTECTED_PAGES.includes(id) && !state.token){
@@ -1599,7 +1603,9 @@ function showPage(id){
   });
 
   if(id === "wheel") refreshSpinStatus();
-  if(id === "wallet"){ refreshWallet(); loadAddresses(); }
+  if(id === "wallet"){ refreshWallet(); }
+  if(id === "deposit"){ refreshWallet(); loadAddresses(); }
+  if(id === "withdraw"){ refreshWallet(); }
   if(id === "transactions"){ loadTransactions(); }
   if(id === "shop") refreshShop();
   if(id === "leaderboard") refreshLeaderboard();
@@ -2343,13 +2349,6 @@ function fireConfetti(){
 
 /* ===================== WALLET ===================== */
 
-function setWalletTab(tab){
-  document.getElementById("tabBtnDeposit").classList.toggle("active", tab==="deposit");
-  document.getElementById("tabBtnWithdraw").classList.toggle("active", tab==="withdraw");
-  document.getElementById("walletPanelDeposit").classList.toggle("active", tab==="deposit");
-  document.getElementById("walletPanelWithdraw").classList.toggle("active", tab==="withdraw");
-}
-
 async function refreshWallet(){
   try{
     const s = await api("/wallet/summary");
@@ -2835,8 +2834,7 @@ function renderNgnWithdrawPendingStatus(box, w){
 // crypto/TRX withdrawal panel, since the spin's balance/prize is NGN.
 function goToNgnWithdraw(){
   closeDynamicResultModal();
-  showPage('wallet');
-  setWalletTab('withdraw');
+  showPage('withdraw');
   selectWithdrawNetwork('NGN');
 }
 
