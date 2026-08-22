@@ -377,7 +377,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .play-amount-label{font-size:12.5px; font-weight:800; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; text-align:center; margin-bottom:10px;}
 .play-amount-grid{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
 .play-amount-chip{flex:1 1 auto; min-width:78px; text-align:center; padding:10px 8px; border-radius:14px; border:1.5px solid var(--glass-border); background:rgba(255,255,255,.5); cursor:pointer; transition:.2s var(--ease); box-sizing:border-box;}
-.play-amount-chip .amt{font-size:14px; font-weight:800; display:block;}
+.play-amount-chip .amt{font-size:14px; font-weight:800; display:block; letter-spacing:.2px;}
 .play-amount-chip .ngn{font-size:10px; color:var(--text-dim); display:block; margin-top:1px;}
 .play-amount-chip:hover{border-color:var(--purple-2); transform:translateY(-1px);}
 .play-amount-chip.active{border-color:var(--purple); background:linear-gradient(135deg,rgba(124,58,237,.14),rgba(236,72,153,.08)); box-shadow:0 0 0 3px rgba(124,58,237,.1);}
@@ -1106,22 +1106,28 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
         <div class="muted">🏆 NGN — Winnings Balance</div>
         <div style="font-size:24px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px; color:var(--green);" id="walletNgnWinnings">₦0</div>
-        <div class="muted" style="font-size:11.5px; margin-bottom:12px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
-        <button class="btn btn-ghost btn-sm" id="transferWinningsBtn" onclick="openTransferWinningsModal()">
-          <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">↩ Move Winnings to Playing Balance</span></span>
-        </button>
+        <div class="muted" style="font-size:11.5px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
       </div>
       <div class="card">
         <div class="muted">💠 Crypto Balance</div>
-        <div style="font-size:32px; font-weight:900; margin:8px 0 4px; letter-spacing:-.5px;" id="walletBalance">$0.00</div>
-        <div class="muted" style="font-size:12px; margin-bottom:12px;" id="walletBalancePts">0 Points</div>
+        <div style="font-size:32px; font-weight:900; margin:8px 0 12px; letter-spacing:-.5px;" id="walletBalance">$0.00</div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <div class="stat-box" style="max-width:220px;"><div class="val" id="pointsRate">100 Points = 1 TRX</div><div class="lbl">Conversion rate</div></div>
-          <div class="stat-box" style="max-width:200px;"><div class="val" id="walletLocked">0 Points</div><div class="lbl">Locked rewards</div></div>
+          <div class="stat-box" style="max-width:220px;"><div class="val" id="walletLocked">$0.00</div><div class="lbl">Locked rewards (not yet spendable)</div></div>
         </div>
       </div>
     </div>
     <p class="muted" style="font-size:12px; margin:-12px 0 22px;">These two balances are always kept separate — a Naira deposit only ever changes NGN Balance, and a TRX/USDT deposit only ever changes Crypto Balance.</p>
+
+    <!-- Dedicated, standalone section — deliberately separate from Deposit
+         and Withdraw, since this never touches an outside bank/wallet, it
+         only moves money between two of YOUR OWN balances. -->
+    <div class="card" style="margin-bottom:22px; border-color:rgba(34,197,94,.3); background:linear-gradient(160deg, rgba(34,197,94,.06), rgba(255,255,255,.5));">
+      <h2 style="margin-bottom:4px;">🔄 Transfer Winnings to Playing Balance</h2>
+      <p class="muted" style="margin-bottom:16px;">Move money from your Winnings Balance into your Main Playing Balance, so you can spin with it. This never touches your bank account — it only moves funds between your own two balances.</p>
+      <button class="btn btn-primary" id="transferWinningsBtn" onclick="openTransferWinningsModal()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">↩ Transfer Winnings</span></span>
+      </button>
+    </div>
 
     <div class="grid-2">
       <button class="btn btn-primary btn-block" onclick="showPage('deposit')" style="padding:16px;">⬇ Go to Deposit</button>
@@ -1511,7 +1517,7 @@ let state = {
 };
 
 function fmtPts(n){ return (Number(n)||0).toFixed(1); }
-function fmtNgn(n){ return "₦" + Math.round(Number(n)||0).toLocaleString(); }
+function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString(); }
 function fmtUsd(points){ return "$" + (Number(points||0) / (state.pointsPerUsdt || 100)).toFixed(2); }
 
 function showToast(msg){
@@ -2354,12 +2360,11 @@ async function refreshWallet(){
     const s = await api("/wallet/summary");
     state.pointsPerUsdt = s.points_per_usdt;
 
-    // Crypto Balance card — shown in USD (the unit that's actually
-    // meaningful across TRX/USDT, which both share this one balance).
+    // Crypto Balance card — shown in USD only. No Points anywhere on the
+    // Wallet page (Points is still used internally for the ledger/exchange
+    // math, it's just never displayed to the user here).
     document.getElementById("walletBalance").textContent = fmtUsd(s.points_balance);
-    document.getElementById("walletBalancePts").textContent = fmtPts(s.points_balance) + " Points";
-    document.getElementById("pointsRate").textContent = `${s.points_per_usdt} Points = 1 TRX`;
-    if(state.user){ document.getElementById("walletLocked").textContent = fmtPts(state.user.locked_points) + " Points"; }
+    if(state.user){ document.getElementById("walletLocked").textContent = fmtUsd(state.user.locked_points); }
     document.getElementById("withdrawAvailBalance").textContent = fmtPts(s.points_balance) + " Points";
 
     // NGN Balance card — a completely separate figure, never combined with
