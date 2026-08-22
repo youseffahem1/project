@@ -381,10 +381,12 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .spin-fee-badge{display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,rgba(245,158,11,.14),rgba(236,72,153,.1)); border:1px solid rgba(245,158,11,.35); color:var(--gold-2); padding:8px 16px; border-radius:999px; font-size:13px; font-weight:800; position:relative; z-index:1;}
 
 /* ===== Play Amount picker (Smart Dynamic Wheel) ===== */
-.spin-balance-row{display:flex; justify-content:center; margin-bottom:18px; position:relative; z-index:1;}
+.spin-balance-row{display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom:18px; position:relative; z-index:1;}
 .spin-balance-chip{display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,.55); border:1px solid var(--glass-border); border-radius:16px; padding:10px 22px; box-shadow:var(--shadow-sm);}
 .spin-balance-chip .l{font-size:10.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.4px;}
 .spin-balance-chip .v{font-size:19px; font-weight:900; color:var(--text); overflow-wrap:anywhere;}
+.spin-balance-chip-winnings{background:var(--green-bg); border-color:rgba(22,163,74,.25);}
+.spin-balance-chip-winnings .v{color:var(--green);}
 .play-amount-section{width:100%; max-width:420px; margin:0 auto 16px; position:relative; z-index:1;}
 .play-amount-label{font-size:12.5px; font-weight:800; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; text-align:center; margin-bottom:10px;}
 .play-amount-grid{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
@@ -1084,6 +1086,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         <div id="spinNormalView" style="display:none; width:100%;">
           <div class="spin-balance-row">
             <div class="spin-balance-chip"><span class="l">Available Balance</span><span class="v" id="spinYourBalance">₦0</span></div>
+            <div class="spin-balance-chip spin-balance-chip-winnings"><span class="l">🏆 Winnings Balance</span><span class="v" id="spinWinningsBalance">₦0</span></div>
           </div>
 
           <div class="play-amount-section">
@@ -2057,6 +2060,15 @@ async function refreshSpinStatus(){
 
     document.getElementById("statBalance").textContent = fmtSpin(state.spinConfig.balance, currency);
     document.getElementById("statBalanceLbl").textContent = currency === "USD" ? "Crypto Balance" : "NGN Balance";
+
+    // NEW: Winnings Balance shown next to Available Balance — independent
+    // of the play/gate balance above; always reflects the loaded user's
+    // ngn_winnings_balance (NGN mode) or usd_winnings_balance (Crypto mode).
+    const winningsAmount = currency === "USD"
+      ? (state.user ? state.user.usd_winnings_balance : 0)
+      : (state.user ? state.user.ngn_winnings_balance : 0);
+    const winningsEl = document.getElementById("spinWinningsBalance");
+    if(winningsEl) winningsEl.textContent = fmtSpin(winningsAmount, currency);
 
     if(!state.spinConfig.hasDeposited){
       gateDeposit.style.display = "block"; normal.style.display = "none";
