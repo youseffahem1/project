@@ -13,6 +13,7 @@ import asyncio
 from .database import Base, engine, SessionLocal
 from .config import DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from . import models
+from .db_migrations import run_startup_migrations
 from .auth import hash_password
 from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes
 from . import blockchain_monitor
@@ -30,8 +31,15 @@ if DATABASE_URL.startswith("sqlite"):
         "PostgreSQL connection string in the Render dashboard's Environment tab."
     )
 
-# --- إنشاء الجداول ---
+# --- إنشاء الجداول (جداول جديدة بالكامل فقط — لا يضيف أعمدة لجدول موجود) ---
 Base.metadata.create_all(bind=engine)
+
+# --- NEW: إضافة أي عمود ناقص لجدول موجود مسبقاً (مثل users.ngn_winnings_balance) ---
+# create_all() أعلاه لا يعدّل جدول موجود، فهذا يغطي الفجوة: يقارن أعمدة كل
+# Model الحالية مع القاعدة الحية على Render ويضيف الناقص فقط عبر
+# ALTER TABLE ... ADD COLUMN IF NOT EXISTS (PostgreSQL فقط، آمن للتكرار،
+# لا يحذف/يعدّل أي شيء موجود). انظر db_migrations.py لكل التفاصيل.
+run_startup_migrations(engine, Base)
 
 # --- Rate limiting عام لكل الـ API (حماية من هجمات bruteforce / سبام) ---
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
