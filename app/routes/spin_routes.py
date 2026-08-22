@@ -215,6 +215,7 @@ def spin_play_config(
             "max_play": SPIN_MAX_PLAY_USD,
             "custom_allowed": SPIN_CUSTOM_AMOUNT_ALLOWED,
             "balance": user.points_balance / POINTS_PER_USDT,
+            "winnings_balance": user.usd_winnings_balance,
             "has_deposited": has_deposited,
             "deposit_tier": tier_label,
         }
@@ -228,6 +229,7 @@ def spin_play_config(
         "max_play_ngn": SPIN_MAX_PLAY_NGN,
         "custom_allowed": SPIN_CUSTOM_AMOUNT_ALLOWED,
         "ngn_balance": user.ngn_balance,
+        "ngn_winnings_balance": user.ngn_winnings_balance,
         "has_deposited": has_deposited,
         "deposit_tier": tier_label,
     }
@@ -348,8 +350,7 @@ def _spin_play_usd(payload, db: Session, user: models.User):
 
     win_tx = None
     if prize_usd > 0:
-        prize_points = Decimal(str(prize_usd)) * Decimal(str(POINTS_PER_USDT))
-        locked_user.points_balance = float(Decimal(str(locked_user.points_balance)) + prize_points)
+        locked_user.usd_winnings_balance = float(Decimal(str(locked_user.usd_winnings_balance)) + Decimal(str(prize_usd)))
         win_tx = models.Transaction(
             user_id=locked_user.id, type=models.TransactionType.SPIN_WIN,
             amount=prize_usd, currency="USD",
@@ -365,6 +366,7 @@ def _spin_play_usd(payload, db: Session, user: models.User):
     return schemas.DynamicSpinResult(
         success=True, currency="USD", play_amount=payload.play_amount,
         winning_amount=prize_usd, new_balance=locked_user.points_balance / POINTS_PER_USDT,
+        new_winnings_balance=locked_user.usd_winnings_balance,
         transaction_id=(win_tx.id if win_tx else fee_tx.id),
         status="WIN" if prize_usd > 0 else "LOSS",
     )
@@ -416,7 +418,7 @@ def _spin_play_ngn(payload, db: Session, user: models.User):
 
     win_tx = None
     if prize > 0:
-        locked_user.ngn_balance = float(Decimal(str(locked_user.ngn_balance)) + Decimal(str(prize)))
+        locked_user.ngn_winnings_balance = float(Decimal(str(locked_user.ngn_winnings_balance)) + Decimal(str(prize)))
         win_tx = models.Transaction(
             user_id=locked_user.id,
             type=models.TransactionType.SPIN_WIN,
@@ -434,6 +436,7 @@ def _spin_play_ngn(payload, db: Session, user: models.User):
     return schemas.DynamicSpinResult(
         success=True, currency="NGN", play_amount=payload.play_amount,
         winning_amount=prize, new_balance=locked_user.ngn_balance,
+        new_winnings_balance=locked_user.ngn_winnings_balance,
         transaction_id=(win_tx.id if win_tx else fee_tx.id),
         status="WIN" if prize > 0 else "LOSS",
     )

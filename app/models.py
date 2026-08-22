@@ -30,6 +30,20 @@ class User(Base):
     # إطلاقًا. كل إيداع/سحب/سبن نيجيري يتعامل مع هذا الحقل فقط.
     ngn_balance = Column(Float, default=0.0)
 
+    # NEW: فصل رصيد اللعب عن رصيد الأرباح — Main Playing Balance مقابل
+    # Winnings Balance. ngn_balance أعلاه أصبح الآن "Main Playing Balance"
+    # فقط: الإيداعات تزيده، السبن يخصم منه فقط — لا يزيد أبداً من ربح سبن.
+    # كل فوز من السبن يروح لهذا الحقل الجديد بدلاً منه، وهو الرصيد الوحيد
+    # القابل للسحب (نظام سحب NGN الحالي يتحقق منه، مو من ngn_balance).
+    ngn_winnings_balance = Column(Float, default=0.0)
+
+    # NEW: نفس الفكرة لرصيد الكريبتو ($ USD، المخزّن أصلاً كنقاط points_balance
+    # مقسومة على POINTS_PER_USDT) — فوز سبن الكريبتو يروح هنا فقط، بالدولار
+    # مباشرة، مو نقاط. ملاحظة: نظام سحب الكريبتو الحالي (wallet_routes.py)
+    # ما زال يسحب من points_balance كما هو — لم يُعدَّل بهذا التغيير (نطاق
+    # التعديل الحالي هو السبن فقط، ونظام سحب الكريبتو ميزة منفصلة قائمة).
+    usd_winnings_balance = Column(Float, default=0.0)
+
     is_unlocked = Column(Boolean, default=False)     # فتح ميزة الاستبدال/السحب
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)

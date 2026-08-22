@@ -30,6 +30,8 @@ class UserOut(BaseModel):
     vip_level: str
     created_at: datetime
     ngn_balance: float = 0.0   # NEW: real Naira balance, separate from points_balance
+    ngn_winnings_balance: float = 0.0   # NEW: NGN spin winnings only — the only NGN balance withdrawable
+    usd_winnings_balance: float = 0.0   # NEW: Crypto/USD spin winnings only — separate from points_balance
 
     class Config:
         from_attributes = True
@@ -60,7 +62,8 @@ class DynamicSpinResult(BaseModel):
     currency: str = "NGN"   # NEW: "NGN" or "USD" — tells the frontend which symbol to show, never guessed client-side
     play_amount: float
     winning_amount: float   # renamed from `prize` — same meaning, this is the exact contract name requested
-    new_balance: float
+    new_balance: float      # Main Playing Balance AFTER this spin (deposits only — never includes winnings)
+    new_winnings_balance: float = 0.0  # NEW: Winnings Balance AFTER this spin — the only balance withdrawable
     transaction_id: str
     status: str = "WIN"  # "WIN" or "LOSS" — set by the route from winning_amount > 0
 

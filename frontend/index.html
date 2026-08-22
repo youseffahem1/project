@@ -37,8 +37,9 @@
   --shadow-glow: 0 0 0 1px rgba(124,58,237,.12), 0 20px 60px rgba(124,58,237,.18);
 }
 *{box-sizing:border-box; margin:0; padding:0; min-width:0;}
-html{scroll-behavior:smooth;}
+html{scroll-behavior:smooth; overflow-x:hidden;}
 body{
+  overflow-x:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,Arial,sans-serif;
   background:
     radial-gradient(1100px 620px at 8% -8%, rgba(124,58,237,.10), transparent 60%),
@@ -82,7 +83,8 @@ img{max-width:100%; display:block;}
 .brand{display:flex; align-items:center; gap:9px; font-weight:800; font-size:19px; letter-spacing:-.3px; flex-shrink:0;}
 .brand .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--pink)); box-shadow:0 0 14px 2px rgba(168,85,247,.5); animation:pulse 2.4s ease-in-out infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 10px 1px rgba(168,85,247,.45);}50%{box-shadow:0 0 18px 5px rgba(236,72,153,.55);}}
-.nav-links{display:flex; gap:2px; font-size:13.5px; color:var(--text-dim); flex-wrap:wrap;}
+.nav-links{display:none; gap:2px; font-size:13.5px; color:var(--text-dim); flex-wrap:wrap;}
+.nav-links.authed{display:flex;}
 .nav-links a{padding:9px 14px; border-radius:999px; transition:.25s var(--ease); font-weight:600; white-space:nowrap;}
 .nav-links a:hover{color:var(--text); background:rgba(124,58,237,.08);}
 .nav-links a.active{color:var(--purple); background:rgba(124,58,237,.1);}
@@ -99,9 +101,19 @@ img{max-width:100%; display:block;}
 .hamburger{display:none; width:38px; height:38px; border-radius:12px; align-items:center; justify-content:center; background:var(--glass-light); border:1px solid var(--glass-border);}
 .hamburger svg{width:19px; height:19px;}
 
+/* FIX: nav-links/hamburger visibility used to be set with inline
+   element.style.display from JS (updateNavAuthState) — an INLINE style,
+   which has higher specificity than this @media rule and was silently
+   overriding it once logged in, so the full desktop nav-links list stayed
+   forced open (display:flex) even on a narrow phone screen, wrapping into
+   a multi-line block that visually overlapped the header (the bug in the
+   screenshot). Visibility is now driven ONLY by the .authed class (toggled
+   from JS via classList, never inline style), so this media query can
+   always win on mobile regardless of auth state — the !important here is
+   deliberate insurance against that exact class of bug recurring. */
 @media(max-width:980px){
-  .nav-links{display:none;}
-  .hamburger{display:flex;}
+  .nav-links, .nav-links.authed{display:none !important;}
+  .hamburger.authed{display:flex;}
 }
 
 /* Mobile drawer */
@@ -697,7 +709,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
 <div class="topnav">
   <div class="brand"><span class="dot"></span> LuckySpin</div>
-  <div class="nav-links" id="navLinksAuthed" style="display:none;">
+  <div class="nav-links" id="navLinksAuthed">
     <a href="#" data-page="wheel" onclick="showPage('wheel')">Spin</a>
     <a href="#" data-page="wallet" onclick="showPage('wallet')">Wallet</a>
     <a href="#" data-page="transactions" onclick="showPage('transactions')">Transactions</a>
@@ -715,7 +727,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <a class="btn btn-primary btn-sm" href="#" onclick="showPage('signup')">Sign Up</a>
     </div>
     <button id="navLogoutDesktop" class="btn btn-ghost btn-sm" style="display:none;" onclick="logout()">Log Out</button>
-    <button class="hamburger" id="hamburgerBtn" onclick="openDrawer()" style="display:none;" aria-label="Menu">
+    <button class="hamburger" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
   </div>
@@ -1078,9 +1090,15 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
     <div class="grid-2" style="margin-bottom:22px; align-items:stretch;">
       <div class="card">
-        <div class="muted">🇳🇬 NGN Balance</div>
-        <div style="font-size:32px; font-weight:900; margin:8px 0 4px; letter-spacing:-.5px;" id="walletNgnBalance">₦0</div>
-        <div class="muted" style="font-size:12px;">Real Naira — bank transfer deposits/withdrawals only</div>
+        <div class="muted">🇳🇬 NGN — Main Playing Balance</div>
+        <div style="font-size:28px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px;" id="walletNgnBalance">₦0</div>
+        <div class="muted" style="font-size:11.5px; margin-bottom:16px;">Main Balance is only for playing.</div>
+
+        <div style="height:1px; background:var(--glass-border); margin:0 0 14px;"></div>
+
+        <div class="muted">🏆 NGN — Winnings Balance</div>
+        <div style="font-size:24px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px; color:var(--green);" id="walletNgnWinnings">₦0</div>
+        <div class="muted" style="font-size:11.5px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
       </div>
       <div class="card">
         <div class="muted">💠 Crypto Balance</div>
@@ -1264,7 +1282,8 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
     <div class="spin-receipt">
       <div class="spin-receipt-title">Winning Receipt</div>
       <div class="row"><span>Play Amount</span><b id="rcPlayAmount">—</b></div>
-      <div class="row"><span>New Balance</span><b id="rcNewBalance">—</b></div>
+      <div class="row"><span>Main Balance</span><b id="rcNewBalance">—</b></div>
+      <div class="row"><span>Winnings Balance</span><b id="rcWinningsBalance">—</b></div>
       <div class="row"><span>Transaction ID</span><b id="rcTxId">—</b></div>
     </div>
 
@@ -1701,11 +1720,11 @@ function logout(){
 }
 
 function updateNavAuthState(authed){
-  document.getElementById("navLinksAuthed").style.display = authed ? "flex" : "none";
+  document.getElementById("navLinksAuthed").classList.toggle("authed", authed);
   document.getElementById("navGuest").style.display = authed ? "none" : "block";
   document.getElementById("navLogoutDesktop").style.display = authed ? "inline-flex" : "none";
   document.getElementById("navBalance").style.display = authed ? "flex" : "none";
-  document.getElementById("hamburger" + "Btn").style.display = authed ? "flex" : "none";
+  document.getElementById("hamburgerBtn").classList.toggle("authed", authed);
   document.getElementById("bottomNav").style.display = authed ? "block" : "none";
   document.getElementById("navAdminLink").style.display = (authed && state.isAdmin) ? "inline-flex" : "none";
   document.getElementById("drawerAdminLink").style.display = (authed && state.isAdmin) ? "flex" : "none";
@@ -2122,7 +2141,7 @@ function showDynamicResultModal(result){
     title.textContent = "You Won";
     amountEl.textContent = "+" + fmtSpin(result.winning_amount, currency);
     subtitle.textContent = "Congratulations!";
-    desc.textContent = "Your winnings have been added to your balance.";
+    desc.textContent = "Your winnings have been added to your Winnings Balance.";
     rays.style.display = "block";
     glow.style.display = "block";
     fireConfetti();
@@ -2138,10 +2157,13 @@ function showDynamicResultModal(result){
   }
 
   // Play Again / Withdraw are always both shown, win or lose — same actions
-  // either way, per spec.
+  // either way, per spec. Main Balance and Winnings Balance are shown
+  // separately here — a win never merges into Main Balance, so both
+  // numbers after this spin come straight from the backend response.
   document.getElementById("rcPlayAmount").textContent = fmtSpin(result.play_amount, currency);
   document.getElementById("rcTxId").textContent = result.transaction_id;
   document.getElementById("rcNewBalance").textContent = fmtSpin(result.new_balance, currency);
+  document.getElementById("rcWinningsBalance").textContent = fmtSpin(result.new_winnings_balance, currency);
 
   document.getElementById("dynamicResultModalBg").classList.add("show");
 }
@@ -2269,6 +2291,10 @@ async function refreshWallet(){
     // call (s.ngn_balance), which the backend already keeps as its own
     // dedicated field (see wallet_routes.py / User.ngn_balance).
     document.getElementById("walletNgnBalance").textContent = fmtNgn(s.ngn_balance);
+    // NEW: Winnings Balance — spin wins only, the only NGN balance that can
+    // ever be withdrawn (see nigerian_withdrawal_routes.py). Never derived
+    // from ngn_balance; comes straight from its own dedicated field.
+    document.getElementById("walletNgnWinnings").textContent = fmtNgn(s.ngn_winnings_balance);
 
     // NEW: real native-currency-per-USD rates from the backend's live prices
     // (same price_service the deposit side already uses) — lets the withdraw
@@ -2587,9 +2613,10 @@ function renderNgnWithdrawForm(box, info){
   const minW = Number(info.min_withdrawal_ngn || 5000);
   box.innerHTML = `
     <div class="stat-box" style="max-width:260px; margin-bottom:14px;">
-      <div class="val">${fmtNgn(state.user ? state.user.ngn_balance : 0)}</div>
-      <div class="lbl">Available Balance</div>
+      <div class="val">${fmtNgn(state.user ? state.user.ngn_winnings_balance : 0)}</div>
+      <div class="lbl">Winnings Balance — Available to Withdraw</div>
     </div>
+    <p class="muted" style="font-size:11.5px; margin:-10px 0 14px;">Only your Winnings Balance can be withdrawn — your Main Playing Balance (deposits) is for playing only.</p>
 
     <div class="ngn-info-banner">
       <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
@@ -2614,7 +2641,7 @@ function renderNgnWithdrawForm(box, info){
         <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString()} or more" oninput="validateNgnWithdrawAmount(${minW})">
         <button type="button" class="max-btn" onclick="setNgnWithdrawMax()">MAX</button>
       </div>
-      <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your balance immediately and reviewed by an admin.</p>
+      <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your Winnings Balance immediately and reviewed by an admin.</p>
     </div>
 
     <button class="btn btn-primary btn-block" id="ngnWSubmitBtn" onclick="submitNgnWithdrawal()">
@@ -2632,14 +2659,14 @@ function validateNgnWithdrawAmount(minWithdrawal){
     hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString()} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
-    hint.textContent = "This amount is deducted from your balance immediately and reviewed by an admin.";
+    hint.textContent = "This amount is deducted from your Winnings Balance immediately and reviewed by an admin.";
     hint.classList.remove("ngn-amount-error");
   }
 }
 
 function setNgnWithdrawMax(){
   if(!state.user) return;
-  document.getElementById("ngnWAmount").value = state.user.ngn_balance;
+  document.getElementById("ngnWAmount").value = state.user.ngn_winnings_balance;
   validateNgnWithdrawAmount(Number((state.ngnWithdrawInfo && state.ngnWithdrawInfo.min_withdrawal_ngn) || 5000));
 }
 
@@ -2655,7 +2682,7 @@ async function submitNgnWithdrawal(){
   if(!account_number){ showToast("Enter the account number"); return; }
   if(!amount_ngn || amount_ngn <= 0){ showToast("Enter a valid amount"); return; }
   if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString()}`); return; }
-  if(state.user && amount_ngn > state.user.ngn_balance){ showToast("Insufficient balance"); return; }
+  if(state.user && amount_ngn > state.user.ngn_winnings_balance){ showToast("Insufficient balance"); return; }
 
   state.ngnWithdrawSubmitting = true;
   const btn = document.getElementById("ngnWSubmitBtn");

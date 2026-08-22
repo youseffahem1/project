@@ -22,6 +22,8 @@ def _to_user_out(user: models.User) -> schemas.UserOut:
         vip_level=get_vip_level(user.lifetime_xp),
         created_at=user.created_at,
         ngn_balance=user.ngn_balance,
+        ngn_winnings_balance=user.ngn_winnings_balance,
+        usd_winnings_balance=user.usd_winnings_balance,
     )
 
 

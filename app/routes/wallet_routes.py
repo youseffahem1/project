@@ -43,6 +43,7 @@ def wallet_summary(user: models.User = Depends(get_current_user)):
         "points_balance": user.points_balance,
         "points_per_usdt": POINTS_PER_USDT,
         "ngn_balance": user.ngn_balance,   # NEW: real Naira balance, separate from points_balance
+        "ngn_winnings_balance": user.ngn_winnings_balance,   # NEW: NGN spin winnings only — the only NGN balance withdrawable
         # NEW: same shared points_balance, expressed in each crypto rail's terms
         "balances": {
             "TRX_NILE": {"points": user.points_balance, "usd_equivalent": usd_equivalent, "native_equivalent": trx_equivalent},

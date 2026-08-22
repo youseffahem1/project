@@ -3,15 +3,20 @@ NEW (additive only): Nigerian Bank Transfer withdrawal flow — the mirror of
 nigerian_deposit_routes.py.
 
 - User submits their bank account details (name + account number + optional
-  bank name) + an amount -> the amount is deducted from user.ngn_balance
-  IMMEDIATELY (a "hold"), and a PENDING request is created. Deducting up
-  front (not on approval) is what makes it safe against a user firing two
-  withdrawal requests before either is reviewed — the second one simply
-  fails on insufficient balance, same anti-double-spend pattern already
-  used by POST /api/spin/play.
+  bank name) + an amount -> the amount is deducted from
+  user.ngn_winnings_balance IMMEDIATELY (a "hold"), and a PENDING request
+  is created. Deducting up front (not on approval) is what makes it safe
+  against a user firing two withdrawal requests before either is reviewed
+  — the second one simply fails on insufficient balance, same
+  anti-double-spend pattern already used by POST /api/spin/play.
 - Admin reviews and Approves (the hold becomes final — admin ledger is
   debited, marking the payout as actually sent outside this system) or
-  Rejects (refunds the held amount back to user.ngn_balance).
+  Rejects (refunds the held amount back to user.ngn_winnings_balance).
+
+NOTE: as of the Main/Winnings balance split, withdrawals draw from
+ngn_winnings_balance (spin winnings only) — never ngn_balance (deposit
+funds, playing-only, not withdrawable). See models.py's User.ngn_balance /
+User.ngn_winnings_balance comments and spin_routes.py's _spin_play_ngn.
 
 This file does NOT touch auth_routes.py, wallet_routes.py, admin_routes.py,
 spin_routes.py, user_routes.py, nigerian_deposit_routes.py, models.py's
@@ -105,7 +110,7 @@ def create_nigerian_withdrawal(
         db.rollback()
         locked_user = db.query(models.User).filter_by(id=user.id).first()  # SQLite fallback
 
-    current_balance = Decimal(str(locked_user.ngn_balance))
+    current_balance = Decimal(str(locked_user.ngn_winnings_balance))
     amount_dec = Decimal(str(payload.amount_ngn))
     if current_balance < amount_dec:
         raise HTTPException(status_code=402, detail="Insufficient balance")
@@ -113,7 +118,10 @@ def create_nigerian_withdrawal(
     # Hold the funds immediately — deducted now, refunded only if an admin
     # rejects the request. This is what prevents a user from requesting
     # more than their real balance across several pending withdrawals.
-    locked_user.ngn_balance = float(current_balance - amount_dec)
+    # NEW: withdrawals only ever come out of ngn_winnings_balance (Winnings
+    # Balance) — never ngn_balance (Main Playing Balance), which is
+    # deposit-funded and playing-only, never withdrawable.
+    locked_user.ngn_winnings_balance = float(current_balance - amount_dec)
 
     w = models.NigerianWithdrawal(
         user_id=user.id,
@@ -137,7 +145,7 @@ def create_nigerian_withdrawal(
     db.add(models.Notification(
         user_id=locked_user.id, type="WITHDRAWAL_REQUESTED",
         title="Withdrawal Requested",
-        message=f"Your withdrawal request for ₦{payload.amount_ngn:,.0f} is being reviewed.\nNew balance: ₦{locked_user.ngn_balance:,.0f}",
+        message=f"Your withdrawal request for ₦{payload.amount_ngn:,.0f} is being reviewed.\nNew Winnings Balance: ₦{locked_user.ngn_winnings_balance:,.0f}",
     ))
 
     db.commit()
@@ -224,13 +232,16 @@ def reject_nigerian_withdrawal(
     if w.status != models.NigerianWithdrawalStatus.PENDING:
         raise HTTPException(status_code=409, detail=f"Withdrawal is already {w.status.value}")
 
-    # Refund the held amount back to the user — it was deducted at request time.
+    # Refund the held amount back to the user — it was deducted at request
+    # time from ngn_winnings_balance, so it's refunded there too (never to
+    # ngn_balance — a rejected withdrawal must not turn into extra playing
+    # balance).
     try:
         target_user = db.query(models.User).filter_by(id=w.user_id).with_for_update().first()
     except Exception:
         target_user = db.query(models.User).filter_by(id=w.user_id).first()
     if target_user:
-        target_user.ngn_balance = float(Decimal(str(target_user.ngn_balance)) + Decimal(str(w.amount_ngn)))
+        target_user.ngn_winnings_balance = float(Decimal(str(target_user.ngn_winnings_balance)) + Decimal(str(w.amount_ngn)))
         db.add(models.Transaction(
             user_id=target_user.id,
             type=models.TransactionType.WITHDRAW,
