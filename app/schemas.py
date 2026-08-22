@@ -217,3 +217,43 @@ class NigerianWithdrawalCreateRequest(BaseModel):
 
 class NigerianWithdrawalRejectRequest(BaseModel):
     reason: str = Field(min_length=1, max_length=500)
+
+
+# =========================================================================
+# NEW (Prize Tiers): admin-configurable prize tables for the NGN Smart
+# Dynamic Wheel — see models.SpinPrizeTier/SpinPrizeValue, spin_tier_
+# service.py, and routes/admin_spin_routes.py.
+# =========================================================================
+
+class SpinPrizeValueIn(BaseModel):
+    prize_amount: float = Field(ge=0)
+    weight: float = Field(gt=0)
+
+
+class SpinPrizeValueOut(BaseModel):
+    id: str
+    prize_amount: float
+    weight: float
+
+    class Config:
+        from_attributes = True
+
+
+class SpinPrizeTierIn(BaseModel):
+    currency: str = Field(default="NGN")
+    min_play_amount: float = Field(gt=0)
+    label: Optional[str] = Field(default=None, max_length=80)
+    is_active: bool = True
+    prizes: list[SpinPrizeValueIn]
+
+
+class SpinPrizeTierOut(BaseModel):
+    id: str
+    currency: str
+    min_play_amount: float
+    label: Optional[str]
+    is_active: bool
+    prizes: list[SpinPrizeValueOut]
+
+    class Config:
+        from_attributes = True
