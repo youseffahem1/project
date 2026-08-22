@@ -14,7 +14,7 @@ from .database import Base, engine, SessionLocal
 from .config import DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from . import models
 from .auth import hash_password
-from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes, referral_routes, admin_spin_routes
+from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes, referral_routes, admin_spin_routes, admin_users_routes
 from . import blockchain_monitor
 from . import withdrawal_monitor
 from . import spin_tier_service
@@ -92,6 +92,7 @@ app.include_router(nigerian_withdrawal_routes.admin_router)
 app.include_router(referral_routes.user_router)
 app.include_router(referral_routes.admin_router)
 app.include_router(admin_spin_routes.router)
+app.include_router(admin_users_routes.router)
 
 
 @app.on_event("startup")

@@ -1283,12 +1283,14 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <div class="wallet-tab" id="adminTabBtnDeposits" onclick="setAdminTab('deposits')">Deposit Requests</div>
       <div class="wallet-tab" id="adminTabBtnWithdrawals" onclick="setAdminTab('withdrawals')">Withdrawal Requests</div>
       <div class="wallet-tab" id="adminTabBtnPrizeTiers" onclick="setAdminTab('prizetiers')">Prize Tiers</div>
+      <div class="wallet-tab" id="adminTabBtnUsers" onclick="setAdminTab('users')">Users</div>
       <div class="wallet-tab" id="adminTabBtnSettings" onclick="setAdminTab('settings')">Settings</div>
     </div>
     <div id="adminLedgerPanel"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
     <div id="adminDepositsPanel" style="display:none;"></div>
     <div id="adminWithdrawalsPanel" style="display:none;"></div>
     <div id="adminPrizeTiersPanel" style="display:none;"></div>
+    <div id="adminUsersPanel" style="display:none;"></div>
     <div id="adminSettingsPanel" style="display:none;">
       <div class="card" style="max-width:420px;">
         <h2>Referral Reward</h2>
@@ -1488,6 +1490,29 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <button class="btn btn-ghost btn-block" onclick="closeRejectWithdrawalModal()">Cancel</button>
       <button class="btn btn-danger btn-block" id="rwConfirmBtn" onclick="doRejectWithdrawal()">
         <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Confirm Rejection</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="grantWinningsBg">
+  <div class="confirm-modal">
+    <h3>Add Winnings Balance</h3>
+    <div class="row"><span>User</span><b id="gwUser">—</b></div>
+    <div class="row"><span>Current Winnings Balance</span><b id="gwCurrentWinnings">—</b></div>
+    <div class="field" style="margin-top:14px;">
+      <label>Amount (₦)</label>
+      <div class="field-input-wrap"><input id="gwAmount" type="number" min="0.01" step="0.01" placeholder="e.g. 5000"></div>
+    </div>
+    <div class="field">
+      <label>Reason</label>
+      <input id="gwReason" type="text" placeholder="Bonus / Manual Reward" maxlength="300">
+    </div>
+    <p class="muted" style="font-size:11.5px; margin-top:6px;">This adds directly to the user's Winnings Balance only — never their Main/Deposit Balance. It is not treated as a deposit, and no deposit notification or email is sent.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeGrantWinningsModal()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="gwConfirmBtn" onclick="doGrantWinnings()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Add Winnings</span></span>
       </button>
     </div>
   </div>
@@ -3183,16 +3208,19 @@ function setAdminTab(tab){
   document.getElementById("adminTabBtnDeposits").classList.toggle("active", tab==="deposits");
   document.getElementById("adminTabBtnWithdrawals").classList.toggle("active", tab==="withdrawals");
   document.getElementById("adminTabBtnPrizeTiers").classList.toggle("active", tab==="prizetiers");
+  document.getElementById("adminTabBtnUsers").classList.toggle("active", tab==="users");
   document.getElementById("adminTabBtnSettings").classList.toggle("active", tab==="settings");
   document.getElementById("adminLedgerPanel").style.display = tab==="ledger" ? "block" : "none";
   document.getElementById("adminDepositsPanel").style.display = tab==="deposits" ? "block" : "none";
   document.getElementById("adminWithdrawalsPanel").style.display = tab==="withdrawals" ? "block" : "none";
   document.getElementById("adminPrizeTiersPanel").style.display = tab==="prizetiers" ? "block" : "none";
+  document.getElementById("adminUsersPanel").style.display = tab==="users" ? "block" : "none";
   document.getElementById("adminSettingsPanel").style.display = tab==="settings" ? "block" : "none";
   if(tab === "ledger") loadAdminLedger();
   if(tab === "deposits") loadDepositRequests();
   if(tab === "withdrawals") loadWithdrawalRequests();
   if(tab === "prizetiers") loadPrizeTiers();
+  if(tab === "users") loadAdminUsers();
   if(tab === "settings") loadReferralRewardSetting();
 }
 
@@ -3974,6 +4002,141 @@ const NOTIF_ICONS = {
   REDEEM_LOCAL: "🛍️",
   LEDGER_LOCAL: "🏦",
 };
+
+/* ===================== ADMIN: USERS + GRANT WINNINGS ===================== */
+state.adminUsers = state.adminUsers || [];
+state.adminUserSearch = state.adminUserSearch || "";
+state.pendingGrantUser = null;
+
+async function loadAdminUsers(){
+  const panel = document.getElementById("adminUsersPanel");
+  panel.innerHTML = `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="field" style="margin-bottom:0;">
+        <label>Search by name, email, or User ID</label>
+        <div class="field-input-wrap"><input id="adminUserSearchInput" type="text" placeholder="Search users..." value="${escapeHtml(state.adminUserSearch)}" onkeydown="if(event.key==='Enter') runAdminUserSearch()"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="runAdminUserSearch()">Search</button>
+    </div>
+    <div id="adminUsersListWrap"><div class="empty-state"><div class="icon">⏳</div>Loading users...</div></div>
+    <div id="adminGrantsFeedWrap" style="margin-top:22px;"></div>
+  `;
+  await runAdminUserSearch();
+  await loadAdminGrantsFeed();
+}
+
+function runAdminUserSearch(){
+  const input = document.getElementById("adminUserSearchInput");
+  state.adminUserSearch = input ? input.value.trim() : state.adminUserSearch;
+  return fetchAdminUsers();
+}
+
+async function fetchAdminUsers(){
+  const wrap = document.getElementById("adminUsersListWrap");
+  wrap.innerHTML = `<div class="empty-state"><div class="icon">⏳</div>Loading users...</div>`;
+  try{
+    const q = state.adminUserSearch ? ("?search=" + encodeURIComponent(state.adminUserSearch)) : "";
+    const rows = await api("/admin/users" + q);
+    state.adminUsers = rows;
+    renderAdminUsersList();
+  }catch(e){
+    if(e.message === "Admin access required"){
+      wrap.innerHTML = `<div class="card access-denied"><div class="icon">⛔</div><h3 style="font-size:19px; margin-bottom:8px;">Access Denied</h3><p class="muted">You don't have permission to view this page.</p></div>`;
+    }else{
+      wrap.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${escapeHtml(e.message)}</div>`;
+    }
+  }
+}
+
+function renderAdminUsersList(){
+  const wrap = document.getElementById("adminUsersListWrap");
+  if(!state.adminUsers.length){
+    wrap.innerHTML = `<div class="card empty-state"><div class="icon">👤</div>No users found</div>`;
+    return;
+  }
+  wrap.innerHTML = state.adminUsers.map(u=>{
+    const shortId = u.id.length > 14 ? (u.id.slice(0,8) + "…" + u.id.slice(-4)) : u.id;
+    return `
+      <div class="card" style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+        <div style="min-width:0;">
+          <div style="font-weight:700;">${escapeHtml(u.full_name)} ${u.is_admin ? '<span class="tx-filter active" style="display:inline-block; padding:2px 8px; font-size:10px; margin-left:6px;">ADMIN</span>' : ''}</div>
+          <div class="muted" style="font-size:12.5px;">${escapeHtml(u.email)}</div>
+          <div class="muted" style="font-size:11px; font-family:monospace;" title="${escapeHtml(u.id)}">ID: ${shortId}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted" style="font-size:11.5px;">Main Balance</div>
+          <div style="font-weight:700;">${fmtNgn(u.ngn_balance)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="muted" style="font-size:11.5px;">Winnings Balance</div>
+          <div style="font-weight:700; color:var(--purple);">${fmtNgn(u.ngn_winnings_balance)}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick='openGrantWinningsModal(${JSON.stringify(u)})'>Add Winnings</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function openGrantWinningsModal(u){
+  state.pendingGrantUser = u;
+  document.getElementById("gwUser").textContent = u.full_name + " (" + u.email + ")";
+  document.getElementById("gwCurrentWinnings").textContent = fmtNgn(u.ngn_winnings_balance);
+  document.getElementById("gwAmount").value = "";
+  document.getElementById("gwReason").value = "";
+  document.getElementById("grantWinningsBg").classList.add("show");
+}
+function closeGrantWinningsModal(){ document.getElementById("grantWinningsBg").classList.remove("show"); }
+
+let grantWinningsActionLock = false;
+async function doGrantWinnings(){
+  if(grantWinningsActionLock || !state.pendingGrantUser) return;
+  const amount = parseFloat(document.getElementById("gwAmount").value);
+  const reason = document.getElementById("gwReason").value.trim();
+  if(!amount || amount <= 0){ showToast("Enter an amount greater than zero"); return; }
+  if(!reason){ showToast("Enter a reason"); return; }
+
+  grantWinningsActionLock = true;
+  const btn = document.getElementById("gwConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const result = await api(`/admin/users/${state.pendingGrantUser.id}/grant-winnings`, "POST", { amount, reason });
+    showToast(`Added ${fmtNgn(amount)} to ${state.pendingGrantUser.full_name}'s Winnings Balance`);
+    closeGrantWinningsModal();
+    await fetchAdminUsers();
+    await loadAdminGrantsFeed();
+  }catch(e){
+    showToast(e.message);
+  }finally{
+    setButtonLoading(btn, false);
+    grantWinningsActionLock = false;
+  }
+}
+
+async function loadAdminGrantsFeed(){
+  const wrap = document.getElementById("adminGrantsFeedWrap");
+  if(!wrap) return;
+  wrap.innerHTML = `<h3 style="font-size:15px; margin-bottom:10px;">Recent Winnings Grants</h3><div class="empty-state"><div class="icon">⏳</div>Loading...</div>`;
+  try{
+    const rows = await api("/admin/users/grants?limit=50");
+    if(!rows.length){
+      wrap.innerHTML = `<h3 style="font-size:15px; margin-bottom:10px;">Recent Winnings Grants</h3><div class="card empty-state"><div class="icon">🎁</div>No manual grants yet</div>`;
+      return;
+    }
+    const rowsHtml = rows.map(g => `
+      <div class="row" style="padding:10px 0; border-bottom:1px solid var(--glass-border);">
+        <span>
+          <b>${escapeHtml(g.user_name || g.user_email || g.user_id)}</b>
+          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString()}</span>
+          <span class="muted" style="font-size:11.5px; display:block;">${escapeHtml(g.reason || '')}</span>
+        </span>
+        <b style="color:var(--purple);">+${fmtNgn(g.amount)}</b>
+      </div>
+    `).join("");
+    wrap.innerHTML = `<h3 style="font-size:15px; margin-bottom:10px;">Recent Winnings Grants</h3><div class="card">${rowsHtml}</div>`;
+  }catch(e){
+    wrap.innerHTML = `<h3 style="font-size:15px; margin-bottom:10px;">Recent Winnings Grants</h3><div class="empty-state"><div class="icon">⚠️</div>${escapeHtml(e.message)}</div>`;
+  }
+}
 
 function escapeHtml(str){
   return String(str == null ? "" : str)

@@ -60,7 +60,7 @@ class User(Base):
     daily_bonus_streak = Column(Integer, default=0)
 
     spins = relationship("SpinHistory", back_populates="user")
-    transactions = relationship("Transaction", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user", foreign_keys="Transaction.user_id")
 
 
 class SpinHistory(Base):
@@ -85,6 +85,7 @@ class TransactionType(str, enum.Enum):
     SPIN_FEE = "SPIN_FEE"                # NEW: خصم رسوم السبن ($1) من رصيد المستخدم
     WINNINGS_TRANSFER = "WINNINGS_TRANSFER"  # NEW: نقل من Winnings Balance إلى Main/Playing Balance
     REFERRAL_REWARD = "REFERRAL_REWARD"      # NEW: مكافأة إحالة صديق بعد إيداعه المؤهل
+    ADMIN_GRANT = "ADMIN_GRANT"               # NEW: إضافة يدوية لـ Winnings Balance من الأدمن (Bonus/Manual Reward)
 
 
 class Transaction(Base):
@@ -102,7 +103,16 @@ class Transaction(Base):
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="transactions")
+    # NEW (Admin Grant Winnings): only ever set for type=ADMIN_GRANT rows —
+    # every other existing Transaction type/row leaves both null, completely
+    # unaffected. Reuses this table as the audit trail instead of a new one.
+    # Never updated after creation (no PUT/PATCH endpoint touches a
+    # Transaction row anywhere in the app) — the id column above already
+    # serves as this record's permanent Transaction ID.
+    admin_id = Column(String, ForeignKey("users.id"), nullable=True)
+    reason = Column(String, nullable=True)
+
+    user = relationship("User", back_populates="transactions", foreign_keys=[user_id])
 
 
 class BitGoDepositAddress(Base):

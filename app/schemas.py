@@ -257,3 +257,54 @@ class SpinPrizeTierOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# =============================================================================
+# NEW (additive only): Admin Users list/search + manual Winnings Balance
+# grants. Reuses the existing Transaction table as the audit trail (see
+# models.py: Transaction.admin_id / Transaction.reason) — no new balance
+# system, per spec.
+# =============================================================================
+
+class AdminUserOut(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    ngn_balance: float = 0.0             # "Main Balance" (Main/Playing Balance)
+    ngn_winnings_balance: float = 0.0    # "Winnings Balance"
+    is_admin: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminGrantWinningsRequest(BaseModel):
+    amount: float = Field(gt=0)
+    reason: str = Field(min_length=2, max_length=300)
+
+
+class AdminGrantWinningsResult(BaseModel):
+    success: bool = True
+    transaction_id: str
+    user_id: str
+    admin_id: str
+    amount: float
+    currency: str
+    reason: str
+    new_main_balance: float
+    new_winnings_balance: float
+    created_at: datetime
+
+
+class AdminGrantHistoryOut(BaseModel):
+    transaction_id: str
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    admin_id: Optional[str] = None
+    admin_name: Optional[str] = None
+    amount: float
+    currency: str
+    reason: Optional[str] = None
+    created_at: datetime

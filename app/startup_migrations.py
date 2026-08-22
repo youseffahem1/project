@@ -41,6 +41,11 @@ _COLUMNS_TO_ENSURE = [
     ("users", "usd_winnings_balance", "FLOAT DEFAULT 0.0", "DOUBLE PRECISION DEFAULT 0.0"),
     ("users", "referral_code", "VARCHAR", "VARCHAR"),
     ("users", "referred_by_user_id", "VARCHAR", "VARCHAR"),
+    # NEW (Admin Grant Winnings): both nullable, both only ever populated for
+    # type=ADMIN_GRANT rows — every pre-existing Transaction row/type is
+    # completely unaffected either way.
+    ("transactions", "admin_id", "VARCHAR", "VARCHAR"),
+    ("transactions", "reason", "VARCHAR", "VARCHAR"),
 ]
 
 
