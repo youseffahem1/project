@@ -19,6 +19,7 @@ from . import blockchain_monitor
 from . import withdrawal_monitor
 from . import spin_tier_service
 from .startup_migrations import run_startup_column_migrations
+from .enum_migrations import run_enum_value_migrations
 
 # --- تحذير واضح باللوج لو السيرفر شغال بدون DATABASE_URL (يعني sqlite محلي) ---
 # فقط طباعة تحذيرية — ما توقف السيرفر ولا تغيّر أي سلوك، بس تساعدك تكتشف
@@ -40,6 +41,12 @@ Base.metadata.create_all(bind=engine)
 # آمن ويعمل تلقائيًا بكل Startup/Deploy، بدون Render Shell وبدون سكربت
 # منفصل. راجع app/startup_migrations.py للتفاصيل الكاملة.
 run_startup_column_migrations(engine)
+
+# --- NEW: يضيف تلقائيًا أي قيمة ناقصة داخل أي PostgreSQL ENUM موجود أصلاً
+# (مثال: قيمة ADMIN_GRANT الناقصة من enum transactiontype). ALTER TABLE ADD
+# COLUMN فوق لا يضيف قيم Enum جديدة — هذا ما يغطي الفجوة. آمن ويعمل تلقائيًا
+# بكل Startup/Deploy، بدون Render Shell. راجع app/enum_migrations.py.
+run_enum_value_migrations(engine, Base)
 
 # --- Rate limiting عام لكل الـ API (حماية من هجمات bruteforce / سبام) ---
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
