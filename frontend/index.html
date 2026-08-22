@@ -50,6 +50,7 @@ body{
     var(--bg);
   color:var(--text);
   min-height:100vh;
+  min-height:100dvh; /* iPhones: accounts for the address bar showing/hiding instead of the taller static 100vh, so the background/layout doesn't jump or leave a gap when Safari's chrome collapses. */
   position:relative;
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
@@ -85,7 +86,7 @@ img{max-width:100%; display:block;}
 @keyframes float2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-50px,-30px) scale(1.1);}}
 @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,50px);}}
 
-.app-wrap{position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column;}
+.app-wrap{position:relative; z-index:1; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;}
 
 /* ===== Header ===== */
 .topnav{
@@ -94,6 +95,11 @@ img{max-width:100%; display:block;}
   background:rgba(255,255,255,.72); backdrop-filter:blur(20px) saturate(180%);
   -webkit-backdrop-filter:blur(20px) saturate(180%);
   border-bottom:1px solid var(--glass-border);
+  /* iPhone notch/Dynamic Island in landscape (or PWA fullscreen) sits over
+     the top-left/top-right corners, not just the top — pad the sides by
+     the safe area too so nav items never render underneath it. */
+  padding-left:max(clamp(16px,4vw,36px), env(safe-area-inset-left));
+  padding-right:max(clamp(16px,4vw,36px), env(safe-area-inset-right));
 }
 .brand{display:flex; align-items:center; gap:9px; font-weight:800; font-size:19px; letter-spacing:-.3px; flex-shrink:0;}
 .brand .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--purple-2),var(--pink)); box-shadow:0 0 14px 2px rgba(168,85,247,.5); animation:pulse 2.4s ease-in-out infinite;}
@@ -161,7 +167,8 @@ img{max-width:100%; display:block;}
 .bottom-nav{
   display:none; position:fixed; bottom:0; left:0; right:0; z-index:70;
   background:rgba(255,255,255,.86); backdrop-filter:blur(22px) saturate(180%);
-  border-top:1px solid var(--glass-border); padding:8px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--glass-border);
+  padding:8px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
   box-shadow:0 -8px 30px rgba(20,18,40,.08);
 }
 .bottom-nav-inner{display:flex; justify-content:space-around; align-items:center;}
@@ -678,6 +685,13 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
 /* ===== Toast ===== */
 .toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%); background:rgba(20,18,31,.92); color:#fff; border:1px solid rgba(255,255,255,.1); padding:14px 22px; border-radius:14px; font-size:13.5px; z-index:300; display:none; box-shadow:0 14px 40px rgba(20,18,40,.3); backdrop-filter:blur(20px); animation:slideUp .3s var(--ease); max-width:90vw; overflow-wrap:anywhere; text-align:center;}
+/* FIX: on phones the bottom tab bar (.bottom-nav) sits fixed at the very
+   bottom, and this toast used to land at bottom:26px regardless — on an
+   iPhone with a home indicator that put the toast half-hidden behind/
+   overlapping the tab bar. Lift it clear of the bar + the safe area. */
+@media(max-width:700px){
+  .toast{bottom:calc(78px + env(safe-area-inset-bottom));}
+}
 @keyframes slideUp{from{opacity:0; transform:translate(-50%,14px);}to{opacity:1; transform:translate(-50%,0);}}
 
 /* ===== Apple-style top-center notifications ===== */
@@ -2189,6 +2203,19 @@ async function selectPlayAmount(amount){
   await loadWheelForAmount(amount);
 }
 
+/* CHANGED: this used to write a second, large red line into
+   #spinInlineError below the wheel ("Insufficient balance for this
+   amount" / the min-max range message) *in addition to* the muted
+   #spinStatus line right above it — two stacked messages saying almost
+   the same thing, which visually crowded the space between the wheel
+   and the prize ticker and didn't match how every other "insufficient
+   balance" case in the app is surfaced (those all use showToast).
+   Now: #spinStatus keeps a single short status line in place (so the
+   reason the button is disabled is still always visible), and the
+   fuller explanation goes out as a toast — but only once per distinct
+   cause (via _lastSpinStatusKey), not on every re-render, so picking a
+   chip repeatedly or a background refresh doesn't spam notifications. */
+let _lastSpinStatusKey = null;
 function updateSpinButtonState(){
   const cfg = state.spinConfig;
   const btn = document.getElementById("spinBtn");
@@ -2201,16 +2228,25 @@ function updateSpinButtonState(){
 
   if(amount < cfg.minPlay || amount > cfg.maxPlay){
     btn.disabled = true;
-    errEl.textContent = `Play amount must be between ${fmtSpin(cfg.minPlay, cfg.currency)} and ${fmtSpin(cfg.maxPlay, cfg.currency)}`;
     statusEl.textContent = "Choose a valid play amount";
+    const key = "range:" + amount + ":" + cfg.minPlay + ":" + cfg.maxPlay;
+    if(_lastSpinStatusKey !== key){
+      showToast(`Play amount must be between ${fmtSpin(cfg.minPlay, cfg.currency)} and ${fmtSpin(cfg.maxPlay, cfg.currency)}`);
+      _lastSpinStatusKey = key;
+    }
     return;
   }
   if(cfg.balance < amount){
     btn.disabled = true;
-    errEl.textContent = "Insufficient balance for this amount";
     statusEl.textContent = "Insufficient balance";
+    const key = "insufficient:" + amount;
+    if(_lastSpinStatusKey !== key){
+      showToast("Insufficient balance for this amount");
+      _lastSpinStatusKey = key;
+    }
     return;
   }
+  _lastSpinStatusKey = null;
   btn.disabled = spinning;
   statusEl.textContent = "Ready to spin!";
   statusEl.classList.add("is-ready");
