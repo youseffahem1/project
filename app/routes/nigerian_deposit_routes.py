@@ -29,7 +29,9 @@ from ..config import (
     NGN_BANK_NAME, NGN_ACCOUNT_NAME, NGN_ACCOUNT_NUMBER,
     NIGERIAN_DEPOSIT_UPLOAD_DIR, MAX_PROOF_UPLOAD_MB, MIN_DEPOSIT_NGN,
     ALLOWED_PROOF_EXTENSIONS, ALLOWED_PROOF_CONTENT_TYPES,
+    MIN_REFERRAL_QUALIFYING_DEPOSIT_NGN,
 )
+from ..ledger_service import get_referral_reward_amount
 
 user_router = APIRouter(prefix="/api/wallet", tags=["nigerian-deposit"])
 admin_router = APIRouter(prefix="/api/admin/nigerian-deposits", tags=["admin-nigerian-deposit"])
@@ -234,6 +236,46 @@ def approve_nigerian_deposit(
     dep.points_credited = ngn_amount
     dep.approved_by = admin.id
     dep.approved_at = datetime.utcnow()
+
+    # NEW (Feature 1 — Refer & Earn): pay out the referrer's reward the
+    # FIRST time this referred user's deposit crosses the qualifying
+    # threshold — never more than once per referred user, ever, enforced by
+    # the unique constraint on ReferralReward.referred_user_id (a second
+    # attempt would raise IntegrityError, not silently double-pay).
+    if (
+        target_user.referred_by_user_id
+        and ngn_amount >= MIN_REFERRAL_QUALIFYING_DEPOSIT_NGN
+        and not db.query(models.ReferralReward).filter_by(referred_user_id=target_user.id).first()
+    ):
+        try:
+            referrer = db.query(models.User).filter_by(id=target_user.referred_by_user_id).with_for_update().first()
+        except Exception:
+            referrer = db.query(models.User).filter_by(id=target_user.referred_by_user_id).first()
+
+        if referrer:
+            reward_amount = get_referral_reward_amount(db)
+            referrer.ngn_winnings_balance = float(Decimal(str(referrer.ngn_winnings_balance)) + Decimal(str(reward_amount)))
+
+            db.add(models.ReferralReward(
+                referrer_user_id=referrer.id,
+                referred_user_id=target_user.id,
+                reward_amount_ngn=reward_amount,
+                status=models.ReferralRewardStatus.PAID,
+                triggered_deposit_id=dep.id,
+                paid_at=datetime.utcnow(),
+            ))
+            db.add(models.Transaction(
+                user_id=referrer.id,
+                type=models.TransactionType.REFERRAL_REWARD,
+                amount=reward_amount,
+                currency="NGN",
+                description=f"Referral reward — {target_user.full_name} deposited ₦{ngn_amount:,.0f}",
+            ))
+            db.add(models.Notification(
+                user_id=referrer.id, type="REFERRAL_REWARD",
+                title="Referral Reward Earned!",
+                message=f"₦{reward_amount:,.0f} was added to your Winnings Balance — your referral made a qualifying deposit.",
+            ))
 
     db.commit()
     db.refresh(dep)

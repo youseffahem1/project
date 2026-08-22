@@ -219,3 +219,40 @@ def get_user_ngn_deposit_tier(db: Session, user_id: str):
         if lifetime >= min_ngn:
             label, multiplier = tier_label, tier_multiplier
     return label, multiplier
+
+
+# =========================================================================
+# NEW (Feature 1 — Refer & Earn): live-editable referral reward amount.
+# Reads/writes the tiny generic AdminSetting key/value table (models.py) —
+# this is what makes the reward amount admin-configurable AT RUNTIME (via
+# GET/PUT /api/admin/settings/referral-reward) with no redeploy needed,
+# unlike a plain env var.
+# =========================================================================
+
+REFERRAL_REWARD_SETTING_KEY = "referral_reward_ngn"
+
+
+def get_referral_reward_amount(db: Session) -> float:
+    from .config import DEFAULT_REFERRAL_REWARD_NGN
+
+    row = db.query(models.AdminSetting).filter_by(key=REFERRAL_REWARD_SETTING_KEY).first()
+    if row is None:
+        return DEFAULT_REFERRAL_REWARD_NGN
+    try:
+        return float(row.value)
+    except (TypeError, ValueError):
+        return DEFAULT_REFERRAL_REWARD_NGN
+
+
+def set_referral_reward_amount(db: Session, amount_ngn: float) -> float:
+    from datetime import datetime
+
+    row = db.query(models.AdminSetting).filter_by(key=REFERRAL_REWARD_SETTING_KEY).first()
+    if row is None:
+        row = models.AdminSetting(key=REFERRAL_REWARD_SETTING_KEY, value=str(amount_ngn))
+        db.add(row)
+    else:
+        row.value = str(amount_ngn)
+        row.updated_at = datetime.utcnow()
+    db.commit()
+    return amount_ngn

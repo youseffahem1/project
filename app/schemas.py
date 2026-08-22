@@ -7,6 +7,7 @@ class SignupRequest(BaseModel):
     full_name: str = Field(min_length=2, max_length=80)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+    referral_code: Optional[str] = Field(default=None, max_length=32)  # NEW (Feature 1): optional — who referred them
 
 
 class LoginRequest(BaseModel):
@@ -66,6 +67,21 @@ class DynamicSpinResult(BaseModel):
     new_winnings_balance: float = 0.0  # NEW: Winnings Balance AFTER this spin — the only balance withdrawable
     transaction_id: str
     status: str = "WIN"  # "WIN" or "LOSS" — set by the route from winning_amount > 0
+
+
+class TransferWinningsRequest(BaseModel):
+    # NEW (Feature 5): move some/all of Winnings Balance into Main/Playing
+    # Balance. amount is optional — omit it to transfer the FULL winnings
+    # balance in one go (matches the "Transfer" button UX in the spec).
+    amount_ngn: Optional[float] = Field(default=None, gt=0)
+
+
+class TransferWinningsResult(BaseModel):
+    success: bool = True
+    transferred_amount: float
+    new_main_balance: float
+    new_winnings_balance: float
+    transaction_id: str
 
 
 class TransactionOut(BaseModel):

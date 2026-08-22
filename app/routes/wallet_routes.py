@@ -16,6 +16,57 @@ from ..config import (
 router = APIRouter(prefix="/api/wallet", tags=["wallet"])
 
 
+@router.post("/transfer-winnings-to-main", response_model=schemas.TransferWinningsResult)
+def transfer_winnings_to_main(
+    payload: schemas.TransferWinningsRequest,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user),
+):
+    """NEW (Feature 5): moves NGN from Winnings Balance into Main/Playing
+    Balance — the reverse direction never happens automatically anywhere
+    else in the app (a spin win always lands in Winnings, never Main).
+    This is the ONLY way money moves from Winnings -> Main, and it always
+    goes through here (row-locked, backend-computed, recorded as a real
+    Transaction) — never adjusted directly by the frontend."""
+    try:
+        locked_user = db.query(models.User).filter_by(id=user.id).with_for_update().first()
+    except Exception:
+        db.rollback()
+        locked_user = db.query(models.User).filter_by(id=user.id).first()  # SQLite fallback
+
+    winnings = Decimal(str(locked_user.ngn_winnings_balance))
+    amount = Decimal(str(payload.amount_ngn)) if payload.amount_ngn is not None else winnings
+
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Nothing to transfer")
+    if amount > winnings:
+        raise HTTPException(status_code=402, detail="Insufficient Winnings Balance")
+
+    locked_user.ngn_winnings_balance = float(winnings - amount)
+    locked_user.ngn_balance = float(Decimal(str(locked_user.ngn_balance)) + amount)
+
+    tx = models.Transaction(
+        user_id=locked_user.id,
+        type=models.TransactionType.WINNINGS_TRANSFER,
+        amount=float(amount),
+        currency="NGN",
+        description=f"Transferred ₦{amount} from Winnings Balance to Main Playing Balance",
+    )
+    db.add(tx)
+    db.flush()
+    db.commit()
+    db.refresh(locked_user)
+    db.refresh(tx)
+
+    return schemas.TransferWinningsResult(
+        success=True,
+        transferred_amount=float(amount),
+        new_main_balance=locked_user.ngn_balance,
+        new_winnings_balance=locked_user.ngn_winnings_balance,
+        transaction_id=tx.id,
+    )
+
+
 @router.get("/summary")
 def wallet_summary(user: models.User = Depends(get_current_user)):
     # points_balance is the ONE shared balance behind TRX and USDT-TRC20

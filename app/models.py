@@ -44,6 +44,13 @@ class User(Base):
     # التعديل الحالي هو السبن فقط، ونظام سحب الكريبتو ميزة منفصلة قائمة).
     usd_winnings_balance = Column(Float, default=0.0)
 
+    # NEW (Feature 1 — Refer & Earn): every user gets a permanent, unique
+    # referral code generated at signup (see auth_routes.py). referred_by
+    # is set once, at signup time, if the new user signed up with someone
+    # else's code — never editable afterward.
+    referral_code = Column(String, unique=True, index=True, nullable=True)
+    referred_by_user_id = Column(String, ForeignKey("users.id"), nullable=True)
+
     is_unlocked = Column(Boolean, default=False)     # فتح ميزة الاستبدال/السحب
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
@@ -76,6 +83,8 @@ class TransactionType(str, enum.Enum):
     WITHDRAW = "WITHDRAW"               # سحب نقاط (لاحقاً = تحويل حقيقي)
     ACHIEVEMENT = "ACHIEVEMENT"
     SPIN_FEE = "SPIN_FEE"                # NEW: خصم رسوم السبن ($1) من رصيد المستخدم
+    WINNINGS_TRANSFER = "WINNINGS_TRANSFER"  # NEW: نقل من Winnings Balance إلى Main/Playing Balance
+    REFERRAL_REWARD = "REFERRAL_REWARD"      # NEW: مكافأة إحالة صديق بعد إيداعه المؤهل
 
 
 class Transaction(Base):
@@ -329,3 +338,46 @@ class NigerianWithdrawal(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", foreign_keys=[user_id])
+
+
+# =========================================================================
+# NEW (additive only): Refer & Earn.
+# - AdminSetting: tiny generic key/value store so the referral reward
+#   amount (and future admin-tunable numbers) can change at runtime from
+#   an admin endpoint, with no redeploy/env var edit needed. Doesn't touch
+#   or replace config.py's env-based settings — this is only for values an
+#   admin needs to change live from the dashboard.
+# - ReferralReward: one row per (referrer, referred) pair, unique on
+#   referred_user_id — this is what makes "reward exactly once per
+#   referral" enforceable at the database level, not just in application
+#   logic (a duplicate insert attempt fails outright).
+# =========================================================================
+
+class AdminSetting(Base):
+    __tablename__ = "admin_settings"
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ReferralRewardStatus(str, enum.Enum):
+    PENDING = "PENDING"   # referred user signed up, hasn't deposited ≥ threshold yet
+    PAID = "PAID"          # threshold deposit happened, reward credited
+
+
+class ReferralReward(Base):
+    __tablename__ = "referral_rewards"
+    __table_args__ = (UniqueConstraint("referred_user_id", name="uq_referral_reward_referred_user"),)
+
+    id = Column(String, primary_key=True, default=gen_id)
+    referrer_user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    referred_user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    reward_amount_ngn = Column(Float, nullable=True)   # set once PAID; NULL while PENDING
+    status = Column(Enum(ReferralRewardStatus), default=ReferralRewardStatus.PENDING, nullable=False)
+    triggered_deposit_id = Column(String, ForeignKey("nigerian_deposits.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    paid_at = Column(DateTime, nullable=True)
+
+    referrer = relationship("User", foreign_keys=[referrer_user_id])
+    referred = relationship("User", foreign_keys=[referred_user_id])

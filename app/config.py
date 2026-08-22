@@ -265,6 +265,18 @@ NGN_ACCOUNT_NUMBER = os.environ.get("NGN_ACCOUNT_NUMBER", "5120736698")
 NGN_PER_POINT = float(os.environ.get("NGN_PER_POINT", "8"))
 MIN_DEPOSIT_NGN = float(os.environ.get("MIN_DEPOSIT_NGN", "5000"))
 MIN_WITHDRAWAL_NGN = float(os.environ.get("MIN_WITHDRAWAL_NGN", "5000"))
+
+# NEW (Feature 1 — Refer & Earn):
+# - MIN_REFERRAL_QUALIFYING_DEPOSIT_NGN: the referred user's deposit must be
+#   at least this much for their referrer to get paid. Env-only (needs a
+#   redeploy to change) — for a value an admin can change live from the
+#   dashboard, see DEFAULT_REFERRAL_REWARD_NGN below instead.
+# - DEFAULT_REFERRAL_REWARD_NGN: fallback reward amount used ONLY the first
+#   time, before any admin has ever set one via PUT /api/admin/settings/referral-reward
+#   — after that, the live value lives in the admin_settings table (see
+#   ledger_service.get_referral_reward_amount), not here.
+MIN_REFERRAL_QUALIFYING_DEPOSIT_NGN = float(os.environ.get("MIN_REFERRAL_QUALIFYING_DEPOSIT_NGN", "5000"))
+DEFAULT_REFERRAL_REWARD_NGN = float(os.environ.get("DEFAULT_REFERRAL_REWARD_NGN", "500"))
 NIGERIAN_DEPOSIT_UPLOAD_DIR = os.environ.get("NIGERIAN_DEPOSIT_UPLOAD_DIR", "uploads/nigerian_deposits")
 MAX_PROOF_UPLOAD_MB = 5
 ALLOWED_PROOF_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
