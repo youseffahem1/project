@@ -799,7 +799,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   </div>
 </div>
 
-<div class="page active" id="page-landing">
+<div class="page" id="page-landing">
   <div class="landing-hero">
     <div>
       <span class="pill">✨ Pay-per-spin • 100 Points = $1</span>
@@ -946,7 +946,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   </div>
 </div>
 
-<div class="page" id="page-login">
+<div class="page active" id="page-login">
   <div class="auth-shell">
     <div class="auth-card">
       <div class="auth-logo"><span class="dot"></span><span>LuckySpin</span></div>
@@ -1098,7 +1098,10 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
         <div class="muted">🏆 NGN — Winnings Balance</div>
         <div style="font-size:24px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px; color:var(--green);" id="walletNgnWinnings">₦0</div>
-        <div class="muted" style="font-size:11.5px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
+        <div class="muted" style="font-size:11.5px; margin-bottom:12px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
+        <button class="btn btn-ghost btn-sm" id="transferWinningsBtn" onclick="openTransferWinningsModal()">
+          <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">↩ Move Winnings to Playing Balance</span></span>
+        </button>
       </div>
       <div class="card">
         <div class="muted">💠 Crypto Balance</div>
@@ -1229,6 +1232,29 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <div id="historyList"></div>
     </div>
   </div>
+
+  <div class="container" style="margin-top:20px;">
+    <div class="card">
+      <h2>🎁 Refer a Friend</h2>
+      <p class="muted" style="margin-bottom:16px;">Share your link — when your friend deposits <b id="refMinDeposit">₦5,000</b> or more, you get <b id="refRewardAmount">₦500</b> added to your Winnings Balance.</p>
+
+      <div class="field">
+        <label>Your Referral Link</label>
+        <div class="field-input-wrap" style="display:flex; gap:8px; align-items:center;">
+          <input id="refLinkInput" type="text" readonly value="" style="flex:1;">
+          <button class="btn btn-ghost btn-sm" onclick="copyReferralLink()" style="flex-shrink:0;">📋 Copy</button>
+        </div>
+      </div>
+
+      <div class="stat-box" style="max-width:220px; margin-bottom:18px;">
+        <div class="val" id="refTotalEarned">₦0</div>
+        <div class="lbl">Total earned from referrals</div>
+      </div>
+
+      <h3 style="font-size:14px; margin-bottom:10px;">Your Referrals</h3>
+      <div id="referralList"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-admin">
@@ -1238,10 +1264,24 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <div class="wallet-tab active" id="adminTabBtnLedger" onclick="setAdminTab('ledger')">Ledger</div>
       <div class="wallet-tab" id="adminTabBtnDeposits" onclick="setAdminTab('deposits')">Deposit Requests</div>
       <div class="wallet-tab" id="adminTabBtnWithdrawals" onclick="setAdminTab('withdrawals')">Withdrawal Requests</div>
+      <div class="wallet-tab" id="adminTabBtnSettings" onclick="setAdminTab('settings')">Settings</div>
     </div>
     <div id="adminLedgerPanel"><div class="empty-state"><div class="icon">⏳</div>Loading...</div></div>
     <div id="adminDepositsPanel" style="display:none;"></div>
     <div id="adminWithdrawalsPanel" style="display:none;"></div>
+    <div id="adminSettingsPanel" style="display:none;">
+      <div class="card" style="max-width:420px;">
+        <h2>Referral Reward</h2>
+        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">Paid once per referred user, the moment their first qualifying NGN deposit is approved.</p>
+        <div class="field">
+          <label>Reward Amount (₦)</label>
+          <div class="field-input-wrap"><input id="adminRefRewardInput" type="number" min="0" step="1"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="adminRefRewardSaveBtn" onclick="saveReferralRewardSetting()">
+          <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Save</span></span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1375,6 +1415,28 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 </div>
 
 <!-- Approve NGN withdrawal -->
+<!-- Transfer Winnings -> Main Playing Balance -->
+<div class="modal-bg" id="transferWinningsBg">
+  <div class="confirm-modal">
+    <h3>Move Winnings to Playing Balance?</h3>
+    <div class="row"><span>Winnings Balance</span><b id="twAvailable">₦0</b></div>
+    <div class="field" style="margin-top:14px;">
+      <label>Amount to move</label>
+      <div class="field-input-wrap with-max">
+        <input id="twAmount" type="number" min="0" step="0.01" placeholder="₦ 0.00">
+        <button type="button" class="max-btn" onclick="setTransferWinningsMax()">ALL</button>
+      </div>
+      <p class="muted" style="font-size:11.5px; margin-top:6px;">Moved funds become part of your Playing Balance and can no longer be withdrawn directly — you'd need to win them again to withdraw.</p>
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost btn-block" onclick="closeTransferWinningsModal()">Cancel</button>
+      <button class="btn btn-primary btn-block" id="twConfirmBtn" onclick="doTransferWinnings()">
+        <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Move Funds</span></span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="approveWithdrawalBg">
   <div class="confirm-modal">
     <h3>Approve Withdrawal?</h3>
@@ -1652,7 +1714,14 @@ async function doSignup(){
   const btn = document.getElementById("signupBtn");
   setButtonLoading(btn, true);
   try{
-    const data = await api("/auth/signup", "POST", {full_name, email, password}, false);
+    // NEW (Feature 1): pass along a ?ref=CODE from the URL if present —
+    // read fresh from the address bar rather than cached at page-load, in
+    // case the person landed here from a referral link, then clicked
+    // through to Sign Up from elsewhere on the page.
+    const refCode = new URLSearchParams(window.location.search).get("ref");
+    const payload = {full_name, email, password};
+    if(refCode) payload.referral_code = refCode;
+    const data = await api("/auth/signup", "POST", payload, false);
     setToken(data.access_token, true);
     await loadMe();
     await checkAdminStatus();
@@ -2664,6 +2733,43 @@ function validateNgnWithdrawAmount(minWithdrawal){
   }
 }
 
+/* ---- NGN: Transfer Winnings -> Main Playing Balance ---- */
+
+function openTransferWinningsModal(){
+  if(!state.user) return;
+  document.getElementById("twAvailable").textContent = fmtNgn(state.user.ngn_winnings_balance);
+  document.getElementById("twAmount").value = "";
+  document.getElementById("transferWinningsBg").classList.add("show");
+}
+function closeTransferWinningsModal(){ document.getElementById("transferWinningsBg").classList.remove("show"); }
+function setTransferWinningsMax(){
+  if(!state.user) return;
+  document.getElementById("twAmount").value = state.user.ngn_winnings_balance;
+}
+
+let transferWinningsLock = false; // prevents duplicate transfer requests from rapid double-clicks
+
+async function doTransferWinnings(){
+  if(transferWinningsLock) return;
+  const raw = document.getElementById("twAmount").value;
+  const amount_ngn = raw ? parseFloat(raw) : undefined;
+  if(raw && (!amount_ngn || amount_ngn <= 0)){ showToast("Enter a valid amount"); return; }
+  if(state.user && amount_ngn && amount_ngn > state.user.ngn_winnings_balance){ showToast("Insufficient Winnings Balance"); return; }
+
+  transferWinningsLock = true;
+  const btn = document.getElementById("twConfirmBtn");
+  setButtonLoading(btn, true);
+  try{
+    const body = amount_ngn ? {amount_ngn} : {};
+    const r = await api("/wallet/transfer-winnings-to-main", "POST", body);
+    closeTransferWinningsModal();
+    showToast(`Moved ${fmtNgn(r.transferred_amount)} to Playing Balance`);
+    await loadMe();
+    if(document.getElementById("page-wallet").classList.contains("active")) refreshWallet();
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); transferWinningsLock = false; }
+}
+
 function setNgnWithdrawMax(){
   if(!state.user) return;
   document.getElementById("ngnWAmount").value = state.user.ngn_winnings_balance;
@@ -2995,6 +3101,50 @@ async function refreshProfile(){
       <span class="badge ${tx.amount >= 0 ? 'badge-win' : 'badge-out'}">${tx.amount >= 0 ? '+' : ''}${amtText}</span>
     </div>
   `;}).join("") || `<p class="muted">No transactions yet</p>`;
+
+  loadReferralInfo();
+}
+
+/* ===================== REFER & EARN ===================== */
+
+async function loadReferralInfo(){
+  const listEl = document.getElementById("referralList");
+  try{
+    const r = await api("/referral/me");
+    const link = window.location.origin + window.location.pathname + "?ref=" + encodeURIComponent(r.referral_code);
+    document.getElementById("refLinkInput").value = link;
+    document.getElementById("refMinDeposit").textContent = fmtNgn(r.min_qualifying_deposit_ngn);
+    document.getElementById("refRewardAmount").textContent = fmtNgn(r.reward_amount_ngn);
+    document.getElementById("refTotalEarned").textContent = fmtNgn(r.total_earned_ngn);
+
+    if(!r.referrals.length){
+      listEl.innerHTML = `<div class="empty-state"><div class="icon">👥</div>No referrals yet — share your link!</div>`;
+      return;
+    }
+    listEl.innerHTML = r.referrals.map(ref => {
+      const paid = ref.status === "PAID";
+      return `
+      <div class="item-row">
+        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString()}</span></span>
+        <span class="badge ${paid ? 'badge-win' : ''}">${paid ? '+' + fmtNgn(ref.reward_amount_ngn) : 'Pending deposit'}</span>
+      </div>`;
+    }).join("");
+  }catch(e){
+    listEl.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`;
+  }
+}
+
+function copyReferralLink(){
+  const input = document.getElementById("refLinkInput");
+  input.select();
+  input.setSelectionRange(0, 99999);
+  try{
+    navigator.clipboard.writeText(input.value);
+    showToast("Referral link copied");
+  }catch(e){
+    document.execCommand("copy");
+    showToast("Referral link copied");
+  }
 }
 
 /* ===================== ADMIN LEDGER ===================== */
@@ -3015,12 +3165,34 @@ function setAdminTab(tab){
   document.getElementById("adminTabBtnLedger").classList.toggle("active", tab==="ledger");
   document.getElementById("adminTabBtnDeposits").classList.toggle("active", tab==="deposits");
   document.getElementById("adminTabBtnWithdrawals").classList.toggle("active", tab==="withdrawals");
+  document.getElementById("adminTabBtnSettings").classList.toggle("active", tab==="settings");
   document.getElementById("adminLedgerPanel").style.display = tab==="ledger" ? "block" : "none";
   document.getElementById("adminDepositsPanel").style.display = tab==="deposits" ? "block" : "none";
   document.getElementById("adminWithdrawalsPanel").style.display = tab==="withdrawals" ? "block" : "none";
+  document.getElementById("adminSettingsPanel").style.display = tab==="settings" ? "block" : "none";
   if(tab === "ledger") loadAdminLedger();
   if(tab === "deposits") loadDepositRequests();
   if(tab === "withdrawals") loadWithdrawalRequests();
+  if(tab === "settings") loadReferralRewardSetting();
+}
+
+async function loadReferralRewardSetting(){
+  try{
+    const r = await api("/admin/settings/referral-reward");
+    document.getElementById("adminRefRewardInput").value = r.amount_ngn;
+  }catch(e){ showToast(e.message); }
+}
+
+async function saveReferralRewardSetting(){
+  const val = parseFloat(document.getElementById("adminRefRewardInput").value);
+  if(!val || val <= 0){ showToast("Enter a valid amount"); return; }
+  const btn = document.getElementById("adminRefRewardSaveBtn");
+  setButtonLoading(btn, true);
+  try{
+    await api("/admin/settings/referral-reward", "PUT", {amount_ngn: val});
+    showToast("Referral reward updated");
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
 }
 
 async function loadAdminLedger(){
@@ -3693,8 +3865,19 @@ document.addEventListener("keydown", (e)=>{
     if(u){
       await checkAdminStatus();
       showPage("wheel");
+      return;
     }
   }
+  // NEW (Feature 8): guests never see the marketing/landing page (with its
+  // live spin-wheel preview) as the first thing on load anymore — Login/
+  // Signup is the entry point. The landing page markup itself is untouched
+  // and still reachable via showPage('landing') if something links to it,
+  // it's just no longer the default.
+  // NEW (Feature 1): a referral link (?ref=CODE) clearly means "come sign
+  // up", so send guests straight to the Signup form instead of Login when
+  // one is present.
+  const hasRefCode = new URLSearchParams(window.location.search).get("ref");
+  showPage(hasRefCode ? "signup" : "login");
 })();
 </script>
 </body>

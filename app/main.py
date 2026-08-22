@@ -13,11 +13,11 @@ import asyncio
 from .database import Base, engine, SessionLocal
 from .config import DATABASE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from . import models
-from .db_migrations import run_startup_migrations
 from .auth import hash_password
-from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes
+from .routes import auth_routes, user_routes, spin_routes, wallet_routes, admin_routes, nigerian_deposit_routes, nigerian_withdrawal_routes, referral_routes
 from . import blockchain_monitor
 from . import withdrawal_monitor
+from .startup_migrations import run_startup_column_migrations
 
 # --- تحذير واضح باللوج لو السيرفر شغال بدون DATABASE_URL (يعني sqlite محلي) ---
 # فقط طباعة تحذيرية — ما توقف السيرفر ولا تغيّر أي سلوك، بس تساعدك تكتشف
@@ -31,15 +31,14 @@ if DATABASE_URL.startswith("sqlite"):
         "PostgreSQL connection string in the Render dashboard's Environment tab."
     )
 
-# --- إنشاء الجداول (جداول جديدة بالكامل فقط — لا يضيف أعمدة لجدول موجود) ---
+# --- إنشاء الجداول ---
 Base.metadata.create_all(bind=engine)
 
-# --- NEW: إضافة أي عمود ناقص لجدول موجود مسبقاً (مثل users.ngn_winnings_balance) ---
-# create_all() أعلاه لا يعدّل جدول موجود، فهذا يغطي الفجوة: يقارن أعمدة كل
-# Model الحالية مع القاعدة الحية على Render ويضيف الناقص فقط عبر
-# ALTER TABLE ... ADD COLUMN IF NOT EXISTS (PostgreSQL فقط، آمن للتكرار،
-# لا يحذف/يعدّل أي شيء موجود). انظر db_migrations.py لكل التفاصيل.
-run_startup_migrations(engine, Base)
+# --- NEW: يضيف تلقائيًا أي عمود ناقص على جدول موجود أصلاً (create_all
+# فوق ما بيعمل هيك — بينشئ جداول جديدة بس، مو أعمدة على جدول قديم).
+# آمن ويعمل تلقائيًا بكل Startup/Deploy، بدون Render Shell وبدون سكربت
+# منفصل. راجع app/startup_migrations.py للتفاصيل الكاملة.
+run_startup_column_migrations(engine)
 
 # --- Rate limiting عام لكل الـ API (حماية من هجمات bruteforce / سبام) ---
 limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
@@ -89,6 +88,8 @@ app.include_router(nigerian_deposit_routes.user_router)
 app.include_router(nigerian_deposit_routes.admin_router)
 app.include_router(nigerian_withdrawal_routes.user_router)
 app.include_router(nigerian_withdrawal_routes.admin_router)
+app.include_router(referral_routes.user_router)
+app.include_router(referral_routes.admin_router)
 
 
 @app.get("/api/health")
