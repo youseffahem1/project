@@ -19,8 +19,11 @@ router = APIRouter(prefix="/api/admin/spin-tiers", tags=["admin-spin-tiers"])
 def _validate_prizes(prizes: list[schemas.SpinPrizeValueIn]):
     if not prizes:
         raise HTTPException(status_code=400, detail="A tier needs at least one prize value")
-    if not any(p.prize_amount == 0 for p in prizes):
-        raise HTTPException(status_code=400, detail="Every tier must include a ₦0 (no-win) outcome")
+    # NOTE: a ₦0 (no-win) row is no longer required here — admins can
+    # configure a tier with only nonzero prizes. spin_tier_service.py's
+    # build_tier_prize_table() still transparently adds a ₦0 fallback
+    # outcome at play time if a tier's row list doesn't have one, so this
+    # relaxation doesn't change the runtime safety guarantee at all.
     if len(prizes) != len({p.prize_amount for p in prizes}):
         raise HTTPException(status_code=400, detail="Duplicate prize amounts are not allowed within one tier")
 

@@ -3473,10 +3473,10 @@ async function savePrizeTier(tierId, btnEl){
     if(isNaN(weight) || weight <= 0){ showToast("Every prize needs a weight greater than 0"); return; }
     prizes.push({prize_amount: amt, weight: weight});
   }
-  if(!prizes.some(p => p.prize_amount === 0)){
-    showToast("Every tier must include a NGN 0 (no-win) outcome");
-    return;
-  }
+  // NOTE: a NGN 0 (no-win) row is no longer required — admins can save a
+  // tier made up of only nonzero prizes. The backend still safely falls
+  // back to a NGN 0 outcome at play time if a tier has none, so removing
+  // this row here doesn't change the runtime safety guarantee.
 
   const payload = {currency: "NGN", min_play_amount: minAmount, label: label || null, is_active: isActive, prizes};
 
