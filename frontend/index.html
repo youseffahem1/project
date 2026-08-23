@@ -3759,6 +3759,7 @@ function renderDepositRequestsPanel(){
     }else{
       actions = `<button class="btn btn-ghost btn-sm" onclick='viewDepositProof(${JSON.stringify(d.id)})'>🖼️ View Payment Proof</button>`;
     }
+    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteDeposit(${JSON.stringify(d.id)})'>🗑️ حذف</button>`;
     let note = "";
     if(d.status === "APPROVED"){ note = `<div class="deposit-card-note">Credited <b>${fmtNgn(d.points_credited)}</b></div>`; }
     if(d.status === "REJECTED" && d.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(d.rejection_reason)}</div>`; }
@@ -3865,6 +3866,18 @@ async function doRejectDeposit(){
   finally{ setButtonLoading(btn, false); depositActionLock = false; }
 }
 
+async function doDeleteDeposit(depositId){
+  if(depositActionLock) return;
+  if(!confirm("حذف طلب الإيداع هذا نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) return;
+  depositActionLock = true;
+  try{
+    const r = await api("/admin/nigerian-deposits/" + encodeURIComponent(depositId), "DELETE");
+    showToast(r.message || "Deposit deleted");
+    loadDepositRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ depositActionLock = false; }
+}
+
 /* ===================== ADMIN — NGN WITHDRAWAL REQUESTS ===================== */
 
 state.withdrawalRequests = [];
@@ -3918,6 +3931,7 @@ function renderWithdrawalRequestsPanel(){
         <button class="btn btn-danger btn-sm" onclick='openRejectWithdrawalModal(${JSON.stringify(w)})'>❌ Reject Withdrawal</button>
       `;
     }
+    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteWithdrawal(${JSON.stringify(w.id)})'>🗑️ حذف</button>`;
     let note = "";
     if(w.status === "APPROVED"){ note = `<div class="deposit-card-note">Sent ${fmtNgn(w.amount_ngn)}</div>`; }
     if(w.status === "REJECTED" && w.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(w.rejection_reason)}</div>`; }
@@ -3996,6 +4010,18 @@ async function doRejectWithdrawal(){
     loadWithdrawalRequests();
   }catch(e){ showToast(e.message); }
   finally{ setButtonLoading(btn, false); withdrawalActionLock = false; }
+}
+
+async function doDeleteWithdrawal(withdrawalId){
+  if(withdrawalActionLock) return;
+  if(!confirm("حذف طلب السحب هذا نهائياً؟ إذا كان الطلب قيد الانتظار سيتم استرجاع المبلغ لرصيد المستخدم أولاً. لا يمكن التراجع عن هذا الإجراء.")) return;
+  withdrawalActionLock = true;
+  try{
+    const r = await api("/admin/nigerian-withdrawals/" + encodeURIComponent(withdrawalId), "DELETE");
+    showToast(r.message || "Withdrawal deleted");
+    loadWithdrawalRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ withdrawalActionLock = false; }
 }
 
 /* ===================== BALANCE POPOVER ===================== */

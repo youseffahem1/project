@@ -265,3 +265,52 @@ def reject_nigerian_withdrawal(
     db.refresh(w)
 
     return {"success": True, "message": "Withdrawal rejected", "withdrawal_id": w.id}
+
+
+@admin_router.delete("/{withdrawal_id}")
+def delete_nigerian_withdrawal(
+    withdrawal_id: str,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    """
+    NEW (additive only): permanently deletes a withdrawal request record from
+    the admin panel (any status — pending/approved/rejected).
+
+    Balance safety: a PENDING withdrawal already put a HOLD on the user's
+    ngn_winnings_balance at request time (see create_nigerian_withdrawal).
+    Deleting it here without refunding would silently destroy that money, so
+    a PENDING row is refunded first — identical to what reject_nigerian_withdrawal
+    already does — before the row is removed. APPROVED/REJECTED rows are
+    already fully settled (paid out or already refunded), so those are just
+    deleted with no balance change.
+    """
+    try:
+        w = db.query(models.NigerianWithdrawal).filter_by(id=withdrawal_id).with_for_update().first()
+    except Exception:
+        w = db.query(models.NigerianWithdrawal).filter_by(id=withdrawal_id).first()
+
+    if not w:
+        raise HTTPException(status_code=404, detail="Withdrawal request not found")
+
+    if w.status == models.NigerianWithdrawalStatus.PENDING:
+        try:
+            target_user = db.query(models.User).filter_by(id=w.user_id).with_for_update().first()
+        except Exception:
+            target_user = db.query(models.User).filter_by(id=w.user_id).first()
+        if target_user:
+            target_user.ngn_winnings_balance = float(
+                Decimal(str(target_user.ngn_winnings_balance)) + Decimal(str(w.amount_ngn))
+            )
+            db.add(models.Transaction(
+                user_id=target_user.id,
+                type=models.TransactionType.WITHDRAW,
+                amount=w.amount_ngn,
+                currency="NGN",
+                description=f"Nigerian bank withdrawal deleted by admin — refunded ₦{w.amount_ngn} (request {w.id})",
+            ))
+
+    db.delete(w)
+    db.commit()
+
+    return {"success": True, "message": "Withdrawal deleted", "withdrawal_id": withdrawal_id}

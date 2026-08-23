@@ -319,3 +319,31 @@ def reject_nigerian_deposit(
     db.refresh(dep)
 
     return {"success": True, "message": "Deposit rejected", "deposit_id": dep.id}
+
+
+@admin_router.delete("/{deposit_id}")
+def delete_nigerian_deposit(
+    deposit_id: str,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    """
+    NEW (additive only): permanently deletes a deposit request record from the
+    admin panel (any status — pending/approved/rejected). This only removes the
+    row itself; it never changes user balances. A PENDING deposit hasn't
+    touched the user's balance yet (credit only happens on approval), and an
+    APPROVED/REJECTED deposit has already been fully settled — so there is
+    nothing to refund or reverse here, unlike withdrawal deletion.
+    """
+    try:
+        dep = db.query(models.NigerianDeposit).filter_by(id=deposit_id).with_for_update().first()
+    except Exception:
+        dep = db.query(models.NigerianDeposit).filter_by(id=deposit_id).first()
+
+    if not dep:
+        raise HTTPException(status_code=404, detail="Deposit request not found")
+
+    db.delete(dep)
+    db.commit()
+
+    return {"success": True, "message": "Deposit deleted", "deposit_id": deposit_id}
