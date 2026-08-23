@@ -202,7 +202,7 @@ img{max-width:100%; display:block;}
 .bn-item.active{color:var(--purple);}
 .bn-item span{max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 @media(max-width:700px){
-  .bottom-nav{display:block;}
+  .bottom-nav.authed{display:block;}
   body{padding-bottom:70px;}
 }
 
@@ -896,7 +896,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 </div>
 
 <!-- Bottom nav (mobile, authed only) -->
-<div class="bottom-nav" id="bottomNav" style="display:none;">
+<div class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
     <a href="#" class="bn-item" data-page="wheel" onclick="showPage('wheel')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>
@@ -1673,7 +1673,7 @@ let state = {
 };
 
 function fmtPts(n){ return (Number(n)||0).toFixed(1); }
-function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString(); }
+function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString('en-US'); }
 function fmtUsd(points){ return "$" + (Number(points||0) / (state.pointsPerUsdt || 100)).toFixed(2); }
 
 function showToast(msg){
@@ -2005,7 +2005,13 @@ function updateNavAuthState(authed){
   document.getElementById("navLogoutDesktop").style.display = authed ? "inline-flex" : "none";
   document.getElementById("navBalance").style.display = authed ? "flex" : "none";
   document.getElementById("hamburgerBtn").classList.toggle("authed", authed);
-  document.getElementById("bottomNav").style.display = authed ? "block" : "none";
+  // FIX ("bottom nav bar showing on desktop"): this used to set an INLINE
+  // style.display directly, which always overrides a stylesheet rule —
+  // including the @media(max-width:700px) rule meant to keep this hidden
+  // on desktop/tablet widths. Toggling a class instead lets that media
+  // query do its job again, exactly like .nav-links.authed above already
+  // does correctly.
+  document.getElementById("bottomNav").classList.toggle("authed", authed);
   document.getElementById("navAdminLink").style.display = (authed && state.isAdmin) ? "inline-flex" : "none";
   document.getElementById("drawerAdminLink").style.display = (authed && state.isAdmin) ? "flex" : "none";
   if(authed) startNotificationPolling();
@@ -2135,7 +2141,7 @@ let currentRotation = 0;
 function fmtSpin(amount, currency){
   return currency === "USD" ? fmtUsdRaw(amount) : fmtNgn(amount);
 }
-function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2}); }
 // NEW: shared formatter for any transaction amount, wherever it's shown
 // (Transactions page, balance popover, admin ledger, etc.) — picks the
 // right symbol from tx.currency instead of assuming NGN/Points, so a
@@ -2756,7 +2762,7 @@ async function renderNgnDepositPanel(box){
 
       <div class="ngn-info-banner">
         <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString()}</span></div>
+        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')}</span></div>
       </div>
 
       <div class="ngn-row">
@@ -2780,8 +2786,8 @@ async function renderNgnDepositPanel(box){
     <div class="card" style="margin-top:16px;">
       <h2>Amount to Deposit</h2>
       <div class="field">
-        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString()})</label>
-        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString()} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
+        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')})</label>
+        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
         <p class="muted" id="ngnAmountHint" style="font-size:11.5px; margin-top:6px;">This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.</p>
       </div>
 
@@ -2866,7 +2872,7 @@ function validateNgnAmount(minDeposit){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minDeposit){
-    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString()} — please enter at least that amount.`;
+    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString('en-US')} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
     hint.textContent = "This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.";
@@ -2880,7 +2886,7 @@ async function submitNigerianDeposit(){
   const amount = parseFloat(amountEl.value);
   const minDeposit = Number((state.ngnBankDetails && state.ngnBankDetails.min_deposit_ngn) || 5000);
   if(!amount || amount <= 0){ showToast("Enter the amount you transferred"); return; }
-  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString()}`); return; }
+  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString('en-US')}`); return; }
   if(!state.ngnFile){ showToast("Upload your payment proof screenshot"); return; }
 
   state.ngnSubmitting = true;
@@ -2959,7 +2965,7 @@ function renderNgnWithdrawForm(box, info){
 
     <div class="ngn-info-banner">
       <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString()}</span></div>
+      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString('en-US')}</span></div>
     </div>
 
     <div class="field">
@@ -2975,9 +2981,9 @@ function renderNgnWithdrawForm(box, info){
       <div class="field-input-wrap"><input id="ngnWBankName" type="text" placeholder="e.g. Moniepoint MFB"></div>
     </div>
     <div class="field">
-      <label>Amount (min ₦${minW.toLocaleString()})</label>
+      <label>Amount (min ₦${minW.toLocaleString('en-US')})</label>
       <div class="field-input-wrap with-max">
-        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString()} or more" oninput="validateNgnWithdrawAmount(${minW})">
+        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString('en-US')} or more" oninput="validateNgnWithdrawAmount(${minW})">
         <button type="button" class="max-btn" onclick="setNgnWithdrawMax()">MAX</button>
       </div>
       <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your Winnings Balance immediately and reviewed by an admin.</p>
@@ -2995,7 +3001,7 @@ function validateNgnWithdrawAmount(minWithdrawal){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minWithdrawal){
-    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString()} — please enter at least that amount.`;
+    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString('en-US')} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
     hint.textContent = "This amount is deducted from your Winnings Balance immediately and reviewed by an admin.";
@@ -3057,7 +3063,7 @@ async function submitNgnWithdrawal(){
   if(!account_name){ showToast("Enter the account holder's name"); return; }
   if(!account_number){ showToast("Enter the account number"); return; }
   if(!amount_ngn || amount_ngn <= 0){ showToast("Enter a valid amount"); return; }
-  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString()}`); return; }
+  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString('en-US')}`); return; }
   if(state.user && amount_ngn > state.user.ngn_winnings_balance){ showToast("Insufficient balance"); return; }
 
   state.ngnWithdrawSubmitting = true;
@@ -3272,7 +3278,7 @@ function renderTransactions(){
     const meta = TX_META[tx.type] || {icon:"•", label:tx.type};
     const pos = tx.amount >= 0;
     const desc = (tx.description || meta.label).replace(/</g,"&lt;");
-    const date = new Date(tx.created_at).toLocaleString();
+    const date = new Date(tx.created_at).toLocaleString('en-US');
     return `
       <div class="tx-row">
         <div class="tx-icon">${meta.icon}</div>
@@ -3357,7 +3363,7 @@ async function refreshProfile(){
   document.getElementById("profileNgnBalance").textContent = fmtNgn(u.ngn_balance);
   document.getElementById("profileBalance").textContent = fmtUsd(u.points_balance);
   document.getElementById("profileLocked").textContent = fmtPts(u.locked_points);
-  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString();
+  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString('en-US');
 
   await loadTransactions();
   const hist = state.transactions;
@@ -3394,7 +3400,7 @@ async function loadReferralInfo(){
       const paid = ref.status === "PAID";
       return `
       <div class="item-row">
-        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString()}</span></span>
+        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString('en-US')}</span></span>
         <span class="badge ${paid ? 'badge-win' : ''}">${paid ? '+' + fmtNgn(ref.reward_amount_ngn) : 'Pending deposit'}</span>
       </div>`;
     }).join("");
@@ -3801,7 +3807,7 @@ function renderAdminTransactions(){
         <div class="tx-body">
           <div class="tx-type">${tx.type.replace(/_/g," ")} <span class="status-badge status-${tx.status}" style="margin-left:6px;">${tx.status}</span></div>
           <div class="tx-desc">${hash ? ("Tx: " + hash) : (tx.reference_id ? ("Ref: " + tx.reference_id) : "—")}</div>
-          <div class="tx-date">${new Date(tx.created_at).toLocaleString()}</div>
+          <div class="tx-date">${new Date(tx.created_at).toLocaleString('en-US')}</div>
         </div>
         <div class="tx-amount ${pos?'pos':'neg'}">${pos?'+':''}${fmtLedgerAmount(tx)}</div>
         ${tx.tx_hash ? `<button class="tx-copy" title="Copy hash" onclick="copyText('${tx.tx_hash}')">📋</button>` : ""}
@@ -3920,7 +3926,7 @@ function renderDepositRequestsPanel(){
           <div class="mini"><div class="l">Amount</div><div class="v">₦${d.amount_ngn}</div></div>
           <div class="mini"><div class="l">Currency</div><div class="v">NGN</div></div>
           <div class="mini"><div class="l">Deposit ID</div><div class="v" title="${d.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString()}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString('en-US')}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -4081,7 +4087,7 @@ function renderWithdrawalRequestsPanel(){
           <div class="mini"><div class="l">Account Number</div><div class="v">${escapeHtml(w.account_number)}</div></div>
           <div class="mini"><div class="l">Bank</div><div class="v">${escapeHtml(w.bank_name || "—")}</div></div>
           <div class="mini"><div class="l">Request ID</div><div class="v" title="${w.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString()}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString('en-US')}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -4198,7 +4204,7 @@ async function populateBalancePopover(){
   if(ngnTx.length){
     const last = ngnTx[0];
     const meta = TX_META[last.type] || {label:last.type};
-    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString()}`;
+    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString('en-US')}`;
   }else{
     document.getElementById("bpLast").textContent = "No recent transactions";
   }
@@ -4353,7 +4359,7 @@ async function loadAdminGrantsFeed(){
       <div class="row" style="padding:10px 0; border-bottom:1px solid var(--glass-border);">
         <span>
           <b>${escapeHtml(g.user_name || g.user_email || g.user_id)}</b>
-          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString()}</span>
+          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString('en-US')}</span>
           <span class="muted" style="font-size:11.5px; display:block;">${escapeHtml(g.reason || '')}</span>
         </span>
         <b style="color:var(--purple);">+${fmtNgn(g.amount)}</b>
