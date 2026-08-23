@@ -267,9 +267,9 @@ VIP_LEVELS = [
 # NEW: Nigerian Bank Transfer deposit (manual, admin-approved) — additive
 # only, does not touch POINTS_PER_USDT or any existing conversion above.
 # =========================================================================
-NGN_BANK_NAME = os.environ.get("NGN_BANK_NAME", "Moniepoint MFB")
-NGN_ACCOUNT_NAME = os.environ.get("NGN_ACCOUNT_NAME", "Nnaemeka Micheal Ochonma")
-NGN_ACCOUNT_NUMBER = os.environ.get("NGN_ACCOUNT_NUMBER", "5120736698")
+NGN_BANK_NAME = os.environ.get("NGN_BANK_NAME", "OPay")
+NGN_ACCOUNT_NAME = os.environ.get("NGN_ACCOUNT_NAME", "Uche Ifeoma")
+NGN_ACCOUNT_NUMBER = os.environ.get("NGN_ACCOUNT_NUMBER", "9129493441")
 # كم نايرا = نقطة واحدة. عدّلها من env حسب سعر الصرف الفعلي وقت التشغيل —
 # لا يوجد سعر صرف NGN موجود سابقاً بالمشروع، فهذه القيمة أضيفت خصيصاً لهذه الميزة.
 NGN_PER_POINT = float(os.environ.get("NGN_PER_POINT", "8"))
