@@ -37,6 +37,13 @@
   --shadow-glow: 0 0 0 1px rgba(124,58,237,.12), 0 20px 60px rgba(124,58,237,.18);
 }
 *{box-sizing:border-box; margin:0; padding:0; min-width:0;}
+/* PERFORMANCE: removes the ~300ms tap-delay some mobile browsers add while
+   waiting to see if a tap is actually the start of a double-tap-to-zoom —
+   this alone is a big chunk of "feels laggy to the touch" on phones.
+   Buttons/links/anything clickable get it explicitly; text stays
+   selectable/zoomable as normal (pan-y still allows vertical scrolling). */
+html{touch-action:manipulation;}
+button, a, [onclick], .play-amount-chip, .currency-chip, .wallet-tab, .tx-filter{touch-action:manipulation;}
 html{scroll-behavior:smooth; overflow-x:hidden; overscroll-behavior-x:none; max-width:100%;}
 body{
   overflow-x:hidden;
@@ -78,7 +85,7 @@ img{max-width:100%; display:block;}
    wrapper (not the viewport) is their containing block, so overflow:
    hidden on the wrapper actually clips them — no more drag-reveal. */
 .bg-orbs{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; contain:strict;}
-.bg-orb{position:absolute; border-radius:50%; filter:blur(110px); pointer-events:none; opacity:.55; will-change:transform;}
+.bg-orb{position:absolute; border-radius:50%; filter:blur(55px); pointer-events:none; opacity:.55; will-change:transform;}
 .bg-orb-1{width:520px; height:520px; top:-160px; left:-140px; background:radial-gradient(circle,var(--purple) 0%, transparent 70%); animation:float1 26s ease-in-out infinite;}
 .bg-orb-2{width:480px; height:480px; bottom:-180px; right:-120px; background:radial-gradient(circle,var(--pink) 0%, transparent 70%); animation:float2 30s ease-in-out infinite;}
 .bg-orb-3{width:400px; height:400px; top:32%; right:10%; background:radial-gradient(circle,var(--cyan) 0%, transparent 70%); animation:float3 34s ease-in-out infinite; opacity:.28;}
@@ -93,7 +100,15 @@ img{max-width:100%; display:block;}
    there, and fully honor the OS "reduce motion" setting (freezes the
    animation instead of ignoring it, which also saves battery/CPU). */
 @media(max-width:600px){
-  .bg-orb{filter:blur(70px);}
+  /* PERFORMANCE: on top of the smaller blur radius above, freeze the
+     animation entirely on phones — these orbs are purely decorative
+     background movement, and a `filter:blur()` layer that's ALSO
+     continuously transform-animated has to be reblurred every single
+     frame on many mobile GPUs (it can't just reuse a cached bitmap the
+     way a plain transform can). Stopping the motion removes an ongoing
+     background cost competing with touch responsiveness — the orbs still
+     show, they just hold still instead of drifting forever. */
+  .bg-orb{filter:blur(35px); animation:none;}
 }
 @media(prefers-reduced-motion:reduce){
   .bg-orb{animation:none !important;}
@@ -101,24 +116,12 @@ img{max-width:100%; display:block;}
 
 .app-wrap{position:relative; z-index:1; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;}
 
-/* FIX (auth-state-before-paint): visible by default with zero JS/network
-   dependency so it's the very first thing painted — init() removes it
-   (see revealApp()) only once we actually know whether the visitor is
-   logged in or not, so neither the login page nor the user's dashboard
-   ever flashes briefly on top of the wrong one. Cheap opacity-only
-   transition, no layout thrash. */
-#authGate{position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
-  background:var(--bg, #0b0b14); transition:opacity .25s ease; }
-#authGate.hidden{opacity:0; pointer-events:none;}
-.auth-gate-spinner{width:28px; height:28px; border-radius:50%; border:3px solid rgba(124,58,237,0.15); border-top-color:#a855f7; animation:authGateSpin .7s linear infinite;}
-@keyframes authGateSpin{to{transform:rotate(360deg);}}
-
 /* ===== Header ===== */
 .topnav{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  display:none; align-items:center; justify-content:space-between; gap:12px;
   padding:14px clamp(16px,4vw,36px); position:sticky; top:0; z-index:60;
-  background:rgba(255,255,255,.72); backdrop-filter:blur(20px) saturate(180%);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  background:rgba(255,255,255,.72); backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
   border-bottom:1px solid var(--glass-border);
   /* iPhone notch/Dynamic Island in landscape (or PWA fullscreen) sits over
      the top-left/top-right corners, not just the top — pad the sides by
@@ -178,7 +181,7 @@ img{max-width:100%; display:block;}
 .drawer-bg.show{display:block; animation:fadeIn .25s ease;}
 .drawer{
   position:fixed; top:0; right:0; height:100%; width:min(300px,84vw); z-index:190;
-  background:rgba(255,255,255,.92); backdrop-filter:blur(24px) saturate(180%);
+  background:rgba(255,255,255,.92); backdrop-filter:blur(11px);
   box-shadow:-14px 0 50px rgba(20,18,40,.18); padding:22px 18px; transform:translateX(100%);
   transition:transform .35s var(--ease); display:flex; flex-direction:column; gap:4px;
 }
@@ -191,7 +194,7 @@ img{max-width:100%; display:block;}
 /* Bottom nav (mobile) */
 .bottom-nav{
   display:none; position:fixed; bottom:0; left:0; right:0; z-index:70;
-  background:rgba(255,255,255,.86); backdrop-filter:blur(22px) saturate(180%);
+  background:rgba(255,255,255,.86); backdrop-filter:blur(10px);
   border-top:1px solid var(--glass-border);
   padding:8px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));
   box-shadow:0 -8px 30px rgba(20,18,40,.08);
@@ -202,7 +205,7 @@ img{max-width:100%; display:block;}
 .bn-item.active{color:var(--purple);}
 .bn-item span{max-width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 @media(max-width:700px){
-  .bottom-nav.authed{display:block;}
+  .bottom-nav{display:block;}
   body{padding-bottom:70px;}
 }
 
@@ -212,7 +215,7 @@ img{max-width:100%; display:block;}
 .balance-popover{
   position:fixed; z-index:171; width:300px; max-width:92vw;
   background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:22px;
-  padding:22px; backdrop-filter:blur(26px) saturate(180%); -webkit-backdrop-filter:blur(26px) saturate(180%);
+  padding:22px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   box-shadow:var(--shadow-lg), var(--shadow-glow);
   opacity:0; transform:scale(.92) translateY(-8px); pointer-events:none; transition:.22s var(--ease-soft);
 }
@@ -262,7 +265,7 @@ img{max-width:100%; display:block;}
 
 .card{
   background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius);
-  padding:var(--sp-6); backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
+  padding:var(--sp-6); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
   box-shadow:var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.5);
   transition:.3s var(--ease); animation:cardIn .5s var(--ease) backwards; min-width:0; max-width:100%;
 }
@@ -300,7 +303,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .feature-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:28px;}
 @media(max-width:860px){.feature-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:480px){.feature-grid{grid-template-columns:1fr;}}
-.feature-card{background:var(--glass); border:1px solid var(--glass-border); border-radius:18px; padding:22px; transition:.3s var(--ease); backdrop-filter:blur(16px); box-shadow:var(--shadow-sm);}
+.feature-card{background:var(--glass); border:1px solid var(--glass-border); border-radius:18px; padding:22px; transition:.3s var(--ease); backdrop-filter:blur(8px); box-shadow:var(--shadow-sm);}
 .feature-card:hover{transform:translateY(-5px); border-color:var(--glass-border-strong); box-shadow:var(--shadow-md);}
 .feature-card .icon{font-size:26px; margin-bottom:10px; display:inline-block;}
 .steps-row{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:28px;}
@@ -336,7 +339,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 @media(max-width:860px){.auth-shell{grid-template-columns:1fr; max-width:460px; margin:24px auto;}}
 .auth-card{
   background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px;
-  padding:clamp(28px,4vw,44px); backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  padding:clamp(28px,4vw,44px); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.6);
   transition:.35s var(--ease); animation:cardIn .55s var(--ease) backwards; display:flex; flex-direction:column; justify-content:center; position:relative; min-width:0;
 }
@@ -346,11 +349,11 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .auth-info{
   background:linear-gradient(160deg, rgba(124,58,237,.14), rgba(236,72,153,.06));
   border:1px solid var(--glass-border); border-radius:26px; padding:clamp(26px,4vw,38px);
-  backdrop-filter:blur(20px); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; justify-content:center;
+  backdrop-filter:blur(10px); box-shadow:var(--shadow-lg); display:flex; flex-direction:column; justify-content:center;
   position:relative; overflow:hidden; animation:cardIn .55s var(--ease) .08s backwards; min-width:0;
 }
 @media(max-width:860px){.auth-info{display:none;}}
-.auth-info::before{content:""; position:absolute; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle, rgba(124,58,237,.32), transparent 70%); top:-90px; right:-90px; filter:blur(40px);}
+.auth-info::before{content:""; position:absolute; width:240px; height:240px; border-radius:50%; background:radial-gradient(circle, rgba(124,58,237,.32), transparent 70%); top:-90px; right:-90px; filter:blur(20px);}
 .auth-info-title{font-size:22px; font-weight:800; margin-bottom:8px; letter-spacing:-.4px; position:relative;}
 .auth-info-sub{color:var(--text-dim); font-size:13.5px; line-height:1.7; margin-bottom:26px; position:relative; max-width:320px;}
 .auth-perk{display:flex; align-items:flex-start; gap:13px; margin-bottom:20px; position:relative;}
@@ -436,7 +439,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .spin-stage-card{
   background:radial-gradient(circle at 50% 15%, rgba(124,58,237,.14), transparent 60%), var(--glass);
   border:1px solid var(--glass-border); border-radius:30px; padding:clamp(28px,5vw,56px) 24px 40px;
-  backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.6);
   display:flex; flex-direction:column; align-items:center; gap:26px; position:relative; overflow:hidden; min-width:0;
 }
@@ -479,7 +482,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .spin-orbit{position:absolute; width:372px; height:372px; border-radius:50%; border:1.5px dashed rgba(124,58,237,.3); animation:spinSlow 36s linear infinite;}
 .spin-orbit-2{position:absolute; width:410px; height:410px; border-radius:50%; border:1px dashed rgba(236,72,153,.2); animation:spinSlow 55s linear infinite reverse;}
 @media(max-width:480px){.spin-orbit{width:296px;height:296px;} .spin-orbit-2{width:326px;height:326px;}}
-.spin-stage.is-spinning .spin-halo{animation-duration:.9s; filter:blur(16px);}
+.spin-stage.is-spinning .spin-halo{animation-duration:.9s; filter:blur(8px);}
 .spin-stage.is-spinning .spin-orbit{animation-duration:6s;}
 .spin-stage.is-spinning .spin-orbit-2{animation-duration:9s;}
 
@@ -700,7 +703,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .deposit-card-note{font-size:12px; color:var(--text-dim); overflow-wrap:anywhere; margin-top:10px; background:rgba(15,23,42,.03); border-radius:10px; padding:8px 12px;}
 
 /* ===== Proof viewer modal ===== */
-.proof-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:20px; width:min(560px,94vw); max-width:100%; backdrop-filter:blur(26px) saturate(160%); box-shadow:var(--shadow-lg); animation:winPop .3s var(--ease);}
+.proof-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:20px; width:min(560px,94vw); max-width:100%; backdrop-filter:blur(12px); box-shadow:var(--shadow-lg); animation:winPop .3s var(--ease);}
 .proof-close{position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:10px; background:rgba(15,23,42,.06); color:var(--text); display:flex; align-items:center; justify-content:center; z-index:2;}
 .proof-img-wrap{width:100%; max-height:70vh; overflow:auto; border-radius:16px; background:rgba(15,23,42,.04); display:flex; align-items:center; justify-content:center; padding:8px;}
 .proof-img-wrap img{max-width:100%; max-height:66vh; object-fit:contain; display:block; border-radius:10px; transition:.3s var(--ease);}
@@ -709,7 +712,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .proof-actions{display:flex; gap:8px; justify-content:center; margin-top:14px;}
 
 /* ===== Toast ===== */
-.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%); background:rgba(20,18,31,.92); color:#fff; border:1px solid rgba(255,255,255,.1); padding:14px 22px; border-radius:14px; font-size:13.5px; z-index:300; display:none; box-shadow:0 14px 40px rgba(20,18,40,.3); backdrop-filter:blur(20px); animation:slideUp .3s var(--ease); max-width:90vw; overflow-wrap:anywhere; text-align:center;}
+.toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%); background:rgba(20,18,31,.92); color:#fff; border:1px solid rgba(255,255,255,.1); padding:14px 22px; border-radius:14px; font-size:13.5px; z-index:300; display:none; box-shadow:0 14px 40px rgba(20,18,40,.3); backdrop-filter:blur(10px); animation:slideUp .3s var(--ease); max-width:90vw; overflow-wrap:anywhere; text-align:center;}
 /* FIX: on phones the bottom tab bar (.bottom-nav) sits fixed at the very
    bottom, and this toast used to land at bottom:26px regardless — on an
    iPhone with a home indicator that put the toast half-hidden behind/
@@ -723,7 +726,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .notif-stack{position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:280; display:flex; flex-direction:column; gap:10px; width:min(380px,92vw); align-items:center;}
 .notif-card{
   width:100%; background:rgba(255,255,255,.86); border:1px solid rgba(255,255,255,.6); border-radius:20px; padding:14px 16px;
-  box-shadow:0 20px 50px rgba(20,18,40,.16), 0 0 0 1px rgba(124,58,237,.06); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:0 20px 50px rgba(20,18,40,.16), 0 0 0 1px rgba(124,58,237,.06); backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px);
   position:relative; display:flex; gap:12px; align-items:flex-start; animation:notifIn .45s var(--ease) forwards; overflow:hidden; min-width:0; max-width:100%;
 }
 .notif-card.leaving{animation:notifOut .35s var(--ease-soft) forwards;}
@@ -749,7 +752,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .win-modal{
   position:relative; background:var(--glass-strong); border:1px solid var(--glass-border-strong); border-radius:28px;
   padding:38px 28px 30px; text-align:center; width:min(380px,92vw); max-width:100%; box-sizing:border-box;
-  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%); overflow:hidden;
+  backdrop-filter:blur(13px); -webkit-backdrop-filter:blur(13px); overflow:hidden;
   box-shadow:var(--shadow-lg), var(--shadow-glow); animation:winPop .45s var(--ease);
 }
 .win-modal.closing{animation:winPopOut .32s var(--ease-soft) forwards;}
@@ -765,7 +768,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 @keyframes trophyPop{from{opacity:0; transform:scale(.4) rotate(-25deg);}to{opacity:1; transform:scale(1) rotate(0);}}
 .win-title{font-size:13px; font-weight:800; color:var(--text-dim); letter-spacing:1.4px; text-transform:uppercase;}
 .win-amount-wrap{position:relative; margin:12px 0 10px; display:flex; align-items:center; justify-content:center;}
-.win-amount-glow{position:absolute; width:220px; height:90px; border-radius:50%; background:radial-gradient(ellipse, rgba(245,158,11,.35), rgba(236,72,153,.16) 55%, transparent 75%); filter:blur(18px); animation:amountGlowPulse 2.2s ease-in-out infinite;}
+.win-amount-glow{position:absolute; width:220px; height:90px; border-radius:50%; background:radial-gradient(ellipse, rgba(245,158,11,.35), rgba(236,72,153,.16) 55%, transparent 75%); filter:blur(9px); animation:amountGlowPulse 2.2s ease-in-out infinite;}
 @keyframes amountGlowPulse{0%,100%{opacity:.7; transform:scale(1);}50%{opacity:1; transform:scale(1.08);}}
 .win-amount{position:relative; font-size:clamp(34px,9vw,46px); font-weight:900; letter-spacing:-1px; line-height:1.05; max-width:100%; overflow-wrap:anywhere;
   background:linear-gradient(135deg,var(--gold),var(--pink)); -webkit-background-clip:text; background-clip:text; color:transparent; animation:fadeUp .4s var(--ease) .2s backwards;}
@@ -786,7 +789,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 .spin-receipt .row span:first-child{color:var(--text-dim); flex-shrink:0;}
 .spin-receipt .row b{text-align:right; overflow-wrap:anywhere; word-break:break-word; min-width:0; font-weight:700;}
 
-.confirm-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:32px 28px; width:400px; max-width:100%; backdrop-filter:blur(26px) saturate(160%); box-shadow:var(--shadow-lg); animation:winPop .35s var(--ease); text-align:left;}
+.confirm-modal{position:relative; background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:26px; padding:32px 28px; width:400px; max-width:100%; backdrop-filter:blur(12px); box-shadow:var(--shadow-lg); animation:winPop .35s var(--ease); text-align:left;}
 .confirm-modal h3{font-size:18px; font-weight:800; margin-bottom:18px;}
 .confirm-modal .row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(--glass-border); font-size:13.5px;}
 .confirm-modal .row:last-of-type{border-bottom:none;}
@@ -805,21 +808,6 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 </style>
 </head>
 <body>
-
-<!-- FIX ("user elements flash before disappearing" / "auth state must be
-     determined before rendering the UI"): previously the raw HTML always
-     painted page-login as visible by default (and the guest Login/Sign Up
-     buttons have no default hidden style either), so a RETURNING logged-in
-     user would see a flash of the Login page + guest buttons for a moment
-     before the async auth check (loadMe()) resolved and swapped to their
-     dashboard. This gate covers the whole screen with just the brand and a
-     lightweight CSS spinner (no JS/fonts/images needed, so it paints
-     instantly) and init() reveals the app only once auth state is fully
-     known — see revealApp() near the bottom of the script. -->
-<div id="authGate">
-  <div class="brand" style="font-size:22px;"><span class="dot"></span> LuckySpin</div>
-  <div class="auth-gate-spinner"></div>
-</div>
 
 <div class="app-wrap">
 
@@ -896,7 +884,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 </div>
 
 <!-- Bottom nav (mobile, authed only) -->
-<div class="bottom-nav" id="bottomNav">
+<div class="bottom-nav" id="bottomNav" style="display:none;">
   <div class="bottom-nav-inner">
     <a href="#" class="bn-item" data-page="wheel" onclick="showPage('wheel')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>
@@ -919,64 +907,6 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       <span>More</span>
     </a>
   </div>
-</div>
-
-<div class="page" id="page-landing">
-  <div class="landing-hero">
-    <div>
-      <span class="pill">✨ Pay-per-spin • 100 Points = $1</span>
-      <div class="hero-title">Spin the wheel.<br>Win real points.</div>
-      <p class="muted" style="margin:18px 0 28px; font-size:15.5px; max-width:440px;">
-        LuckySpin is a premium Web3 rewards platform. Deposit crypto, spin for points,
-        redeem them in our shop, or withdraw straight to your own wallet.
-      </p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#" onclick="showPage('signup')">Create Free Account</a>
-        <a class="btn btn-ghost" href="#" onclick="showPage('login')">Log In</a>
-      </div>
-    </div>
-    <div class="wheel-zone">
-      <div class="hero-wheel-stage">
-        <div class="hero-halo"></div>
-        <div class="hero-orbit-2"></div>
-        <div class="hero-orbit"></div>
-        <span class="hero-badge hero-badge-1">💳 From ₦1,000 / spin</span>
-        <span class="hero-badge hero-badge-2">💎 Real Naira prizes</span>
-        <span class="hero-badge hero-badge-3">🔒 Provably fair</span>
-        <div style="position:relative; width:270px; height:270px;">
-          <div class="wheel-pointer"></div>
-          <canvas id="wheelCanvasPreview" width="270" height="270"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="landing-section">
-    <div class="section-title">Why players choose LuckySpin</div>
-    <p class="muted">Built for speed, transparency, and fair play.</p>
-    <div class="feature-grid">
-      <div class="feature-card"><div class="icon">💳</div><b>Pay-Per-Spin</b><p class="muted" style="margin-top:8px; font-size:13px;">100 Points ($1) per spin — no cooldowns, spin whenever you like.</p></div>
-      <div class="feature-card"><div class="icon">⚡</div><b>Fast Withdrawals</b><p class="muted" style="margin-top:8px; font-size:13px;">Small withdrawals are sent automatically — no waiting around.</p></div>
-      <div class="feature-card"><div class="icon">🔒</div><b>Secure & Fair</b><p class="muted" style="margin-top:8px; font-size:13px;">All outcomes are generated server-side — never in your browser.</p></div>
-      <div class="feature-card"><div class="icon">👛</div><b>Your Own Address</b><p class="muted" style="margin-top:8px; font-size:13px;">Every account gets a personal TRON deposit address.</p></div>
-    </div>
-  </div>
-
-  <div class="landing-section" id="about">
-    <div class="section-title">About Us</div>
-    <p class="muted" style="max-width:640px; line-height:1.8;">
-      LuckySpin was built to make earning and redeeming points effortless. No hidden steps,
-      no confusing rules — deposit, spin, and cash out whenever you're ready.
-      Every deposit address is unique to you, and every withdrawal request is reviewed for your safety.
-    </p>
-    <div class="steps-row">
-      <div><div class="step-num">1</div><b>Create an account</b><p class="muted" style="font-size:13px; margin-top:7px;">Takes less than a minute.</p></div>
-      <div><div class="step-num">2</div><b>Deposit crypto</b><p class="muted" style="font-size:13px; margin-top:7px;">Use your personal TRON (Nile) address.</p></div>
-      <div><div class="step-num">3</div><b>Spin & withdraw</b><p class="muted" style="font-size:13px; margin-top:7px;">100 Points per spin — cash out anytime.</p></div>
-    </div>
-  </div>
-
-  <div class="footer-mini">© 2026 LuckySpin. All rights reserved.</div>
 </div>
 
 <div class="page" id="page-signup">
@@ -1673,7 +1603,7 @@ let state = {
 };
 
 function fmtPts(n){ return (Number(n)||0).toFixed(1); }
-function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString('en-US'); }
+function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString(); }
 function fmtUsd(points){ return "$" + (Number(points||0) / (state.pointsPerUsdt || 100)).toFixed(2); }
 
 function showToast(msg){
@@ -1722,30 +1652,7 @@ function extractErrorInfo(data){
   return { message: null, fieldErrors: null };
 }
 
-// FIX ("prevent duplicate requests" / general performance): tracks
-// identical in-flight requests (same method + path + body) so a rapid
-// double-click or a re-render that fires the same fetch twice reuses the
-// ONE request already in progress instead of opening a second one. GET
-// requests are the main beneficiary (e.g. two components asking for the
-// same data at once); POST/PUT are still deduplicated too since an exact
-// duplicate body for those is never intentional, but each request's key is
-// cleared the moment it settles so a genuinely new action right after is
-// never blocked.
-const _inFlightRequests = new Map();
-
 async function api(path, method="GET", body=null, auth=true){
-  const dedupeKey = method + " " + path + " " + (body ? JSON.stringify(body) : "");
-  if(_inFlightRequests.has(dedupeKey)){
-    return _inFlightRequests.get(dedupeKey);
-  }
-  const promise = _apiRaw(path, method, body, auth).finally(()=>{
-    _inFlightRequests.delete(dedupeKey);
-  });
-  _inFlightRequests.set(dedupeKey, promise);
-  return promise;
-}
-
-async function _apiRaw(path, method="GET", body=null, auth=true){
   const headers = {"Content-Type":"application/json"};
   if(auth && state.token) headers["Authorization"] = "Bearer " + state.token;
   let res;
@@ -1996,22 +1903,22 @@ function logout(){
   updateNavAuthState(false);
   stopNotificationPolling();
   closeDrawer();
-  showPage("landing");
+  showPage("login");
 }
 
 function updateNavAuthState(authed){
+  // NEW: the entire header/nav bar is now hidden while on Login/Signup —
+  // it only appears once the person is actually inside the app (right
+  // after a successful login/signup). Guests can currently only ever be on
+  // the Login or Signup page (the old marketing landing page was removed),
+  // so "not authed" and "should hide the header" are the same condition.
+  document.querySelector(".topnav").style.display = authed ? "flex" : "none";
   document.getElementById("navLinksAuthed").classList.toggle("authed", authed);
   document.getElementById("navGuest").style.display = authed ? "none" : "block";
   document.getElementById("navLogoutDesktop").style.display = authed ? "inline-flex" : "none";
   document.getElementById("navBalance").style.display = authed ? "flex" : "none";
   document.getElementById("hamburgerBtn").classList.toggle("authed", authed);
-  // FIX ("bottom nav bar showing on desktop"): this used to set an INLINE
-  // style.display directly, which always overrides a stylesheet rule —
-  // including the @media(max-width:700px) rule meant to keep this hidden
-  // on desktop/tablet widths. Toggling a class instead lets that media
-  // query do its job again, exactly like .nav-links.authed above already
-  // does correctly.
-  document.getElementById("bottomNav").classList.toggle("authed", authed);
+  document.getElementById("bottomNav").style.display = authed ? "block" : "none";
   document.getElementById("navAdminLink").style.display = (authed && state.isAdmin) ? "inline-flex" : "none";
   document.getElementById("drawerAdminLink").style.display = (authed && state.isAdmin) ? "flex" : "none";
   if(authed) startNotificationPolling();
@@ -2120,7 +2027,6 @@ function drawWheel(canvasId, segments){
   ctx.strokeStyle = "rgba(255,255,255,.8)";
   ctx.stroke();
 }
-drawWheel("wheelCanvasPreview", state.wheelSegments);
 drawWheel("wheelCanvas", state.wheelSegments);
 
 function initPrizeTicker(){
@@ -2141,7 +2047,7 @@ let currentRotation = 0;
 function fmtSpin(amount, currency){
   return currency === "USD" ? fmtUsdRaw(amount) : fmtNgn(amount);
 }
-function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2}); }
 // NEW: shared formatter for any transaction amount, wherever it's shown
 // (Transactions page, balance popover, admin ledger, etc.) — picks the
 // right symbol from tx.currency instead of assuming NGN/Points, so a
@@ -2420,32 +2326,12 @@ async function doPlayAmountSpin(){
     );
     canvas.style.transform = `rotate(${currentRotation}deg)`;
     setTimeout(()=>{
-      // FIX ("spin should never hang"): this whole callback used to run with
-      // no error boundary — if anything inside it threw (a rendering glitch,
-      // a missing element, etc.) the spin/button lock flags below would
-      // simply never get reset, since the throw happens on a fresh call
-      // stack the original try/catch (around the network request above)
-      // can't see. Wrapping it guarantees the button and lock always
-      // recover, no matter what happens inside.
-      try{
-        showDynamicResultModal(result);
-        if(state.spinConfig) state.spinConfig.balance = result.new_balance;
-        refreshSpinStatus(); loadMe();
-      }catch(renderErr){
-        console.error("Spin result render failed:", renderErr);
-        showToast("Spin completed, but the result display had a glitch. Your balance is up to date — check Transactions if unsure.");
-      }finally{
-        stage.classList.remove("is-spinning");
-        spinning = false;
-        spinResultRotationLock = false;
-        // Defensive: refreshSpinStatus() above is what normally decides the
-        // button's next enabled/disabled state from fresh server data — but
-        // if THAT call itself fails (e.g. a network hiccup right after the
-        // spin), it must never leave the button permanently stuck disabled
-        // with no way to recover. Re-enabling here is always safe: a real
-        // click right after will just re-validate against the latest config.
-        btn.disabled = false;
-      }
+      stage.classList.remove("is-spinning");
+      showDynamicResultModal(result);
+      if(state.spinConfig) state.spinConfig.balance = result.new_balance;
+      refreshSpinStatus(); loadMe();
+      spinning = false;
+      spinResultRotationLock = false;
     }, 4600);
   }catch(e){
     showToast(e.message);
@@ -2536,16 +2422,10 @@ function animateLockedCountUp(from, to){
 function fireParticles(){
   const layer = document.getElementById("confettiLayer");
   if(!layer) return;
-  // PERFORMANCE: skip entirely when the OS-level "reduce motion" preference
-  // is on, and use noticeably fewer particles on narrow/mobile viewports —
-  // this fires on every single winning spin, so it's worth keeping cheap.
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const isSmallScreen = window.innerWidth < 640;
-  const particleCount = isSmallScreen ? 8 : 16;
   const colors = ["#f59e0b","#ec4899","#a855f7","#06b6d4"];
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2 - 40;
-  for(let i=0;i<particleCount;i++){
+  for(let i=0;i<16;i++){
     const el = document.createElement("div");
     el.className = "particle";
     const size = 4 + Math.random()*5;
@@ -2558,10 +2438,7 @@ function fireParticles(){
     el.style.left = cx + "px";
     el.style.top = cy + "px";
     el.style.background = colors[Math.floor(Math.random()*colors.length)];
-    // PERFORMANCE: dropped the animated box-shadow glow each particle had —
-    // box-shadow blur is one of the most expensive things to repaint every
-    // frame while an element is also moving, multiplied by up to 16 of
-    // these at once. Solid color reads just as well in motion.
+    el.style.boxShadow = `0 0 8px 1px ${colors[Math.floor(Math.random()*colors.length)]}`;
     el.style.setProperty("--pend", `translate(${dx}px, ${dy}px)`);
     layer.appendChild(el);
     setTimeout(()=> el.remove(), 950);
@@ -2593,11 +2470,8 @@ async function claimDailyBonus(){
 
 function fireConfetti(){
   const layer = document.getElementById("confettiLayer");
-  if(!layer) return;
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const isSmallScreen = window.innerWidth < 640;
-  const count = isSmallScreen ? 28 : 60;
   const colors = ["#a855f7","#ec4899","#f59e0b","#06b6d4","#7c3aed"];
+  const count = 60;
   for(let i=0;i<count;i++){
     const el = document.createElement("div");
     el.className = "confetti-piece";
@@ -2762,7 +2636,7 @@ async function renderNgnDepositPanel(box){
 
       <div class="ngn-info-banner">
         <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')}</span></div>
+        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString()}</span></div>
       </div>
 
       <div class="ngn-row">
@@ -2786,8 +2660,8 @@ async function renderNgnDepositPanel(box){
     <div class="card" style="margin-top:16px;">
       <h2>Amount to Deposit</h2>
       <div class="field">
-        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')})</label>
-        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString('en-US')} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
+        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString()})</label>
+        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString()} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
         <p class="muted" id="ngnAmountHint" style="font-size:11.5px; margin-top:6px;">This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.</p>
       </div>
 
@@ -2872,7 +2746,7 @@ function validateNgnAmount(minDeposit){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minDeposit){
-    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString('en-US')} — please enter at least that amount.`;
+    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString()} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
     hint.textContent = "This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.";
@@ -2886,7 +2760,7 @@ async function submitNigerianDeposit(){
   const amount = parseFloat(amountEl.value);
   const minDeposit = Number((state.ngnBankDetails && state.ngnBankDetails.min_deposit_ngn) || 5000);
   if(!amount || amount <= 0){ showToast("Enter the amount you transferred"); return; }
-  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString('en-US')}`); return; }
+  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString()}`); return; }
   if(!state.ngnFile){ showToast("Upload your payment proof screenshot"); return; }
 
   state.ngnSubmitting = true;
@@ -2965,7 +2839,7 @@ function renderNgnWithdrawForm(box, info){
 
     <div class="ngn-info-banner">
       <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString('en-US')}</span></div>
+      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString()}</span></div>
     </div>
 
     <div class="field">
@@ -2981,9 +2855,9 @@ function renderNgnWithdrawForm(box, info){
       <div class="field-input-wrap"><input id="ngnWBankName" type="text" placeholder="e.g. Moniepoint MFB"></div>
     </div>
     <div class="field">
-      <label>Amount (min ₦${minW.toLocaleString('en-US')})</label>
+      <label>Amount (min ₦${minW.toLocaleString()})</label>
       <div class="field-input-wrap with-max">
-        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString('en-US')} or more" oninput="validateNgnWithdrawAmount(${minW})">
+        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString()} or more" oninput="validateNgnWithdrawAmount(${minW})">
         <button type="button" class="max-btn" onclick="setNgnWithdrawMax()">MAX</button>
       </div>
       <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your Winnings Balance immediately and reviewed by an admin.</p>
@@ -3001,7 +2875,7 @@ function validateNgnWithdrawAmount(minWithdrawal){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minWithdrawal){
-    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString('en-US')} — please enter at least that amount.`;
+    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString()} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
     hint.textContent = "This amount is deducted from your Winnings Balance immediately and reviewed by an admin.";
@@ -3063,7 +2937,7 @@ async function submitNgnWithdrawal(){
   if(!account_name){ showToast("Enter the account holder's name"); return; }
   if(!account_number){ showToast("Enter the account number"); return; }
   if(!amount_ngn || amount_ngn <= 0){ showToast("Enter a valid amount"); return; }
-  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString('en-US')}`); return; }
+  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString()}`); return; }
   if(state.user && amount_ngn > state.user.ngn_winnings_balance){ showToast("Insufficient balance"); return; }
 
   state.ngnWithdrawSubmitting = true;
@@ -3278,7 +3152,7 @@ function renderTransactions(){
     const meta = TX_META[tx.type] || {icon:"•", label:tx.type};
     const pos = tx.amount >= 0;
     const desc = (tx.description || meta.label).replace(/</g,"&lt;");
-    const date = new Date(tx.created_at).toLocaleString('en-US');
+    const date = new Date(tx.created_at).toLocaleString();
     return `
       <div class="tx-row">
         <div class="tx-icon">${meta.icon}</div>
@@ -3363,7 +3237,7 @@ async function refreshProfile(){
   document.getElementById("profileNgnBalance").textContent = fmtNgn(u.ngn_balance);
   document.getElementById("profileBalance").textContent = fmtUsd(u.points_balance);
   document.getElementById("profileLocked").textContent = fmtPts(u.locked_points);
-  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString('en-US');
+  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString();
 
   await loadTransactions();
   const hist = state.transactions;
@@ -3400,7 +3274,7 @@ async function loadReferralInfo(){
       const paid = ref.status === "PAID";
       return `
       <div class="item-row">
-        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString('en-US')}</span></span>
+        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString()}</span></span>
         <span class="badge ${paid ? 'badge-win' : ''}">${paid ? '+' + fmtNgn(ref.reward_amount_ngn) : 'Pending deposit'}</span>
       </div>`;
     }).join("");
@@ -3807,7 +3681,7 @@ function renderAdminTransactions(){
         <div class="tx-body">
           <div class="tx-type">${tx.type.replace(/_/g," ")} <span class="status-badge status-${tx.status}" style="margin-left:6px;">${tx.status}</span></div>
           <div class="tx-desc">${hash ? ("Tx: " + hash) : (tx.reference_id ? ("Ref: " + tx.reference_id) : "—")}</div>
-          <div class="tx-date">${new Date(tx.created_at).toLocaleString('en-US')}</div>
+          <div class="tx-date">${new Date(tx.created_at).toLocaleString()}</div>
         </div>
         <div class="tx-amount ${pos?'pos':'neg'}">${pos?'+':''}${fmtLedgerAmount(tx)}</div>
         ${tx.tx_hash ? `<button class="tx-copy" title="Copy hash" onclick="copyText('${tx.tx_hash}')">📋</button>` : ""}
@@ -3926,7 +3800,7 @@ function renderDepositRequestsPanel(){
           <div class="mini"><div class="l">Amount</div><div class="v">₦${d.amount_ngn}</div></div>
           <div class="mini"><div class="l">Currency</div><div class="v">NGN</div></div>
           <div class="mini"><div class="l">Deposit ID</div><div class="v" title="${d.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString('en-US')}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString()}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -4087,7 +3961,7 @@ function renderWithdrawalRequestsPanel(){
           <div class="mini"><div class="l">Account Number</div><div class="v">${escapeHtml(w.account_number)}</div></div>
           <div class="mini"><div class="l">Bank</div><div class="v">${escapeHtml(w.bank_name || "—")}</div></div>
           <div class="mini"><div class="l">Request ID</div><div class="v" title="${w.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString('en-US')}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString()}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -4204,7 +4078,7 @@ async function populateBalancePopover(){
   if(ngnTx.length){
     const last = ngnTx[0];
     const meta = TX_META[last.type] || {label:last.type};
-    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString('en-US')}`;
+    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString()}`;
   }else{
     document.getElementById("bpLast").textContent = "No recent transactions";
   }
@@ -4359,7 +4233,7 @@ async function loadAdminGrantsFeed(){
       <div class="row" style="padding:10px 0; border-bottom:1px solid var(--glass-border);">
         <span>
           <b>${escapeHtml(g.user_name || g.user_email || g.user_id)}</b>
-          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString('en-US')}</span>
+          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString()}</span>
           <span class="muted" style="font-size:11.5px; display:block;">${escapeHtml(g.reason || '')}</span>
         </span>
         <b style="color:var(--purple);">+${fmtNgn(g.amount)}</b>
@@ -4452,36 +4326,31 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
-function revealApp(){
-  const gate = document.getElementById("authGate");
-  if(!gate) return;
-  gate.classList.add("hidden");
-  // Actually remove it after the fade-out finishes so it can never block
-  // clicks/scroll even if something goes wrong with the opacity transition.
-  setTimeout(()=>{ if(gate.parentNode) gate.remove(); }, 300);
-}
-
 (async function init(){
   if(state.token){
     const u = await loadMe();
     if(u){
       await checkAdminStatus();
       showPage("wheel");
-      revealApp();
       return;
     }
   }
+  // NEW: no token at all (a first-time visitor) — loadMe()/logout() above
+  // already handle hiding the header for an EXPIRED token, but that whole
+  // branch is skipped entirely when there was never a token to begin with,
+  // so the header needs to be explicitly hidden here too, or it stays at
+  // its default visible CSS state.
+  updateNavAuthState(false);
   // NEW (Feature 8): guests never see the marketing/landing page (with its
   // live spin-wheel preview) as the first thing on load anymore — Login/
-  // Signup is the entry point. The landing page markup itself is untouched
-  // and still reachable via showPage('landing') if something links to it,
-  // it's just no longer the default.
+  // Signup is the entry point. The landing page itself has been removed
+  // (it's no longer reachable at all — logout() and every other path go
+  // straight to Login/Signup now).
   // NEW (Feature 1): a referral link (?ref=CODE) clearly means "come sign
   // up", so send guests straight to the Signup form instead of Login when
   // one is present.
   const hasRefCode = new URLSearchParams(window.location.search).get("ref");
   showPage(hasRefCode ? "signup" : "login");
-  revealApp();
 })();
 </script>
 </body>
