@@ -101,6 +101,18 @@ img{max-width:100%; display:block;}
 
 .app-wrap{position:relative; z-index:1; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;}
 
+/* FIX (auth-state-before-paint): visible by default with zero JS/network
+   dependency so it's the very first thing painted — init() removes it
+   (see revealApp()) only once we actually know whether the visitor is
+   logged in or not, so neither the login page nor the user's dashboard
+   ever flashes briefly on top of the wrong one. Cheap opacity-only
+   transition, no layout thrash. */
+#authGate{position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  background:var(--bg, #0b0b14); transition:opacity .25s ease; }
+#authGate.hidden{opacity:0; pointer-events:none;}
+.auth-gate-spinner{width:28px; height:28px; border-radius:50%; border:3px solid rgba(124,58,237,0.15); border-top-color:#a855f7; animation:authGateSpin .7s linear infinite;}
+@keyframes authGateSpin{to{transform:rotate(360deg);}}
+
 /* ===== Header ===== */
 .topnav{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -793,6 +805,21 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 </style>
 </head>
 <body>
+
+<!-- FIX ("user elements flash before disappearing" / "auth state must be
+     determined before rendering the UI"): previously the raw HTML always
+     painted page-login as visible by default (and the guest Login/Sign Up
+     buttons have no default hidden style either), so a RETURNING logged-in
+     user would see a flash of the Login page + guest buttons for a moment
+     before the async auth check (loadMe()) resolved and swapped to their
+     dashboard. This gate covers the whole screen with just the brand and a
+     lightweight CSS spinner (no JS/fonts/images needed, so it paints
+     instantly) and init() reveals the app only once auth state is fully
+     known — see revealApp() near the bottom of the script. -->
+<div id="authGate">
+  <div class="brand" style="font-size:22px;"><span class="dot"></span> LuckySpin</div>
+  <div class="auth-gate-spinner"></div>
+</div>
 
 <div class="app-wrap">
 
@@ -1695,7 +1722,30 @@ function extractErrorInfo(data){
   return { message: null, fieldErrors: null };
 }
 
+// FIX ("prevent duplicate requests" / general performance): tracks
+// identical in-flight requests (same method + path + body) so a rapid
+// double-click or a re-render that fires the same fetch twice reuses the
+// ONE request already in progress instead of opening a second one. GET
+// requests are the main beneficiary (e.g. two components asking for the
+// same data at once); POST/PUT are still deduplicated too since an exact
+// duplicate body for those is never intentional, but each request's key is
+// cleared the moment it settles so a genuinely new action right after is
+// never blocked.
+const _inFlightRequests = new Map();
+
 async function api(path, method="GET", body=null, auth=true){
+  const dedupeKey = method + " " + path + " " + (body ? JSON.stringify(body) : "");
+  if(_inFlightRequests.has(dedupeKey)){
+    return _inFlightRequests.get(dedupeKey);
+  }
+  const promise = _apiRaw(path, method, body, auth).finally(()=>{
+    _inFlightRequests.delete(dedupeKey);
+  });
+  _inFlightRequests.set(dedupeKey, promise);
+  return promise;
+}
+
+async function _apiRaw(path, method="GET", body=null, auth=true){
   const headers = {"Content-Type":"application/json"};
   if(auth && state.token) headers["Authorization"] = "Bearer " + state.token;
   let res;
@@ -2364,12 +2414,32 @@ async function doPlayAmountSpin(){
     );
     canvas.style.transform = `rotate(${currentRotation}deg)`;
     setTimeout(()=>{
-      stage.classList.remove("is-spinning");
-      showDynamicResultModal(result);
-      if(state.spinConfig) state.spinConfig.balance = result.new_balance;
-      refreshSpinStatus(); loadMe();
-      spinning = false;
-      spinResultRotationLock = false;
+      // FIX ("spin should never hang"): this whole callback used to run with
+      // no error boundary — if anything inside it threw (a rendering glitch,
+      // a missing element, etc.) the spin/button lock flags below would
+      // simply never get reset, since the throw happens on a fresh call
+      // stack the original try/catch (around the network request above)
+      // can't see. Wrapping it guarantees the button and lock always
+      // recover, no matter what happens inside.
+      try{
+        showDynamicResultModal(result);
+        if(state.spinConfig) state.spinConfig.balance = result.new_balance;
+        refreshSpinStatus(); loadMe();
+      }catch(renderErr){
+        console.error("Spin result render failed:", renderErr);
+        showToast("Spin completed, but the result display had a glitch. Your balance is up to date — check Transactions if unsure.");
+      }finally{
+        stage.classList.remove("is-spinning");
+        spinning = false;
+        spinResultRotationLock = false;
+        // Defensive: refreshSpinStatus() above is what normally decides the
+        // button's next enabled/disabled state from fresh server data — but
+        // if THAT call itself fails (e.g. a network hiccup right after the
+        // spin), it must never leave the button permanently stuck disabled
+        // with no way to recover. Re-enabling here is always safe: a real
+        // click right after will just re-validate against the latest config.
+        btn.disabled = false;
+      }
     }, 4600);
   }catch(e){
     showToast(e.message);
@@ -2460,10 +2530,16 @@ function animateLockedCountUp(from, to){
 function fireParticles(){
   const layer = document.getElementById("confettiLayer");
   if(!layer) return;
+  // PERFORMANCE: skip entirely when the OS-level "reduce motion" preference
+  // is on, and use noticeably fewer particles on narrow/mobile viewports —
+  // this fires on every single winning spin, so it's worth keeping cheap.
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const isSmallScreen = window.innerWidth < 640;
+  const particleCount = isSmallScreen ? 8 : 16;
   const colors = ["#f59e0b","#ec4899","#a855f7","#06b6d4"];
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2 - 40;
-  for(let i=0;i<16;i++){
+  for(let i=0;i<particleCount;i++){
     const el = document.createElement("div");
     el.className = "particle";
     const size = 4 + Math.random()*5;
@@ -2476,7 +2552,10 @@ function fireParticles(){
     el.style.left = cx + "px";
     el.style.top = cy + "px";
     el.style.background = colors[Math.floor(Math.random()*colors.length)];
-    el.style.boxShadow = `0 0 8px 1px ${colors[Math.floor(Math.random()*colors.length)]}`;
+    // PERFORMANCE: dropped the animated box-shadow glow each particle had —
+    // box-shadow blur is one of the most expensive things to repaint every
+    // frame while an element is also moving, multiplied by up to 16 of
+    // these at once. Solid color reads just as well in motion.
     el.style.setProperty("--pend", `translate(${dx}px, ${dy}px)`);
     layer.appendChild(el);
     setTimeout(()=> el.remove(), 950);
@@ -2508,8 +2587,11 @@ async function claimDailyBonus(){
 
 function fireConfetti(){
   const layer = document.getElementById("confettiLayer");
+  if(!layer) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const isSmallScreen = window.innerWidth < 640;
+  const count = isSmallScreen ? 28 : 60;
   const colors = ["#a855f7","#ec4899","#f59e0b","#06b6d4","#7c3aed"];
-  const count = 60;
   for(let i=0;i<count;i++){
     const el = document.createElement("div");
     el.className = "confetti-piece";
@@ -4364,12 +4446,22 @@ document.addEventListener("keydown", (e)=>{
   }
 });
 
+function revealApp(){
+  const gate = document.getElementById("authGate");
+  if(!gate) return;
+  gate.classList.add("hidden");
+  // Actually remove it after the fade-out finishes so it can never block
+  // clicks/scroll even if something goes wrong with the opacity transition.
+  setTimeout(()=>{ if(gate.parentNode) gate.remove(); }, 300);
+}
+
 (async function init(){
   if(state.token){
     const u = await loadMe();
     if(u){
       await checkAdminStatus();
       showPage("wheel");
+      revealApp();
       return;
     }
   }
@@ -4383,6 +4475,7 @@ document.addEventListener("keydown", (e)=>{
   // one is present.
   const hasRefCode = new URLSearchParams(window.location.search).get("ref");
   showPage(hasRefCode ? "signup" : "login");
+  revealApp();
 })();
 </script>
 </body>
