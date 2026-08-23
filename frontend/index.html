@@ -1788,7 +1788,12 @@ async function doSignup(){
     await checkAdminStatus();
     ok.textContent = "Account created — welcome to LuckySpin!"; ok.style.display = "flex";
     showToast("Account created 🎉");
-    setTimeout(()=> showPage("wheel"), 350);
+    setTimeout(()=>{
+      showPage("wheel");
+      // Reveal the header/nav only now — after we've actually left the
+      // Signup page — so they never appear together.
+      updateNavAuthState(true);
+    }, 350);
   }catch(e){
     if(e.fieldErrors){
       const map = { full_name: nameHint, email: emailHint, password: pwHint };
@@ -1821,8 +1826,11 @@ async function doLogin(){
     setToken(data.access_token, remember);
     await loadMe();
     await checkAdminStatus();
-    showToast("Welcome back!");
     showPage("wheel");
+    // Reveal the header/nav only now — after we've actually left the
+    // Login page — so they never appear together.
+    updateNavAuthState(true);
+    showToast("Welcome back!");
   }catch(e){ err.textContent = e.message; err.style.display = "flex"; }
   finally{ setButtonLoading(btn, false); }
 }
@@ -1836,7 +1844,10 @@ function setToken(tok, persist){
     sessionStorage.setItem("ls_token", tok);
     localStorage.removeItem("ls_token");
   }
-  updateNavAuthState(true);
+  // NOTE: does NOT call updateNavAuthState(true) here on purpose — see
+  // loadMe() above. Revealing the header this early (before the Login/
+  // Signup page has actually been swapped out) is what caused the header
+  // and the auth page to briefly show together.
 }
 
 function logout(){
@@ -1873,7 +1884,10 @@ async function loadMe(){
     const u = await api("/user/me");
     state.user = u;
     document.getElementById("navBalanceVal").textContent = fmtNgn(u.ngn_balance);
-    updateNavAuthState(true);
+    // NOTE: does NOT call updateNavAuthState(true) here on purpose — the
+    // header/nav must only appear once we've actually navigated off the
+    // Login/Signup page, never while it's still on screen. Callers reveal
+    // it themselves right after their showPage("wheel") call.
     return u;
   }catch(e){ logout(); }
 }
@@ -2788,12 +2802,12 @@ async function renderNgnWithdrawPanel(){
       api("/wallet/nigerian-withdraw/mine"),
     ]);
     state.ngnWithdrawInfo = info;
-    const pending = mine.find(w => w.status === "PENDING");
-    if(pending){
-      renderNgnWithdrawPendingStatus(box, pending);
-    }else{
-      renderNgnWithdrawForm(box, info);
-    }
+    // NEW: always show the withdraw form, even if the user has a request
+    // still pending review — they no longer get stuck staring at a
+    // "Pending Review" screen. If they try to submit again while a
+    // request is genuinely pending, the balance hold on the backend still
+    // protects against double-withdrawing (see submitNgnWithdrawal).
+    renderNgnWithdrawForm(box, info);
   }catch(e){
     box.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`;
   }
@@ -2917,24 +2931,15 @@ async function submitNgnWithdrawal(){
   try{
     const body = { amount_ngn, account_name, account_number };
     if(bank_name) body.bank_name = bank_name;
-    const r = await api("/wallet/nigerian-withdraw", "POST", body);
+    await api("/wallet/nigerian-withdraw", "POST", body);
     showToast("Withdrawal request submitted");
-    loadMe();
-    const box = document.getElementById("ngnWithdrawForm");
-    renderNgnWithdrawPendingStatus(box, r);
+    await loadMe();
+    // NEW: instead of parking the user on a persistent "Pending Review"
+    // card, just confirm via toast and drop them straight back on a fresh
+    // withdraw form (cleared, with the updated balance already loaded).
+    renderNgnWithdrawForm(document.getElementById("ngnWithdrawForm"), state.ngnWithdrawInfo);
   }catch(e){ showToast(e.message); }
   finally{ setButtonLoading(btn, false); state.ngnWithdrawSubmitting = false; }
-}
-
-function renderNgnWithdrawPendingStatus(box, w){
-  box.innerHTML = `
-    <div class="card dep-status-card">
-      <div class="icon">⏳</div>
-      <h3 style="font-size:18px; margin-bottom:8px;">Pending Review</h3>
-      <p class="muted" style="margin-bottom:6px;">Your withdrawal of <b>${fmtNgn(w.amount_ngn)}</b> to <b>${escapeHtml(w.account_name)}</b> is being reviewed by an admin.</p>
-      <p class="muted" style="font-size:11.5px; overflow-wrap:anywhere;">Request ID: ${w.id}</p>
-    </div>
-  `;
 }
 
 /* ---- Withdraw ---- */
@@ -4303,6 +4308,10 @@ document.addEventListener("keydown", (e)=>{
     if(u){
       await checkAdminStatus();
       showPage("wheel");
+      // Reveal the header/nav only now — after we've actually landed on
+      // an in-app page — so a returning, already-logged-in user never
+      // sees the header flash in before the page itself is ready.
+      updateNavAuthState(true);
       return;
     }
   }
