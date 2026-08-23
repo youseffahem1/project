@@ -161,6 +161,28 @@ def list_nigerian_deposits(
     return [_to_out(d, db) for d in rows]
 
 
+@admin_router.delete("/all")
+def delete_all_nigerian_deposits(
+    status: str = None,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    """
+    NEW: bulk-delete every deposit request currently shown in the admin tab
+    (same `status` filter as the list/GET above — e.g. only PENDING, only
+    APPROVED, etc. — or every deposit if no filter is passed). Same as the
+    single-row delete: this only removes records, never touches balances,
+    since a deposit only ever affects a balance once it's APPROVED (and by
+    then it's already fully settled).
+    """
+    q = db.query(models.NigerianDeposit)
+    if status:
+        q = q.filter(models.NigerianDeposit.status == status)
+    count = q.delete(synchronize_session=False)
+    db.commit()
+    return {"success": True, "message": f"Deleted {count} deposit request(s)", "deleted_count": count}
+
+
 @admin_router.get("/{deposit_id}/proof")
 def get_nigerian_deposit_proof(
     deposit_id: str,

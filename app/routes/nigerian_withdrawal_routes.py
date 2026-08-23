@@ -171,6 +171,52 @@ def list_nigerian_withdrawals(
     return [_to_out(w, db) for w in rows]
 
 
+@admin_router.delete("/all")
+def delete_all_nigerian_withdrawals(
+    status: str = None,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    """
+    NEW: bulk-delete every withdrawal request currently shown in the admin tab
+    (same `status` filter as the list/GET above, or every withdrawal if no
+    filter is passed).
+
+    Balance safety: exactly like the single-row delete — any row still
+    PENDING has a HOLD on the user's ngn_winnings_balance from request time,
+    so each PENDING row is refunded individually before it's deleted.
+    APPROVED/REJECTED rows are already fully settled and are just removed.
+    """
+    q = db.query(models.NigerianWithdrawal)
+    if status:
+        q = q.filter(models.NigerianWithdrawal.status == status)
+    rows = q.all()
+
+    count = 0
+    for w in rows:
+        if w.status == models.NigerianWithdrawalStatus.PENDING:
+            try:
+                target_user = db.query(models.User).filter_by(id=w.user_id).with_for_update().first()
+            except Exception:
+                target_user = db.query(models.User).filter_by(id=w.user_id).first()
+            if target_user:
+                target_user.ngn_winnings_balance = float(
+                    Decimal(str(target_user.ngn_winnings_balance)) + Decimal(str(w.amount_ngn))
+                )
+                db.add(models.Transaction(
+                    user_id=target_user.id,
+                    type=models.TransactionType.WITHDRAW,
+                    amount=w.amount_ngn,
+                    currency="NGN",
+                    description=f"Nigerian bank withdrawal deleted by admin (bulk) — refunded ₦{w.amount_ngn} (request {w.id})",
+                ))
+        db.delete(w)
+        count += 1
+
+    db.commit()
+    return {"success": True, "message": f"Deleted {count} withdrawal request(s)", "deleted_count": count}
+
+
 @admin_router.post("/{withdrawal_id}/approve")
 def approve_nigerian_withdrawal(
     withdrawal_id: str,

@@ -3553,7 +3553,10 @@ function renderAdminLedgerUI(data){
 
     <div class="grid-2" style="align-items:start;">
       <div class="card">
-        <h2>Ledger Transactions</h2>
+        <h2 style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <span>Ledger Transactions</span>
+          <button class="btn btn-danger btn-sm" onclick="doDeleteAllLedgerTransactions()">🗑️ Delete All</button>
+        </h2>
         <div class="tx-toolbar">
           <div class="tx-filters" id="adminTxFilters">
             <div class="tx-filter active" data-filter="all" onclick="setAdminTxFilter('all')">All</div>
@@ -3606,6 +3609,19 @@ async function loadAdminLedgerTransactions(){
   }catch(e){
     if(listEl && e.message !== "Admin access required"){ listEl.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div>${e.message}</div>`; }
   }
+}
+
+let ledgerTxActionLock = false;
+async function doDeleteAllLedgerTransactions(){
+  if(ledgerTxActionLock) return;
+  if(!confirm(`Delete ALL ${state.ledgerCurrency} ledger transaction history? This cannot be undone.`)) return;
+  ledgerTxActionLock = true;
+  try{
+    const r = await api("/admin/ledger/transactions/all?currency=" + encodeURIComponent(state.ledgerCurrency), "DELETE");
+    showToast(r.message || "Ledger transactions deleted");
+    loadAdminLedgerTransactions();
+  }catch(e){ showToast(e.message); }
+  finally{ ledgerTxActionLock = false; }
 }
 
 function setAdminTxFilter(f){
@@ -3738,11 +3754,11 @@ const DEP_STATUS_ICON = {PENDING:"⏳", APPROVED:"✅", REJECTED:"❌"};
 function renderDepositRequestsPanel(){
   const panel = document.getElementById("adminDepositsPanel");
   const filters = ["PENDING","APPROVED","REJECTED"];
-  let html = `<div class="dep-filters">`;
+  let html = `<div class="dep-filters" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;"><div style="display:flex; flex-wrap:wrap; gap:8px;">`;
   filters.forEach(f=>{
     html += `<div class="tx-filter ${state.depositFilter===f?'active':''}" onclick="setDepositFilter('${f}')">${f.charAt(0)+f.slice(1).toLowerCase()}</div>`;
   });
-  html += `</div>`;
+  html += `</div><button class="btn btn-danger btn-sm" onclick="doDeleteAllDeposits()">🗑️ Delete All</button></div>`;
 
   if(!state.depositRequests.length){
     html += `<div class="card empty-state"><div class="icon">📭</div>No ${state.depositFilter.toLowerCase()} deposit requests</div>`;
@@ -3762,7 +3778,7 @@ function renderDepositRequestsPanel(){
     }else{
       actions = `<button class="btn btn-ghost btn-sm" onclick='viewDepositProof(${JSON.stringify(d.id)})'>🖼️ View Payment Proof</button>`;
     }
-    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteDeposit(${JSON.stringify(d.id)})'>🗑️ حذف</button>`;
+    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteDeposit(${JSON.stringify(d.id)})'>🗑️ Delete</button>`;
     let note = "";
     if(d.status === "APPROVED"){ note = `<div class="deposit-card-note">Credited <b>${fmtNgn(d.points_credited)}</b></div>`; }
     if(d.status === "REJECTED" && d.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(d.rejection_reason)}</div>`; }
@@ -3886,6 +3902,18 @@ async function doDeleteDeposit(depositId){
   finally{ depositActionLock = false; }
 }
 
+async function doDeleteAllDeposits(){
+  if(depositActionLock) return;
+  if(!confirm(`Delete ALL ${state.depositFilter.toLowerCase()} deposit requests? This cannot be undone.`)) return;
+  depositActionLock = true;
+  try{
+    const r = await api("/admin/nigerian-deposits/all?status=" + encodeURIComponent(state.depositFilter), "DELETE");
+    showToast(r.message || "Deposits deleted");
+    loadDepositRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ depositActionLock = false; }
+}
+
 /* ===================== ADMIN — NGN WITHDRAWAL REQUESTS ===================== */
 
 state.withdrawalRequests = [];
@@ -3918,11 +3946,11 @@ function setWithdrawalFilter(f){
 function renderWithdrawalRequestsPanel(){
   const panel = document.getElementById("adminWithdrawalsPanel");
   const filters = ["PENDING","APPROVED","REJECTED"];
-  let html = `<div class="dep-filters">`;
+  let html = `<div class="dep-filters" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;"><div style="display:flex; flex-wrap:wrap; gap:8px;">`;
   filters.forEach(f=>{
     html += `<div class="tx-filter ${state.withdrawalFilter===f?'active':''}" onclick="setWithdrawalFilter('${f}')">${f.charAt(0)+f.slice(1).toLowerCase()}</div>`;
   });
-  html += `</div>`;
+  html += `</div><button class="btn btn-danger btn-sm" onclick="doDeleteAllWithdrawals()">🗑️ Delete All</button></div>`;
 
   if(!state.withdrawalRequests.length){
     html += `<div class="card empty-state"><div class="icon">📭</div>No ${state.withdrawalFilter.toLowerCase()} withdrawal requests</div>`;
@@ -3939,7 +3967,7 @@ function renderWithdrawalRequestsPanel(){
         <button class="btn btn-danger btn-sm" onclick='openRejectWithdrawalModal(${JSON.stringify(w)})'>❌ Reject Withdrawal</button>
       `;
     }
-    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteWithdrawal(${JSON.stringify(w.id)})'>🗑️ حذف</button>`;
+    actions += `<button class="btn btn-danger btn-sm" onclick='doDeleteWithdrawal(${JSON.stringify(w.id)})'>🗑️ Delete</button>`;
     let note = "";
     if(w.status === "APPROVED"){ note = `<div class="deposit-card-note">Sent ${fmtNgn(w.amount_ngn)}</div>`; }
     if(w.status === "REJECTED" && w.rejection_reason){ note = `<div class="deposit-card-note">Reason: ${escapeHtml(w.rejection_reason)}</div>`; }
@@ -4027,6 +4055,18 @@ async function doDeleteWithdrawal(withdrawalId){
   try{
     const r = await api("/admin/nigerian-withdrawals/" + encodeURIComponent(withdrawalId), "DELETE");
     showToast(r.message || "Withdrawal deleted");
+    loadWithdrawalRequests();
+  }catch(e){ showToast(e.message); }
+  finally{ withdrawalActionLock = false; }
+}
+
+async function doDeleteAllWithdrawals(){
+  if(withdrawalActionLock) return;
+  if(!confirm(`Delete ALL ${state.withdrawalFilter.toLowerCase()} withdrawal requests? Any still-pending ones will be refunded to the user first. This cannot be undone.`)) return;
+  withdrawalActionLock = true;
+  try{
+    const r = await api("/admin/nigerian-withdrawals/all?status=" + encodeURIComponent(state.withdrawalFilter), "DELETE");
+    showToast(r.message || "Withdrawals deleted");
     loadWithdrawalRequests();
   }catch(e){ showToast(e.message); }
   finally{ withdrawalActionLock = false; }

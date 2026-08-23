@@ -118,6 +118,31 @@ def get_ledger_transactions(
     return q.offset(offset).limit(limit).all()
 
 
+@router.delete("/transactions/all")
+def delete_all_ledger_transactions(
+    currency: str = None,
+    db: Session = Depends(get_db),
+    admin: models.User = Depends(get_current_admin),
+):
+    """
+    NEW: bulk-delete ledger transaction history rows (optionally scoped to
+    one `currency`, matching whatever's currently shown in the Ledger
+    Transactions list). This only clears the transaction log/history — it
+    does NOT touch AdminLedger.total_balance (the actual ledger balance is a
+    separate running total updated at credit/debit time, not derived from
+    these rows), so the Ledger Balance figure is unaffected. It DOES reset
+    the Spin Revenue / Total Withdrawals stat cards on this page back toward
+    zero for the affected currency, since those are computed by summing
+    these very rows — that's expected for a full history wipe.
+    """
+    q = db.query(models.LedgerTransaction)
+    if currency:
+        q = q.filter(models.LedgerTransaction.currency == currency)
+    count = q.delete(synchronize_session=False)
+    db.commit()
+    return {"success": True, "message": f"Deleted {count} ledger transaction(s)", "deleted_count": count}
+
+
 @router.post("/withdraw")
 def admin_withdraw(
     payload: schemas.AdminWithdrawRequest,
