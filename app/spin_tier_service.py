@@ -101,10 +101,14 @@ def build_tier_prize_table(db: Session, play_amount: float, currency: str = "NGN
         return None, [(0.0, 1.0)]   # no tiers configured at all yet — always safe, always ₦0
 
     eligible = [(pv.prize_amount, max(pv.weight, 0.0)) for pv in tier.prizes if pv.prize_amount <= play_amount]
-    if not any(p == 0.0 for p, _ in eligible):
-        # A spin must always have SOME reachable outcome — ₦0 is always the
-        # safe one, added here if an admin's tier config didn't include it
-        # explicitly (the admin API also nudges toward always including one).
+    if not eligible:
+        # Only true last resort: NOTHING the admin configured for this
+        # tier is even reachable at this play amount (every configured
+        # prize costs more than what was actually wagered this spin).
+        # NGN 0 is the only safe outcome left. This is now the ONLY path
+        # that can ever produce NGN 0 for a tier the admin built with no
+        # NGN 0 row — a tier with at least one reachable configured prize
+        # never falls back to 0 anymore.
         eligible.append((0.0, 1.0))
 
     total_weight = sum(w for _, w in eligible)

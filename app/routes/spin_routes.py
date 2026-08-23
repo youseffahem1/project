@@ -303,7 +303,16 @@ def spin_wheel_preview(
     # works — display is purely visual, `segments` below still enforces
     # the real (capped, reachable) odds server-side.
     if prize_tier is not None:
-        display_values = sorted({pv.prize_amount for pv in prize_tier.prizes} | {0.0})
+        # CHANGED: no longer force ₦0 onto the wheel face for every tier —
+        # only show it if the tier's admin config actually includes it, or
+        # if this specific spin's real odds table ended up containing it
+        # (the rare last-resort fallback in build_tier_prize_table above).
+        # Union with the actual table keeps the invariant this endpoint's
+        # docstring promises: every value POST /play can land on is always
+        # present in display_segments.
+        configured = {pv.prize_amount for pv in prize_tier.prizes}
+        table_values = {p for p, _ in table}
+        display_values = sorted(configured | table_values)
     else:
         display_values = sorted({p for p, _ in table})
     return {
