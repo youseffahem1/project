@@ -31,9 +31,9 @@
   --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
   --ease: cubic-bezier(.22,1,.36,1);
   --ease-soft: cubic-bezier(.4,0,.2,1);
-  --shadow-sm: 0 2px 10px rgba(30,20,60,.06);
-  --shadow-md: 0 10px 34px rgba(30,20,60,.09);
-  --shadow-lg: 0 24px 64px rgba(30,20,60,.14);
+  --shadow-sm: 0 2px 8px rgba(30,20,60,.05);
+  --shadow-md: 0 6px 20px rgba(30,20,60,.08);
+  --shadow-lg: 0 14px 40px rgba(30,20,60,.12);
   --shadow-glow: 0 0 0 1px rgba(124,58,237,.12), 0 20px 60px rgba(124,58,237,.18);
 }
 *{box-sizing:border-box; margin:0; padding:0; min-width:0;}
@@ -830,7 +830,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   </div>
   <div class="nav-right">
     <div class="balance-chip" id="navBalance" style="display:none;" onclick="toggleBalancePopover(event)">
-      <span class="gem">💎</span> <span class="pt" id="navBalanceVal">₦0</span>
+      <span class="gem">💎</span> <span class="pt" id="navBalanceVal">NGN 0</span>
     </div>
     <div id="navGuest">
       <a class="btn btn-ghost btn-sm" href="#" onclick="showPage('login')">Log In</a>
@@ -847,7 +847,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 <div class="popover-bg" id="popoverBg" onclick="closeBalancePopover()"></div>
 <div class="balance-popover" id="balancePopover">
   <div class="bp-label">NGN Balance</div>
-  <div class="bp-amount" id="bpAmount">₦0</div>
+  <div class="bp-amount" id="bpAmount">NGN 0</div>
   <div class="bp-usd" id="bpUsd">Real Naira balance</div>
   <div class="bp-stats">
     <div class="bp-stat"><div class="v" id="bpDeposits">—</div><div class="l">Total Deposits</div></div>
@@ -999,7 +999,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         <div class="perk-text"><b>Your own TRON address</b><span>A permanent, personal deposit address — no sharing, no mix-ups.</span></div>
       </div>
       <div class="auth-stats-row">
-        <div><div class="num">₦1K</div><div class="lbl2">Min play</div></div>
+        <div><div class="num">NGN 1K</div><div class="lbl2">Min play</div></div>
         <div><div class="num">100%</div><div class="lbl2">Server-side fair</div></div>
         <div><div class="num">0</div><div class="lbl2">Signup fees</div></div>
       </div>
@@ -1103,19 +1103,19 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         <!-- Normal spin view -->
         <div id="spinNormalView" style="display:none; width:100%;">
           <div class="spin-balance-row">
-            <div class="spin-balance-chip"><span class="l">Available Balance</span><span class="v" id="spinYourBalance">₦0</span></div>
-            <div class="spin-balance-chip spin-balance-chip-winnings"><span class="l">🏆 Winnings Balance</span><span class="v" id="spinWinningsBalance">₦0</span></div>
+            <div class="spin-balance-chip"><span class="l">Available Balance</span><span class="v" id="spinYourBalance">NGN 0</span></div>
+            <div class="spin-balance-chip spin-balance-chip-winnings"><span class="l">🏆 Winnings Balance</span><span class="v" id="spinWinningsBalance">NGN 0</span></div>
           </div>
 
           <div class="play-amount-section">
             <div class="play-amount-label">Choose Play Amount</div>
             <div class="play-amount-grid" id="playAmountGrid"></div>
             <div class="play-amount-custom" id="playAmountCustomWrap" style="display:none;">
-              <input type="number" id="playAmountCustomInput" placeholder="Custom amount (₦)" oninput="onCustomPlayAmountInput()">
+              <input type="number" id="playAmountCustomInput" placeholder="Custom amount (NGN )" oninput="onCustomPlayAmountInput()">
             </div>
           </div>
 
-          <div class="playing-with-badge" id="playingWithBadge">Playing with ₦1,000</div>
+          <div class="playing-with-badge" id="playingWithBadge">Playing with NGN 1,000</div>
 
           <div class="spin-stage" id="spinStage">
             <div class="spin-halo"></div>
@@ -1123,7 +1123,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
             <div class="spin-orbit"></div>
             <div class="wheel-pointer"></div>
             <canvas id="wheelCanvas" width="300" height="300"></canvas>
-            <button class="spin-center-btn" id="spinBtn" onclick="doPlayAmountSpin()"><span id="spinBtnLabel">SPIN</span><small id="spinBtnAmount">₦1,000</small></button>
+            <button class="spin-center-btn" id="spinBtn" onclick="doPlayAmountSpin()"><span id="spinBtnLabel">SPIN</span><small id="spinBtnAmount">NGN 1,000</small></button>
           </div>
           <div class="spin-status" id="spinStatus">Checking status...</div>
           <div class="spin-inline-error" id="spinInlineError"></div>
@@ -1144,7 +1144,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         </div>
         <div class="card spin-side-card">
           <h2>Your Balance</h2>
-          <div class="stat-box"><div class="val" id="statBalance">₦0</div><div class="lbl" id="statBalanceLbl">NGN Balance</div></div>
+          <div class="stat-box"><div class="val" id="statBalance">NGN 0</div><div class="lbl" id="statBalanceLbl">NGN Balance</div></div>
         </div>
       </div>
     </div>
@@ -1158,13 +1158,13 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
     <div class="grid-2" style="margin-bottom:22px; align-items:stretch;">
       <div class="card">
         <div class="muted">🇳🇬 NGN — Main Playing Balance</div>
-        <div style="font-size:28px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px;" id="walletNgnBalance">₦0</div>
+        <div style="font-size:28px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px;" id="walletNgnBalance">NGN 0</div>
         <div class="muted" style="font-size:11.5px; margin-bottom:16px;">Main Balance is only for playing.</div>
 
         <div style="height:1px; background:var(--glass-border); margin:0 0 14px;"></div>
 
         <div class="muted">🏆 NGN — Winnings Balance</div>
-        <div style="font-size:24px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px; color:var(--green);" id="walletNgnWinnings">₦0</div>
+        <div style="font-size:24px; font-weight:900; margin:8px 0 2px; letter-spacing:-.5px; color:var(--green);" id="walletNgnWinnings">NGN 0</div>
         <div class="muted" style="font-size:11.5px;">Winnings Balance can be withdrawn — Available to Withdraw.</div>
       </div>
       <div class="card">
@@ -1299,7 +1299,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       </div>
       <div class="vip-row"><span>Level</span><b><span class="vip-badge" id="profileVip">Bronze</span></b></div>
       <div class="vip-row"><span>Total XP</span><b id="profileXp">0</b></div>
-      <div class="vip-row"><span>🇳🇬 NGN Balance</span><b id="profileNgnBalance">₦0</b></div>
+      <div class="vip-row"><span>🇳🇬 NGN Balance</span><b id="profileNgnBalance">NGN 0</b></div>
       <div class="vip-row"><span>💠 Crypto Balance</span><b id="profileBalance">$0.00</b></div>
       <div class="vip-row"><span>Locked points</span><b id="profileLocked">0</b></div>
       <div class="vip-row"><span>Member since</span><b id="profileSince">—</b></div>
@@ -1313,7 +1313,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   <div class="container" style="margin-top:20px;">
     <div class="card">
       <h2>🎁 Refer a Friend</h2>
-      <p class="muted" style="margin-bottom:16px;">Share your link — when your friend deposits <b id="refMinDeposit">₦5,000</b> or more, you get <b id="refRewardAmount">₦500</b> added to your Winnings Balance.</p>
+      <p class="muted" style="margin-bottom:16px;">Share your link — when your friend deposits <b id="refMinDeposit">NGN 5,000</b> or more, you get <b id="refRewardAmount">NGN 500</b> added to your Winnings Balance.</p>
 
       <div class="field">
         <label>Your Referral Link</label>
@@ -1324,7 +1324,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
       </div>
 
       <div class="stat-box" style="max-width:220px; margin-bottom:18px;">
-        <div class="val" id="refTotalEarned">₦0</div>
+        <div class="val" id="refTotalEarned">NGN 0</div>
         <div class="lbl">Total earned from referrals</div>
       </div>
 
@@ -1355,7 +1355,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         <h2>Referral Reward</h2>
         <p class="muted" style="margin-bottom:14px; font-size:12.5px;">Paid once per referred user, the moment their first qualifying NGN deposit is approved.</p>
         <div class="field">
-          <label>Reward Amount (₦)</label>
+          <label>Reward Amount (NGN )</label>
           <div class="field-input-wrap"><input id="adminRefRewardInput" type="number" min="0" step="1"></div>
         </div>
         <button class="btn btn-primary btn-sm" id="adminRefRewardSaveBtn" onclick="saveReferralRewardSetting()">
@@ -1500,11 +1500,11 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 <div class="modal-bg" id="transferWinningsBg">
   <div class="confirm-modal">
     <h3>Move Winnings to Playing Balance?</h3>
-    <div class="row"><span>Winnings Balance</span><b id="twAvailable">₦0</b></div>
+    <div class="row"><span>Winnings Balance</span><b id="twAvailable">NGN 0</b></div>
     <div class="field" style="margin-top:14px;">
       <label>Amount to move</label>
       <div class="field-input-wrap with-max">
-        <input id="twAmount" type="number" min="0" step="0.01" placeholder="₦ 0.00">
+        <input id="twAmount" type="number" min="0" step="0.01" placeholder="NGN 0.00">
         <button type="button" class="max-btn" onclick="setTransferWinningsMax()">ALL</button>
       </div>
       <p class="muted" style="font-size:11.5px; margin-top:6px;">Moved funds become part of your Playing Balance and can no longer be withdrawn directly — you'd need to win them again to withdraw.</p>
@@ -1560,7 +1560,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
     <div class="row"><span>User</span><b id="gwUser">—</b></div>
     <div class="row"><span>Current Winnings Balance</span><b id="gwCurrentWinnings">—</b></div>
     <div class="field" style="margin-top:14px;">
-      <label>Amount (₦)</label>
+      <label>Amount (NGN )</label>
       <div class="field-input-wrap"><input id="gwAmount" type="number" min="0.01" step="0.01" placeholder="e.g. 5000"></div>
     </div>
     <div class="field">
@@ -1586,7 +1586,7 @@ let state = {
   token: localStorage.getItem("ls_token") || sessionStorage.getItem("ls_token") || null,
   user: null,
   isAdmin: false,
-  wheelSegments: ["₦20,000","₦30,000","₦15,000","₦10,000","₦2,500","₦1,000","₦800","₦400","₦350","₦200","₦0"],
+  wheelSegments: ["20,000","30,000","15,000","10,000","2,500","1,000","800","400","350","200","0"],
   wheelSegmentValues: [0.5,20,2,3,10,5,1,20],
   addresses: [],
   depositCoin: null,
@@ -1603,7 +1603,7 @@ let state = {
 };
 
 function fmtPts(n){ return (Number(n)||0).toFixed(1); }
-function fmtNgn(n){ return "₦\u2009" + Math.round(Number(n)||0).toLocaleString(); }
+function fmtNgn(n){ return "NGN " + Math.round(Number(n)||0).toLocaleString("en-US"); }
 function fmtUsd(points){ return "$" + (Number(points||0) / (state.pointsPerUsdt || 100)).toFixed(2); }
 
 function showToast(msg){
@@ -2032,7 +2032,12 @@ drawWheel("wheelCanvas", state.wheelSegments);
 function initPrizeTicker(){
   const track = document.getElementById("prizeTicker");
   if(!track) return;
-  const prizes = state.wheelSegments.map(v => `💎 ${v}`);
+  // state.wheelSegments holds compact wheel-face labels (no currency
+  // prefix for NGN, since the wheel itself is cramped — see
+  // fmtWheelLabel). The ticker has more room, so it adds "NGN " back for
+  // NGN amounts; USD amounts already carry their own "$" from fmtUsdRaw.
+  const isUsd = state.spinConfig ? state.spinConfig.currency === "USD" : state.spinCurrency === "USD";
+  const prizes = state.wheelSegments.map(v => `💎 ${isUsd ? v : "NGN " + v}`);
   const doubled = [...prizes, ...prizes];
   track.innerHTML = doubled.map(p => `<span class="prize-chip">${p}</span>`).join("");
 }
@@ -2043,11 +2048,18 @@ let currentRotation = 0;
 
 // NEW: fmtSpin formats an amount using WHICHEVER currency the backend says
 // this spin/config is in — never guessed, never "PT". "USD" -> "$", "NGN"
-// (or anything else, defensively) -> "₦".
+// (or anything else, defensively) -> "NGN ".
 function fmtSpin(amount, currency){
   return currency === "USD" ? fmtUsdRaw(amount) : fmtNgn(amount);
 }
-function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:2}); }
+// Compact label just for the wheel face itself — segments are narrow, so
+// this drops the "NGN " prefix (the wheel's context already makes the
+// currency obvious) and just shows the number, keeping every other amount
+// in the app using the full "NGN 1,000" / "$1.00" format from fmtSpin above.
+function fmtWheelLabel(amount, currency){
+  return currency === "USD" ? fmtUsdRaw(amount) : Math.round(Number(amount)||0).toLocaleString("en-US");
+}
+function fmtUsdRaw(n){ return "$" + (Number(n)||0).toLocaleString("en-US", {minimumFractionDigits:0, maximumFractionDigits:2}); }
 // NEW: shared formatter for any transaction amount, wherever it's shown
 // (Transactions page, balance popover, admin ledger, etc.) — picks the
 // right symbol from tx.currency instead of assuming NGN/Points, so a
@@ -2117,7 +2129,7 @@ async function refreshSpinStatus(){
       gateDeposit.style.display = "none"; normal.style.display = "block";
       document.getElementById("spinYourBalance").textContent = fmtSpin(state.spinConfig.balance, currency);
       const customInput = document.getElementById("playAmountCustomInput");
-      if(customInput) customInput.placeholder = `Custom amount (${currency === "USD" ? "$" : "₦"})`;
+      if(customInput) customInput.placeholder = `Custom amount (${currency === "USD" ? "$" : "NGN "})`;
       renderPlayAmountChips();
       if(!state.selectedPlayAmount || !state.spinConfig.presets.includes(state.selectedPlayAmount)){
         selectPlayAmount(state.spinConfig.presets[0]);
@@ -2253,7 +2265,7 @@ async function loadWheelForAmount(amount){
     // (for drawing) — these must always stay in the same order/index.
     const values = r.display_segments || r.segments.map(s => s.prize);
     state.wheelSegmentValues = values;
-    state.wheelSegments = values.map(v => fmtSpin(v, r.currency));
+    state.wheelSegments = values.map(v => fmtWheelLabel(v, r.currency));
     drawWheel("wheelCanvas", state.wheelSegments);
     initPrizeTicker();
   }catch(e){ /* keep previous wheel rendered if this fails */ }
@@ -2267,7 +2279,7 @@ let spinResultRotationLock = false;
 // where the wheel used to spin to a purely random angle with NO relationship
 // to the real backend result, so the visible landing segment and the amount
 // shown in the win modal could disagree (e.g. wheel stops near "700" while
-// the modal says "₦0"). segments/segmentValues must be the same array used
+// the modal says "NGN 0"). segments/segmentValues must be the same array used
 // to draw the wheel (state.wheelSegmentValues), same order, same length.
 function computeWheelRotationForPrize(segmentValues, prize, currentRotationValue){
   const n = segmentValues.length;
@@ -2636,7 +2648,7 @@ async function renderNgnDepositPanel(box){
 
       <div class="ngn-info-banner">
         <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">₦${Number(d.min_deposit_ngn || 5000).toLocaleString()}</span></div>
+        <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Deposit</span><span class="ngn-info-chip-v">NGN ${Number(d.min_deposit_ngn || 5000).toLocaleString("en-US")}</span></div>
       </div>
 
       <div class="ngn-row">
@@ -2660,9 +2672,9 @@ async function renderNgnDepositPanel(box){
     <div class="card" style="margin-top:16px;">
       <h2>Amount to Deposit</h2>
       <div class="field">
-        <label>Amount you transferred (min ₦${Number(d.min_deposit_ngn || 5000).toLocaleString()})</label>
-        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="₦ ${Number(d.min_deposit_ngn || 5000).toLocaleString()} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
-        <p class="muted" id="ngnAmountHint" style="font-size:11.5px; margin-top:6px;">This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.</p>
+        <label>Amount you transferred (min NGN ${Number(d.min_deposit_ngn || 5000).toLocaleString("en-US")})</label>
+        <div class="field-input-wrap"><input id="ngnAmount" type="number" min="${Number(d.min_deposit_ngn || 5000)}" step="0.01" placeholder="NGN ${Number(d.min_deposit_ngn || 5000).toLocaleString("en-US")} or more" oninput="validateNgnAmount(${Number(d.min_deposit_ngn || 5000)})"></div>
+        <p class="muted" id="ngnAmountHint" style="font-size:11.5px; margin-top:6px;">This is only what you tell us — an admin verifies your payment proof before any NGN is credited to your balance.</p>
       </div>
 
       <h2 style="margin-top:20px;">Upload Payment Proof</h2>
@@ -2746,10 +2758,10 @@ function validateNgnAmount(minDeposit){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minDeposit){
-    hint.textContent = `Minimum deposit is ₦${minDeposit.toLocaleString()} — please enter at least that amount.`;
+    hint.textContent = `Minimum deposit is NGN ${minDeposit.toLocaleString("en-US")} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
-    hint.textContent = "This is only what you tell us — an admin verifies your payment proof before any ₦ is credited to your balance.";
+    hint.textContent = "This is only what you tell us — an admin verifies your payment proof before any NGN is credited to your balance.";
     hint.classList.remove("ngn-amount-error");
   }
 }
@@ -2760,7 +2772,7 @@ async function submitNigerianDeposit(){
   const amount = parseFloat(amountEl.value);
   const minDeposit = Number((state.ngnBankDetails && state.ngnBankDetails.min_deposit_ngn) || 5000);
   if(!amount || amount <= 0){ showToast("Enter the amount you transferred"); return; }
-  if(amount < minDeposit){ showToast(`Minimum deposit is ₦${minDeposit.toLocaleString()}`); return; }
+  if(amount < minDeposit){ showToast(`Minimum deposit is NGN ${minDeposit.toLocaleString("en-US")}`); return; }
   if(!state.ngnFile){ showToast("Upload your payment proof screenshot"); return; }
 
   state.ngnSubmitting = true;
@@ -2799,7 +2811,7 @@ function renderNgnPendingStatus(box){
     <div class="card dep-status-card">
       <div class="icon">⏳</div>
       <h3 style="font-size:18px; margin-bottom:8px;">Pending Review</h3>
-      <p class="muted" style="margin-bottom:6px;">Your deposit of <b>₦${r.amount_ngn}</b> is being reviewed by an admin.</p>
+      <p class="muted" style="margin-bottom:6px;">Your deposit of <b>NGN ${r.amount_ngn}</b> is being reviewed by an admin.</p>
       <p class="muted" style="font-size:11.5px; overflow-wrap:anywhere;">Deposit ID: ${r.id}</p>
       <button class="btn btn-ghost btn-sm" style="margin-top:16px;" onclick="state.ngnLastResult=null; renderDepositContent();">Submit Another Deposit</button>
     </div>
@@ -2839,7 +2851,7 @@ function renderNgnWithdrawForm(box, info){
 
     <div class="ngn-info-banner">
       <div class="ngn-info-chip"><span class="ngn-info-chip-l">Currency</span><span class="ngn-info-chip-v">🇳🇬 NGN</span></div>
-      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">₦${minW.toLocaleString()}</span></div>
+      <div class="ngn-info-chip"><span class="ngn-info-chip-l">Minimum Withdrawal</span><span class="ngn-info-chip-v">NGN ${minW.toLocaleString("en-US")}</span></div>
     </div>
 
     <div class="field">
@@ -2855,9 +2867,9 @@ function renderNgnWithdrawForm(box, info){
       <div class="field-input-wrap"><input id="ngnWBankName" type="text" placeholder="e.g. Moniepoint MFB"></div>
     </div>
     <div class="field">
-      <label>Amount (min ₦${minW.toLocaleString()})</label>
+      <label>Amount (min NGN ${minW.toLocaleString("en-US")})</label>
       <div class="field-input-wrap with-max">
-        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="₦ ${minW.toLocaleString()} or more" oninput="validateNgnWithdrawAmount(${minW})">
+        <input id="ngnWAmount" type="number" min="${minW}" step="0.01" placeholder="NGN ${minW.toLocaleString("en-US")} or more" oninput="validateNgnWithdrawAmount(${minW})">
         <button type="button" class="max-btn" onclick="setNgnWithdrawMax()">MAX</button>
       </div>
       <p class="muted" id="ngnWAmountHint" style="font-size:11.5px; margin-top:6px;">This amount is deducted from your Winnings Balance immediately and reviewed by an admin.</p>
@@ -2875,7 +2887,7 @@ function validateNgnWithdrawAmount(minWithdrawal){
   if(!el || !hint) return;
   const val = parseFloat(el.value);
   if(el.value && val > 0 && val < minWithdrawal){
-    hint.textContent = `Minimum withdrawal is ₦${minWithdrawal.toLocaleString()} — please enter at least that amount.`;
+    hint.textContent = `Minimum withdrawal is NGN ${minWithdrawal.toLocaleString("en-US")} — please enter at least that amount.`;
     hint.classList.add("ngn-amount-error");
   }else{
     hint.textContent = "This amount is deducted from your Winnings Balance immediately and reviewed by an admin.";
@@ -2937,7 +2949,7 @@ async function submitNgnWithdrawal(){
   if(!account_name){ showToast("Enter the account holder's name"); return; }
   if(!account_number){ showToast("Enter the account number"); return; }
   if(!amount_ngn || amount_ngn <= 0){ showToast("Enter a valid amount"); return; }
-  if(amount_ngn < minW){ showToast(`Minimum withdrawal is ₦${minW.toLocaleString()}`); return; }
+  if(amount_ngn < minW){ showToast(`Minimum withdrawal is NGN ${minW.toLocaleString("en-US")}`); return; }
   if(state.user && amount_ngn > state.user.ngn_winnings_balance){ showToast("Insufficient balance"); return; }
 
   state.ngnWithdrawSubmitting = true;
@@ -3152,7 +3164,7 @@ function renderTransactions(){
     const meta = TX_META[tx.type] || {icon:"•", label:tx.type};
     const pos = tx.amount >= 0;
     const desc = (tx.description || meta.label).replace(/</g,"&lt;");
-    const date = new Date(tx.created_at).toLocaleString();
+    const date = new Date(tx.created_at).toLocaleString("en-US");
     return `
       <div class="tx-row">
         <div class="tx-icon">${meta.icon}</div>
@@ -3237,7 +3249,7 @@ async function refreshProfile(){
   document.getElementById("profileNgnBalance").textContent = fmtNgn(u.ngn_balance);
   document.getElementById("profileBalance").textContent = fmtUsd(u.points_balance);
   document.getElementById("profileLocked").textContent = fmtPts(u.locked_points);
-  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString();
+  document.getElementById("profileSince").textContent = new Date(u.created_at).toLocaleDateString("en-US");
 
   await loadTransactions();
   const hist = state.transactions;
@@ -3274,7 +3286,7 @@ async function loadReferralInfo(){
       const paid = ref.status === "PAID";
       return `
       <div class="item-row">
-        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString()}</span></span>
+        <span style="min-width:0; overflow-wrap:anywhere;">${escapeHtml(ref.full_name)} <span class="muted" style="font-size:11px;">— joined ${new Date(ref.joined_at).toLocaleDateString("en-US")}</span></span>
         <span class="badge ${paid ? 'badge-win' : ''}">${paid ? '+' + fmtNgn(ref.reward_amount_ngn) : 'Pending deposit'}</span>
       </div>`;
     }).join("");
@@ -3420,7 +3432,7 @@ function renderPrizeTierForm(tier, formId){
   const prizeRows = prizes.map((p, i) => `
     <div class="prize-row" data-idx="${i}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
       <div class="field" style="margin:0; flex:1;">
-        <label style="font-size:10.5px;">Prize Amount (₦)</label>
+        <label style="font-size:10.5px;">Prize Amount (NGN )</label>
         <input type="number" min="0" step="1" class="pt-prize-amount" value="${p.prize_amount}">
       </div>
       <div class="field" style="margin:0; flex:1;">
@@ -3434,12 +3446,12 @@ function renderPrizeTierForm(tier, formId){
   return `
     <div class="grid-2" style="gap:12px; margin-bottom:10px;">
       <div class="field" style="margin:0;">
-        <label>Play Amount Threshold (₦)</label>
+        <label>Play Amount Threshold (NGN )</label>
         <input type="number" min="1" step="1" class="pt-min-amount" value="${minAmt}" placeholder="e.g. 5000">
       </div>
       <div class="field" style="margin:0;">
         <label>Label (optional)</label>
-        <input type="text" class="pt-label" value="${escapeHtml(label)}" placeholder="e.g. ₦5,000 Tier">
+        <input type="text" class="pt-label" value="${escapeHtml(label)}" placeholder="e.g. NGN 5,000 Tier">
       </div>
     </div>
     <label class="checkbox-row" style="margin-bottom:12px;">
@@ -3462,7 +3474,7 @@ function addPrizeRow(btnEl){
   row.style = "display:flex; gap:8px; align-items:center; margin-bottom:8px;";
   row.innerHTML = `
     <div class="field" style="margin:0; flex:1;">
-      <label style="font-size:10.5px;">Prize Amount (₦)</label>
+      <label style="font-size:10.5px;">Prize Amount (NGN )</label>
       <input type="number" min="0" step="1" class="pt-prize-amount" value="">
     </div>
     <div class="field" style="margin:0; flex:1;">
@@ -3498,7 +3510,7 @@ async function savePrizeTier(tierId, btnEl){
     prizes.push({prize_amount: amt, weight: weight});
   }
   if(!prizes.some(p => p.prize_amount === 0)){
-    showToast("Every tier must include a ₦0 (no-win) outcome");
+    showToast("Every tier must include a NGN 0 (no-win) outcome");
     return;
   }
 
@@ -3681,7 +3693,7 @@ function renderAdminTransactions(){
         <div class="tx-body">
           <div class="tx-type">${tx.type.replace(/_/g," ")} <span class="status-badge status-${tx.status}" style="margin-left:6px;">${tx.status}</span></div>
           <div class="tx-desc">${hash ? ("Tx: " + hash) : (tx.reference_id ? ("Ref: " + tx.reference_id) : "—")}</div>
-          <div class="tx-date">${new Date(tx.created_at).toLocaleString()}</div>
+          <div class="tx-date">${new Date(tx.created_at).toLocaleString("en-US")}</div>
         </div>
         <div class="tx-amount ${pos?'pos':'neg'}">${pos?'+':''}${fmtLedgerAmount(tx)}</div>
         ${tx.tx_hash ? `<button class="tx-copy" title="Copy hash" onclick="copyText('${tx.tx_hash}')">📋</button>` : ""}
@@ -3797,10 +3809,10 @@ function renderDepositRequestsPanel(){
           <span class="status-badge status-${d.status}">${DEP_STATUS_ICON[d.status]||''} ${d.status}</span>
         </div>
         <div class="deposit-card-body">
-          <div class="mini"><div class="l">Amount</div><div class="v">₦${d.amount_ngn}</div></div>
+          <div class="mini"><div class="l">Amount</div><div class="v">NGN ${d.amount_ngn}</div></div>
           <div class="mini"><div class="l">Currency</div><div class="v">NGN</div></div>
           <div class="mini"><div class="l">Deposit ID</div><div class="v" title="${d.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString()}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(d.created_at).toLocaleString("en-US")}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -3841,7 +3853,7 @@ function toggleProofZoom(){
 function openApproveDepositModal(d){
   state.pendingApproveDeposit = d;
   document.getElementById("apUser").textContent = d.user_name || d.user_email || "—";
-  document.getElementById("apAmount").textContent = "₦" + d.amount_ngn;
+  document.getElementById("apAmount").textContent = "NGN " + d.amount_ngn;
   document.getElementById("apPoints").textContent = "Calculated by server on approval";
   document.getElementById("approveDepositBg").classList.add("show");
 }
@@ -3866,7 +3878,7 @@ async function doApproveDeposit(){
 function openRejectDepositModal(d){
   state.pendingRejectDeposit = d;
   document.getElementById("rjUser").textContent = d.user_name || d.user_email || "—";
-  document.getElementById("rjAmount").textContent = "₦" + d.amount_ngn;
+  document.getElementById("rjAmount").textContent = "NGN " + d.amount_ngn;
   document.getElementById("rjReason").value = "";
   document.getElementById("rejectDepositBg").classList.add("show");
 }
@@ -3961,7 +3973,7 @@ function renderWithdrawalRequestsPanel(){
           <div class="mini"><div class="l">Account Number</div><div class="v">${escapeHtml(w.account_number)}</div></div>
           <div class="mini"><div class="l">Bank</div><div class="v">${escapeHtml(w.bank_name || "—")}</div></div>
           <div class="mini"><div class="l">Request ID</div><div class="v" title="${w.id}">${shortId}</div></div>
-          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString()}</div></div>
+          <div class="mini"><div class="l">Created</div><div class="v">${new Date(w.created_at).toLocaleString("en-US")}</div></div>
         </div>
         <div class="deposit-card-actions">${actions}</div>
         ${note}
@@ -4078,7 +4090,7 @@ async function populateBalancePopover(){
   if(ngnTx.length){
     const last = ngnTx[0];
     const meta = TX_META[last.type] || {label:last.type};
-    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString()}`;
+    document.getElementById("bpLast").textContent = `${meta.label}: ${last.amount >= 0 ? '+' : ''}${fmtNgn(last.amount)} — ${new Date(last.created_at).toLocaleDateString("en-US")}`;
   }else{
     document.getElementById("bpLast").textContent = "No recent transactions";
   }
@@ -4233,7 +4245,7 @@ async function loadAdminGrantsFeed(){
       <div class="row" style="padding:10px 0; border-bottom:1px solid var(--glass-border);">
         <span>
           <b>${escapeHtml(g.user_name || g.user_email || g.user_id)}</b>
-          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString()}</span>
+          <span class="muted" style="font-size:11.5px; display:block;">by ${escapeHtml(g.admin_name || 'Admin')} · ${new Date(g.created_at).toLocaleString("en-US")}</span>
           <span class="muted" style="font-size:11.5px; display:block;">${escapeHtml(g.reason || '')}</span>
         </span>
         <b style="color:var(--purple);">+${fmtNgn(g.amount)}</b>
