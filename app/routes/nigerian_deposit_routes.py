@@ -179,6 +179,7 @@ def get_nigerian_deposit_proof(
 @admin_router.post("/{deposit_id}/approve")
 def approve_nigerian_deposit(
     deposit_id: str,
+    payload: schemas.NigerianDepositApproveRequest,
     db: Session = Depends(get_db),
     admin: models.User = Depends(get_current_admin),
 ):
@@ -206,7 +207,13 @@ def approve_nigerian_deposit(
     # to divide by NGN_PER_POINT and credit points_balance, which was the
     # root cause of NGN deposits showing up as an unrelated Points figure
     # instead of a real Naira balance. Fixed: straight NGN credit.
-    ngn_amount = float(dep.amount_ngn)
+    #
+    # NEW: credit exactly what the admin typed in after checking the proof
+    # screenshot (payload.approved_amount_ngn) — NOT dep.amount_ngn, which is
+    # only what the user claimed when submitting the request and is never
+    # trusted as final truth (e.g. user typed ₦5000 but the screenshot proof
+    # actually shows ₦3000 was sent).
+    ngn_amount = float(payload.approved_amount_ngn)
 
     target_user.ngn_balance = float(Decimal(str(target_user.ngn_balance)) + Decimal(str(ngn_amount)))
 
@@ -215,7 +222,7 @@ def approve_nigerian_deposit(
         type=models.TransactionType.DEPOSIT_UNLOCK,
         amount=ngn_amount,
         currency="NGN",
-        description=f"Nigerian bank deposit approved — ₦{dep.amount_ngn} (deposit {dep.id})",
+        description=f"Nigerian bank deposit approved — ₦{ngn_amount} credited by admin (requested ₦{dep.amount_ngn}, deposit {dep.id})",
     ))
 
     ledger_service.credit_ledger(

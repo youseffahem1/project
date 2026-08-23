@@ -190,6 +190,14 @@ class NigerianDepositRejectRequest(BaseModel):
     reason: str = Field(min_length=1, max_length=500)
 
 
+class NigerianDepositApproveRequest(BaseModel):
+    # NEW: the admin opens the payment proof screenshot, reads the REAL amount
+    # that actually shows in it, and types it here. This is the amount that
+    # gets credited — NOT necessarily what the user originally typed in
+    # amount_ngn (e.g. user claimed ₦5000 but the screenshot only shows ₦3000).
+    approved_amount_ngn: float = Field(gt=0)
+
+
 class NigerianWithdrawalOut(BaseModel):
     id: str
     user_id: str

@@ -1408,8 +1408,11 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   <div class="confirm-modal">
     <h3>Approve Deposit?</h3>
     <div class="row"><span>User</span><b id="apUser">—</b></div>
-    <div class="row"><span>Amount</span><b id="apAmount">—</b></div>
-    <div class="row"><span>Points to Credit</span><b id="apPoints">—</b></div>
+    <div class="row"><span>Amount Claimed</span><b id="apAmount">—</b></div>
+    <div style="margin:14px 0;">
+      <label for="apApprovedAmount" style="display:block; font-size:12.5px; color:var(--muted); margin-bottom:6px;">المبلغ الفعلي في صورة الإثبات (₦)</label>
+      <input type="number" id="apApprovedAmount" min="1" step="1" placeholder="افتح الصورة وتأكد ثم اكتب المبلغ الحقيقي" style="width:100%; padding:12px 14px; border-radius:13px; border:1px solid var(--glass-border); background:rgba(255,255,255,.65); font-family:inherit; font-size:14px; outline:none;">
+    </div>
     <div class="confirm-actions">
       <button class="btn btn-ghost btn-block" onclick="closeApproveDepositModal()">Cancel</button>
       <button class="btn btn-primary btn-block" id="apConfirmBtn" onclick="doApproveDeposit()">
@@ -3819,18 +3822,23 @@ function openApproveDepositModal(d){
   state.pendingApproveDeposit = d;
   document.getElementById("apUser").textContent = d.user_name || d.user_email || "—";
   document.getElementById("apAmount").textContent = "NGN " + d.amount_ngn;
-  document.getElementById("apPoints").textContent = "Calculated by server on approval";
+  // Pre-fill with what the user claimed, but the admin must open the proof
+  // image and correct this to the REAL amount shown in the screenshot before
+  // confirming — this is what actually gets credited, not d.amount_ngn.
+  document.getElementById("apApprovedAmount").value = d.amount_ngn;
   document.getElementById("approveDepositBg").classList.add("show");
 }
 function closeApproveDepositModal(){ document.getElementById("approveDepositBg").classList.remove("show"); }
 
 async function doApproveDeposit(){
   if(depositActionLock || !state.pendingApproveDeposit) return;
+  const approvedAmount = parseFloat(document.getElementById("apApprovedAmount").value);
+  if(!approvedAmount || approvedAmount <= 0){ showToast("أدخل المبلغ الفعلي من صورة الإثبات"); return; }
   depositActionLock = true;
   const btn = document.getElementById("apConfirmBtn");
   setButtonLoading(btn, true);
   try{
-    const r = await api("/admin/nigerian-deposits/" + encodeURIComponent(state.pendingApproveDeposit.id) + "/approve", "POST");
+    const r = await api("/admin/nigerian-deposits/" + encodeURIComponent(state.pendingApproveDeposit.id) + "/approve", "POST", {approved_amount_ngn: approvedAmount});
     closeApproveDepositModal();
     showToast(r.message || "Deposit approved");
     showNotification({id:"dep_approve_"+r.deposit_id, title:"Deposit approved", message:`+${fmtNgn(r.ngn_credited)} credited`, type:"DEPOSIT_SUCCESS"}, true);
