@@ -77,14 +77,27 @@ img{max-width:100%; display:block;}
    the individual orbs position:absolute *inside* that wrapper. Now the
    wrapper (not the viewport) is their containing block, so overflow:
    hidden on the wrapper actually clips them — no more drag-reveal. */
-.bg-orbs{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none;}
-.bg-orb{position:absolute; border-radius:50%; filter:blur(110px); pointer-events:none; opacity:.55;}
+.bg-orbs{position:fixed; inset:0; overflow:hidden; z-index:0; pointer-events:none; contain:strict;}
+.bg-orb{position:absolute; border-radius:50%; filter:blur(110px); pointer-events:none; opacity:.55; will-change:transform;}
 .bg-orb-1{width:520px; height:520px; top:-160px; left:-140px; background:radial-gradient(circle,var(--purple) 0%, transparent 70%); animation:float1 26s ease-in-out infinite;}
 .bg-orb-2{width:480px; height:480px; bottom:-180px; right:-120px; background:radial-gradient(circle,var(--pink) 0%, transparent 70%); animation:float2 30s ease-in-out infinite;}
 .bg-orb-3{width:400px; height:400px; top:32%; right:10%; background:radial-gradient(circle,var(--cyan) 0%, transparent 70%); animation:float3 34s ease-in-out infinite; opacity:.28;}
 @keyframes float1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(60px,40px) scale(1.08);}}
 @keyframes float2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-50px,-30px) scale(1.1);}}
 @keyframes float3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,50px);}}
+/* PERFORMANCE: 3 large (up to 520px) continuously-animated `filter:blur()`
+   layers are one of the heaviest things a phone GPU can be asked to
+   repaint every frame, forever — a real source of general jank/slowness
+   on mid/low-end devices, not just on the spin page. On small screens
+   the orbs are mostly decorative bleed anyway, so shrink the blur cost
+   there, and fully honor the OS "reduce motion" setting (freezes the
+   animation instead of ignoring it, which also saves battery/CPU). */
+@media(max-width:600px){
+  .bg-orb{filter:blur(70px);}
+}
+@media(prefers-reduced-motion:reduce){
+  .bg-orb{animation:none !important;}
+}
 
 .app-wrap{position:relative; z-index:1; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;}
 
@@ -1686,12 +1699,24 @@ async function api(path, method="GET", body=null, auth=true){
   const headers = {"Content-Type":"application/json"};
   if(auth && state.token) headers["Authorization"] = "Bearer " + state.token;
   let res;
+  // FIX ("spin sometimes hangs/freezes"): fetch() has NO built-in timeout —
+  // if the server is slow to respond (e.g. a free-tier host waking up from
+  // sleep, or a flaky connection), this used to just sit there forever with
+  // no feedback, which looks exactly like the app froze. Give it a generous
+  // but finite window, then fail with a message the user can act on.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
   try{
-    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : null });
+    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : null, signal: controller.signal });
   }catch(networkErr){
+    if(networkErr.name === "AbortError"){
+      throw new Error("The server is taking too long to respond. Please try again.");
+    }
     // fetch() itself throws on DNS failure / offline / server unreachable / CORS network error —
     // this is a real connectivity problem, distinct from a normal HTTP error response below.
     throw new Error("Check your internet connection and try again.");
+  }finally{
+    clearTimeout(timeoutId);
   }
   let data = null;
   try{ data = await res.json(); }catch(e){}

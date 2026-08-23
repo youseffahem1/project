@@ -289,7 +289,23 @@ def spin_wheel_preview(
     # unlike before. USD/Crypto spin below is untouched and still uses the
     # old game_logic.build_dynamic_prize_table/WHEEL_DISPLAY_VALUES_USD.
     prize_tier, table = spin_tier_service.build_tier_prize_table(db, play_amount, "NGN", tier_multiplier)
-    display_values = sorted({p for p, _ in table})
+    # BUGFIX: display_segments used to be derived from `table`, which is
+    # ALREADY filtered down to only the prizes <= play_amount (the
+    # anti-cheat cap — correct for `segments`/actual odds, but wrong for
+    # what the wheel FACE should show). Whenever a tier's configured
+    # prizes were all above the chosen play_amount (e.g. a ₦1,000 spin
+    # against a tier whose smallest configured prize is ₦2,500), `table`
+    # collapsed to just [(0.0, 1.0)] and the wheel rendered as a single
+    # blank ₦0 slice — a plain colored circle with no numbers, exactly
+    # the "wheel freezes / shows the same picture, no numbers" symptom.
+    # Fix: show the tier's FULL configured prize face regardless of
+    # play_amount, matching how USD's WHEEL_DISPLAY_VALUES_USD already
+    # works — display is purely visual, `segments` below still enforces
+    # the real (capped, reachable) odds server-side.
+    if prize_tier is not None:
+        display_values = sorted({pv.prize_amount for pv in prize_tier.prizes} | {0.0})
+    else:
+        display_values = sorted({p for p, _ in table})
     return {
         "currency": "NGN",
         "play_amount": play_amount,
@@ -297,6 +313,7 @@ def spin_wheel_preview(
         "segments": [{"prize": prize, "probability": prob} for prize, prob in table],
         "tier_label": prize_tier.label if prize_tier else None,
     }
+
 
 
 @router.post("/play", response_model=schemas.DynamicSpinResult)
