@@ -1603,7 +1603,7 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
         <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
           <span id="adminWinBoostState" class="badge badge-out">OFF</span>
           <button type="button" class="btn btn-primary btn-sm" id="adminWinBoostBtn" onclick="toggleAdminWinBoost()">
-            <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Turn On</span></span>
+            <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label" id="adminWinBoostBtnLabel">Turn On</span></span>
           </button>
         </div>
       </div>
@@ -3651,11 +3651,15 @@ function renderAdminWinBoost(enabled, customAmount){
   const stateEl = document.getElementById("adminWinBoostState");
   const labelEl = document.getElementById("adminWinBoostBtnLabel");
   const hintEl = document.getElementById("adminWinBoostModeHint");
-  if(!stateEl || !labelEl) return;
+  // FIX: this used to bail out entirely when the label element was missing,
+  // which silently skipped the state.adminWinBoostOn update too — leaving
+  // the toggle reading a stale badge forever, so clicks looked dead. State
+  // and badge must ALWAYS update; only the cosmetic label/hint are optional.
+  if(!stateEl) return;
   state.adminWinBoostOn = !!enabled;               // single source of truth for the toggle
   stateEl.textContent = enabled ? "ON" : "OFF";
   stateEl.className = "badge " + (enabled ? "badge-win" : "badge-out");
-  labelEl.textContent = enabled ? "Turn Off" : "Turn On";
+  if(labelEl) labelEl.textContent = enabled ? "Turn Off" : "Turn On";
   if(hintEl){
     hintEl.textContent = customAmount != null
       ? `Mode: fixed prize — every boosted spin pays NGN ${Number(customAmount).toLocaleString()}`
