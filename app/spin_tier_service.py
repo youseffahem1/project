@@ -146,3 +146,44 @@ def resolve_tiered_spin(db: Session, play_amount: float, currency: str = "NGN", 
     weights = [w for _, w in table]
     chosen_prize = random.choices(prizes, weights=weights, k=1)[0]
     return {"prize": chosen_prize, "table": table, "tier": tier}
+
+
+# =========================================================================
+# NEW: Admin Win Boost — while the admin toggle (ledger_service.
+# ADMIN_WIN_BOOST_SETTING_KEY) is ON, spins made by an ADMIN account use the
+# two helpers below instead of resolve_tiered_spin. The operator plays a
+# small amount and still lands the largest prize configured anywhere across
+# this currency's active tiers. Regular players never go through here — the
+# route checks user.is_admin AND the live flag server-side on every spin.
+# =========================================================================
+
+def get_max_configured_prize(db: Session, currency: str = "NGN") -> float:
+    """Largest prize amount configured across ALL ACTIVE tiers for this
+    currency (0.0 when no tiers exist or every configured row is ₦0).
+    Read-only — used both to resolve an admin-boosted spin and to add the
+    boosted value to GET /api/spin/wheel's display_segments so the wheel
+    graphic can always land exactly on what POST /play returns."""
+    max_prize = 0.0
+    for tier in get_tiers(db, currency):
+        for pv in tier.prizes:
+            if pv.prize_amount > max_prize:
+                max_prize = float(pv.prize_amount)
+    return max_prize
+
+
+def resolve_admin_boosted_spin(db: Session, play_amount: float, currency: str = "NGN") -> dict:
+    """Deterministic top-prize outcome for an admin-boosted NGN spin.
+
+    Deliberately ignores build_tier_prize_table's 'prize <= play_amount'
+    cap. That cap exists to protect the HOUSE from overpaying players; here
+    the house itself (the authenticated admin) asked for the payout via its
+    own toggle, so paying above the wagered amount to that one account is
+    intended behavior — no other user's outcome, odds, or balance changes.
+    Returns the same dict shape as resolve_tiered_spin so callers can treat
+    both identically. Falls back to a safe single-₦0 table when no tiers
+    are configured at all yet."""
+    tier = select_tier_for_play_amount(db, play_amount, currency)
+    top_prize = get_max_configured_prize(db, currency)
+    if tier is None or top_prize <= 0:
+        return {"prize": 0.0, "table": [(0.0, 1.0)], "tier": tier}
+    return {"prize": top_prize, "table": [(top_prize, 1.0)], "tier": tier}

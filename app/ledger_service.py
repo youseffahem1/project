@@ -256,3 +256,39 @@ def set_referral_reward_amount(db: Session, amount_ngn: float) -> float:
         row.updated_at = datetime.utcnow()
     db.commit()
     return amount_ngn
+
+
+# =========================================================================
+# NEW: Admin Win Boost — a live-toggleable flag stored in the same generic
+# AdminSetting key/value table as the referral reward above. While enabled,
+# NGN spins made by an ADMIN account resolve to the largest prize configured
+# across the active NGN tiers instead of the normal weighted draw (see
+# spin_routes.py / spin_tier_service.py). Never affects non-admin users, and
+# the flag is re-checked server-side at spin time — nothing is trusted from
+# the client beyond its authenticated identity.
+# =========================================================================
+
+ADMIN_WIN_BOOST_SETTING_KEY = "admin_win_boost_enabled"
+
+
+def is_admin_win_boost_enabled(db: Session) -> bool:
+    """Defaults to False when the admin has never toggled it — the boost is
+    strictly opt-in, so a fresh deployment behaves exactly as before."""
+    row = db.query(models.AdminSetting).filter_by(key=ADMIN_WIN_BOOST_SETTING_KEY).first()
+    if row is None:
+        return False
+    return str(row.value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def set_admin_win_boost_enabled(db: Session, enabled: bool) -> bool:
+    from datetime import datetime
+
+    row = db.query(models.AdminSetting).filter_by(key=ADMIN_WIN_BOOST_SETTING_KEY).first()
+    if row is None:
+        row = models.AdminSetting(key=ADMIN_WIN_BOOST_SETTING_KEY, value=str(bool(enabled)))
+        db.add(row)
+    else:
+        row.value = str(bool(enabled))
+        row.updated_at = datetime.utcnow()
+    db.commit()
+    return bool(enabled)

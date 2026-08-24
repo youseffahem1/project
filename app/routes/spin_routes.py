@@ -315,6 +315,18 @@ def spin_wheel_preview(
         display_values = sorted(configured | table_values)
     else:
         display_values = sorted({p for p, _ in table})
+
+    # Admin Win Boost (NEW): when the requester is an admin and the toggle
+    # is ON, their next POST /play will resolve to the largest configured
+    # NGN prize even if it's bigger than play_amount — add it to the wheel
+    # FACE so the frontend can always land exactly on what /play returns
+    # (same invariant as above). Purely visual; `segments` still shows the
+    # normal reachable odds and non-admin callers never hit this branch.
+    if getattr(user, "is_admin", False) and ledger_service.is_admin_win_boost_enabled(db):
+        boosted_top = spin_tier_service.get_max_configured_prize(db, "NGN")
+        if boosted_top > 0:
+            display_values = sorted(set(display_values) | {boosted_top})
+
     return {
         "currency": "NGN",
         "play_amount": play_amount,
@@ -446,12 +458,21 @@ def _spin_play_ngn(payload, db: Session, user: models.User):
     locked_user.ngn_balance = float(current_balance - play_amount_dec)
 
     tier_label, tier_multiplier = ledger_service.get_user_ngn_deposit_tier(db, user.id)
-    # CHANGED (Prize Tiers): server-side outcome now comes from the
-    # play-amount-specific tier table (spin_tier_service), not the old
-    # universal filtered list — see spin_wheel_preview above for the same
-    # change on the read-only preview side. The hard "prize <= play_amount"
-    # cap is still enforced, just against the new per-tier prize rows.
-    outcome = spin_tier_service.resolve_tiered_spin(db, payload.play_amount, "NGN", tier_multiplier)
+    # Admin Win Boost (NEW): while the admin toggle is ON, spins made by an
+    # ADMIN account always land the largest prize configured across the
+    # active NGN tiers, regardless of play amount. Both conditions are
+    # checked server-side HERE on every spin (authenticated identity + live
+    # flag) — never from anything the client sent. Every other user keeps
+    # getting the normal weighted draw with the play_amount cap enforced.
+    if bool(getattr(locked_user, "is_admin", False)) and ledger_service.is_admin_win_boost_enabled(db):
+        outcome = spin_tier_service.resolve_admin_boosted_spin(db, payload.play_amount, "NGN")
+    else:
+        # CHANGED (Prize Tiers): server-side outcome now comes from the
+        # play-amount-specific tier table (spin_tier_service), not the old
+        # universal filtered list — see spin_wheel_preview above for the same
+        # change on the read-only preview side. The hard "prize <= play_amount"
+        # cap is still enforced, just against the new per-tier prize rows.
+        outcome = spin_tier_service.resolve_tiered_spin(db, payload.play_amount, "NGN", tier_multiplier)
     prize = outcome["prize"]
 
     fee_tx = models.Transaction(

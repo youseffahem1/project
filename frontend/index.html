@@ -1305,6 +1305,17 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
           <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Save</span></span>
         </button>
       </div>
+
+      <div class="card" style="max-width:420px; margin-top:14px;">
+        <h2>Admin Win Boost — NGN Wheel</h2>
+        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">While ON, YOUR OWN NGN spins always land the largest prize configured across all active NGN tiers — no matter how little you play. Regular players are never affected.</p>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span id="adminWinBoostState" class="badge badge-out">OFF</span>
+          <button class="btn btn-primary btn-sm" id="adminWinBoostBtn" onclick="toggleAdminWinBoost()">
+            <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Turn On</span></span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -3307,7 +3318,7 @@ function setAdminTab(tab){
   if(tab === "withdrawals") loadWithdrawalRequests();
   if(tab === "prizetiers") loadPrizeTiers();
   if(tab === "users") loadAdminUsers();
-  if(tab === "settings") loadReferralRewardSetting();
+  if(tab === "settings"){ loadReferralRewardSetting(); loadAdminWinBoost(); }
 }
 
 async function loadReferralRewardSetting(){
@@ -3325,6 +3336,40 @@ async function saveReferralRewardSetting(){
   try{
     await api("/admin/settings/referral-reward", "PUT", {amount_ngn: val});
     showToast("Referral reward updated");
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
+}
+
+/* =========================================================================
+   NEW: Admin Win Boost toggle (NGN wheel). State always comes straight from
+   the backend (GET /admin/win-boost) — never guessed locally — so what the
+   button shows matches exactly what POST /api/spin/play will honor next.
+   ========================================================================= */
+
+function renderAdminWinBoost(enabled){
+  const stateEl = document.getElementById("adminWinBoostState");
+  const labelEl = document.getElementById("adminWinBoostBtnLabel");
+  if(!stateEl || !labelEl) return;
+  stateEl.textContent = enabled ? "ON" : "OFF";
+  stateEl.className = "badge " + (enabled ? "badge-win" : "badge-out");
+  labelEl.textContent = enabled ? "Turn Off" : "Turn On";
+}
+
+async function loadAdminWinBoost(){
+  try{
+    const r = await api("/admin/win-boost");
+    renderAdminWinBoost(r.enabled);
+  }catch(e){ showToast(e.message); }
+}
+
+async function toggleAdminWinBoost(){
+  const current = document.getElementById("adminWinBoostState").textContent.trim() === "ON";
+  const btn = document.getElementById("adminWinBoostBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/win-boost", "POST", {enabled: !current});
+    renderAdminWinBoost(r.enabled);
+    showToast(r.message || "Win Boost updated");
   }catch(e){ showToast(e.message); }
   finally{ setButtonLoading(btn, false); }
 }
