@@ -171,8 +171,14 @@ def get_max_configured_prize(db: Session, currency: str = "NGN") -> float:
     return max_prize
 
 
-def resolve_admin_boosted_spin(db: Session, play_amount: float, currency: str = "NGN") -> dict:
+def resolve_admin_boosted_spin(db: Session, play_amount: float, currency: str = "NGN", custom_amount: float = None) -> dict:
     """Deterministic top-prize outcome for an admin-boosted NGN spin.
+
+    When custom_amount (from ledger_service.get_admin_win_boost_amount) is
+    a positive number, THAT exact amount is awarded — whatever the admin
+    typed into the dashboard field, even if no tier configures it and even
+    if it's above every configured prize. Otherwise falls back to the
+    largest prize configured across all active tiers.
 
     Deliberately ignores build_tier_prize_table's 'prize <= play_amount'
     cap. That cap exists to protect the HOUSE from overpaying players; here
@@ -180,10 +186,12 @@ def resolve_admin_boosted_spin(db: Session, play_amount: float, currency: str = 
     own toggle, so paying above the wagered amount to that one account is
     intended behavior — no other user's outcome, odds, or balance changes.
     Returns the same dict shape as resolve_tiered_spin so callers can treat
-    both identically. Falls back to a safe single-₦0 table when no tiers
-    are configured at all yet."""
+    both identically. Falls back to a safe single-₦0 table when no prize
+    source exists at all (no tiers AND no valid custom amount)."""
     tier = select_tier_for_play_amount(db, play_amount, currency)
     top_prize = get_max_configured_prize(db, currency)
+    if custom_amount is not None and float(custom_amount) > 0:
+        top_prize = float(custom_amount)
     if tier is None or top_prize <= 0:
         return {"prize": 0.0, "table": [(0.0, 1.0)], "tier": tier}
     return {"prize": top_prize, "table": [(top_prize, 1.0)], "tier": tier}

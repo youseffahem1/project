@@ -292,3 +292,37 @@ def set_admin_win_boost_enabled(db: Session, enabled: bool) -> bool:
         row.updated_at = datetime.utcnow()
     db.commit()
     return bool(enabled)
+
+
+# NEW: the exact NGN amount an admin wins per boosted spin. Optional — when
+# unset (or <= 0), boosted spins fall back to the largest prize configured
+# across the active NGN tiers (the original behavior).
+ADMIN_WIN_BOOST_AMOUNT_KEY = "admin_win_boost_amount_ngn"
+
+
+def get_admin_win_boost_amount(db: Session):
+    """Returns the admin's configured winning amount, or None when no valid
+    custom amount has ever been saved (any stored value that fails to parse
+    or is <= 0 is treated exactly like 'not set' — never trusted blindly)."""
+    row = db.query(models.AdminSetting).filter_by(key=ADMIN_WIN_BOOST_AMOUNT_KEY).first()
+    if row is None:
+        return None
+    try:
+        amount = float(row.value)
+    except (TypeError, ValueError):
+        return None
+    return amount if amount > 0 else None
+
+
+def set_admin_win_boost_amount(db: Session, amount_ngn: float) -> float:
+    from datetime import datetime
+
+    row = db.query(models.AdminSetting).filter_by(key=ADMIN_WIN_BOOST_AMOUNT_KEY).first()
+    if row is None:
+        row = models.AdminSetting(key=ADMIN_WIN_BOOST_AMOUNT_KEY, value=str(float(amount_ngn)))
+        db.add(row)
+    else:
+        row.value = str(float(amount_ngn))
+        row.updated_at = datetime.utcnow()
+    db.commit()
+    return float(amount_ngn)

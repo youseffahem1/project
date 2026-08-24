@@ -1308,8 +1308,17 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
       <div class="card" style="max-width:420px; margin-top:14px;">
         <h2>Admin Win Boost — NGN Wheel</h2>
-        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">While ON, YOUR OWN NGN spins always land the largest prize configured across all active NGN tiers — no matter how little you play. Regular players are never affected.</p>
-        <div style="display:flex; align-items:center; gap:12px;">
+        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">While ON, YOUR OWN NGN spins always land your configured prize — no matter how little you play. Leave the field empty to win the largest configured tier prize instead. Regular players are never affected.</p>
+        <div class="field">
+          <label>Winning Amount (NGN )</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="field-input-wrap" style="flex:1;"><input id="adminWinBoostAmountInput" type="number" min="1" step="1" placeholder="e.g. 20000"></div>
+            <button class="btn btn-ghost btn-sm" id="adminWinBoostAmountBtn" onclick="saveAdminWinBoostAmount()">
+              <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Done</span></span>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
           <span id="adminWinBoostState" class="badge badge-out">OFF</span>
           <button class="btn btn-primary btn-sm" id="adminWinBoostBtn" onclick="toggleAdminWinBoost()">
             <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Turn On</span></span>
@@ -3359,7 +3368,21 @@ async function loadAdminWinBoost(){
   try{
     const r = await api("/admin/win-boost");
     renderAdminWinBoost(r.enabled);
+    const inp = document.getElementById("adminWinBoostAmountInput");
+    if(inp) inp.value = (r.custom_amount != null ? r.custom_amount : "");
   }catch(e){ showToast(e.message); }
+}
+
+async function saveAdminWinBoostAmount(){
+  const val = parseFloat(document.getElementById("adminWinBoostAmountInput").value);
+  if(!val || val <= 0){ showToast("Enter a valid winning amount"); return; }
+  const btn = document.getElementById("adminWinBoostAmountBtn");
+  setButtonLoading(btn, true);
+  try{
+    const r = await api("/admin/win-boost/amount", "PUT", {amount: val});
+    showToast(r.message || "Winning amount saved");
+  }catch(e){ showToast(e.message); }
+  finally{ setButtonLoading(btn, false); }
 }
 
 async function toggleAdminWinBoost(){

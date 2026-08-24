@@ -317,15 +317,23 @@ def spin_wheel_preview(
         display_values = sorted({p for p, _ in table})
 
     # Admin Win Boost (NEW): when the requester is an admin and the toggle
-    # is ON, their next POST /play will resolve to the largest configured
-    # NGN prize even if it's bigger than play_amount — add it to the wheel
-    # FACE so the frontend can always land exactly on what /play returns
-    # (same invariant as above). Purely visual; `segments` still shows the
-    # normal reachable odds and non-admin callers never hit this branch.
+    # is ON, their next POST /play will resolve to a fixed boosted prize
+    # even if it's bigger than play_amount — add every value it could land
+    # on (the largest configured prize AND the custom field amount, when
+    # set) to the wheel FACE so the frontend can always rotate exactly to
+    # what /play returns (same invariant as above). Purely visual;
+    # `segments` still shows the normal reachable odds and non-admin
+    # callers never hit this branch.
     if getattr(user, "is_admin", False) and ledger_service.is_admin_win_boost_enabled(db):
-        boosted_top = spin_tier_service.get_max_configured_prize(db, "NGN")
-        if boosted_top > 0:
-            display_values = sorted(set(display_values) | {boosted_top})
+        boost_values = set()
+        tier_top = spin_tier_service.get_max_configured_prize(db, "NGN")
+        if tier_top > 0:
+            boost_values.add(tier_top)
+        custom_amount = ledger_service.get_admin_win_boost_amount(db)
+        if custom_amount and custom_amount > 0:
+            boost_values.add(float(custom_amount))
+        if boost_values:
+            display_values = sorted(set(display_values) | boost_values)
 
     return {
         "currency": "NGN",
@@ -459,13 +467,18 @@ def _spin_play_ngn(payload, db: Session, user: models.User):
 
     tier_label, tier_multiplier = ledger_service.get_user_ngn_deposit_tier(db, user.id)
     # Admin Win Boost (NEW): while the admin toggle is ON, spins made by an
-    # ADMIN account always land the largest prize configured across the
-    # active NGN tiers, regardless of play amount. Both conditions are
-    # checked server-side HERE on every spin (authenticated identity + live
-    # flag) — never from anything the client sent. Every other user keeps
-    # getting the normal weighted draw with the play_amount cap enforced.
+    # ADMIN account always land a fixed boosted prize — the amount saved in
+    # the dashboard field if one was set, otherwise the largest prize
+    # configured across the active NGN tiers — regardless of play amount.
+    # Both conditions (authenticated identity + live flag) are checked
+    # server-side HERE on every spin — never from anything the client sent.
+    # Every other user keeps getting the normal weighted draw with the
+    # play_amount cap enforced.
     if bool(getattr(locked_user, "is_admin", False)) and ledger_service.is_admin_win_boost_enabled(db):
-        outcome = spin_tier_service.resolve_admin_boosted_spin(db, payload.play_amount, "NGN")
+        outcome = spin_tier_service.resolve_admin_boosted_spin(
+            db, payload.play_amount, "NGN",
+            custom_amount=ledger_service.get_admin_win_boost_amount(db),
+        )
     else:
         # CHANGED (Prize Tiers): server-side outcome now comes from the
         # play-amount-specific tier table (spin_tier_service), not the old
