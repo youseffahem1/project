@@ -327,7 +327,17 @@ class AdminWinBoostToggleRequest(BaseModel):
 
 
 class AdminWinBoostAmountRequest(BaseModel):
-    custom_amount: Optional[float] = Field(default=None, gt=0)
+    # NEW FIX: the frontend's "Done" button (saveAdminWinBoostAmount) sends
+    # {"amount": <value>} to PUT /admin/win-boost/amount — not
+    # "custom_amount". The field here previously didn't match that name at
+    # all; since this field is Optional with a default of None, FastAPI
+    # silently accepted the mismatched request and just fell back to None
+    # every single time, regardless of what the admin actually typed — the
+    # amount looked "saved" (no error, a success toast) but was actually
+    # thrown away, so Win Boost always fell back to "largest configured
+    # prize" instead of honoring the entered amount. Renamed to match the
+    # frontend exactly.
+    amount: Optional[float] = Field(default=None, gt=0)
 
 
 class AdminWinBoostOut(BaseModel):

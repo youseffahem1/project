@@ -47,5 +47,5 @@ def set_win_boost_amount(
     db: Session = Depends(get_db),
     admin: models.User = Depends(get_current_admin),
 ):
-    s = admin_win_boost_service.set_custom_amount(db, payload.custom_amount, admin.id)
+    s = admin_win_boost_service.set_custom_amount(db, payload.amount, admin.id)
     return schemas.AdminWinBoostOut(enabled=s.enabled, custom_amount=s.custom_amount)
