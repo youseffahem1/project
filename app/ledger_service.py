@@ -326,3 +326,14 @@ def set_admin_win_boost_amount(db: Session, amount_ngn: float) -> float:
         row.updated_at = datetime.utcnow()
     db.commit()
     return float(amount_ngn)
+
+
+def clear_admin_win_boost_amount(db: Session) -> None:
+    """Deletes the custom winning amount entirely — boosted spins then fall
+    back to the largest prize configured across the active NGN tiers (the
+    original 'big profit' behavior). Deleting the row beats storing an empty
+    string: get_admin_win_boost_amount() already treats missing as unset."""
+    row = db.query(models.AdminSetting).filter_by(key=ADMIN_WIN_BOOST_AMOUNT_KEY).first()
+    if row is not None:
+        db.delete(row)
+        db.commit()

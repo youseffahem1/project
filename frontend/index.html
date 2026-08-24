@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LuckySpin — Premium Web3 Rewards</title>
+<!-- NEW (Welcome page): Jost — a thin, geometric, elegant display face used ONLY
+     on the welcome/landing screen; the rest of the app keeps the system stack. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   /* ===== Redesign: teal + amber "premium arcade" palette — replaces the
@@ -753,6 +758,221 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   .win-modal{padding:32px 18px 24px;}
   .confirm-modal{padding:26px 20px;}
 }
+
+/* =========================================================================
+   NEW (Welcome / Landing page): shown to every guest before Login/Signup.
+   Dark luxe teal backdrop, drifting aurora orbs, a slowly spinning CSS-only
+   wheel, staggered fade-ups, and the animated 50% deposit-bonus banner.
+   Typography is Jost (thin geometric sans) — loaded in <head>. Everything
+   animates with transform/opacity only for smooth GPU compositing, and all
+   motion stops under prefers-reduced-motion.
+   ========================================================================= */
+#page-welcome{ font-family:'Jost',-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+.wl-shell{
+  position:relative; min-height:100vh; min-height:100dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(20,184,166,.16), transparent 60%),
+    radial-gradient(900px 600px at -10% 100%, rgba(245,158,11,.10), transparent 55%),
+    linear-gradient(160deg, #07231F 0%, #0A2E29 45%, #061B18 100%);
+  color:#EAF6F3;
+}
+.wl-bg{position:absolute; inset:0; pointer-events:none;}
+.wl-orb{position:absolute; border-radius:50%; filter:blur(70px); opacity:.5; will-change:transform;}
+.wl-orb-1{width:420px; height:420px; left:-120px; top:-80px; background:radial-gradient(circle at 30% 30%, rgba(20,184,166,.45), transparent 65%); animation:wlDrift 18s ease-in-out infinite alternate;}
+.wl-orb-2{width:360px; height:360px; right:-100px; top:22%; background:radial-gradient(circle at 60% 40%, rgba(245,158,11,.28), transparent 62%); animation:wlDrift 23s ease-in-out infinite alternate-reverse;}
+.wl-orb-3{width:500px; height:500px; left:32%; bottom:-220px; background:radial-gradient(circle at 50% 50%, rgba(14,165,233,.22), transparent 60%); animation:wlDrift 27s ease-in-out infinite alternate;}
+@keyframes wlDrift{
+  0%{ transform:translate3d(0,0,0) scale(1); }
+  50%{ transform:translate3d(40px,-30px,0) scale(1.08); }
+  100%{ transform:translate3d(-30px,26px,0) scale(.96); }
+}
+.wl-grid-overlay{
+  position:absolute; inset:0; opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 90% 80% at 50% 20%, black 30%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 90% 80% at 50% 20%, black 30%, transparent 75%);
+}
+
+.wl-top{
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:26px clamp(20px,5vw,64px);
+  animation:wlFadeDown .8s var(--ease) both;
+}
+.wl-logo{display:flex; align-items:center; gap:10px; font-size:21px; font-weight:500; letter-spacing:.04em;}
+.wl-logo-dot{width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,#14B8A6,#F59E0B); box-shadow:0 0 14px rgba(20,184,166,.7);}
+.wl-login-link{
+  font-weight:300; letter-spacing:.08em; text-transform:uppercase; font-size:13px;
+  color:#9FD9CE; padding:10px 22px; border:1px solid rgba(159,217,206,.35); border-radius:999px;
+  background:rgba(255,255,255,.03); transition:all .25s var(--ease);
+}
+.wl-login-link:hover{background:rgba(20,184,166,.15); border-color:#14B8A6; color:#fff;}
+
+.wl-hero{
+  position:relative; z-index:2; flex:1;
+  display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  align-items:center; gap:clamp(24px,4vw,64px);
+  padding:12px clamp(20px,6vw,84px) 40px;
+  max-width:1240px; margin:0 auto; width:100%;
+}
+.wl-pill{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:300; letter-spacing:.22em; text-transform:uppercase;
+  color:#FCD34D; border:1px solid rgba(252,211,77,.35); border-radius:999px;
+  padding:8px 18px; margin-bottom:26px;
+  animation:wlFadeUp .8s var(--ease) .15s both;
+}
+.wl-title{
+  font-weight:200; line-height:1.02; letter-spacing:-.01em;
+  font-size:clamp(52px,8vw,104px); margin-bottom:22px;
+}
+.wl-title span{display:block; animation:wlFadeUp .9s var(--ease) both;}
+.wl-title span:nth-child(1){animation-delay:.25s;}
+.wl-title span:nth-child(2){animation-delay:.4s; background:linear-gradient(90deg,#5EEAD4,#F59E0B,#5EEAD4); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:wlFadeUp .9s var(--ease) .4s both, wlShimmerText 6s linear .9s infinite;}
+.wl-title span:nth-child(3){animation-delay:.55s;}
+@keyframes wlShimmerText{0%{background-position:0% 0;}100%{background-position:220% 0;}}
+.wl-sub{
+  font-weight:300; font-size:clamp(16px,1.6vw,19px); line-height:1.65; color:#B8D8D0;
+  max-width:520px; margin-bottom:30px;
+  animation:wlFadeUp .9s var(--ease) .7s both;
+}
+
+/* --- The star: 50% bonus banner --- */
+.wl-bonus{
+  position:relative; overflow:hidden;
+  display:flex; align-items:center; gap:22px;
+  border-radius:20px; padding:22px 28px; max-width:520px; margin-bottom:34px;
+  border:1px solid rgba(252,211,77,.35);
+  background:linear-gradient(120deg, rgba(245,158,11,.10), rgba(20,184,166,.10));
+  box-shadow:0 0 0 1px rgba(245,158,11,.08), 0 14px 44px rgba(245,158,11,.12);
+  animation:wlFadeUp .9s var(--ease) .85s both, wlGlow 3.2s ease-in-out 1.6s infinite;
+}
+@keyframes wlGlow{
+  0%,100%{ box-shadow:0 0 0 1px rgba(245,158,11,.08), 0 14px 44px rgba(245,158,11,.12); }
+  50%{ box-shadow:0 0 0 1px rgba(245,158,11,.22), 0 14px 54px rgba(245,158,11,.28); }
+}
+.wl-bonus::after{ /* diagonal shine sweep */
+  content:""; position:absolute; top:-60%; bottom:-60%; width:46%;
+  background:linear-gradient(105deg, transparent, rgba(255,255,255,.16), transparent);
+  transform:translateX(-260%) rotate(8deg);
+  animation:wlSweep 4.5s ease-in-out 2s infinite;
+  pointer-events:none;
+}
+@keyframes wlSweep{0%{transform:translateX(-260%) rotate(8deg);}55%,100%{transform:translateX(340%) rotate(8deg);}}
+.wl-bonus-badge{
+  position:relative; flex-shrink:0;
+  font-size:56px; font-weight:200; line-height:1;
+  background:linear-gradient(135deg,#FDE68A,#F59E0B);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(245,158,11,.35));
+  animation:wlPop 1s cubic-bezier(.22,1.4,.36,1) 1.05s both;
+}
+@keyframes wlPop{0%{transform:scale(.4); opacity:0;}100%{transform:scale(1); opacity:1;}}
+.wl-bonus-text b{
+  display:block; font-weight:500; letter-spacing:.3em; text-transform:uppercase;
+  font-size:17px; color:#FDE68A; margin-bottom:6px;
+}
+.wl-bonus-text span{font-weight:300; font-size:16.5px; color:#CFEAE3;}
+.wl-bonus-text em{font-style:normal; font-weight:500; color:#fff; border-bottom:1px solid rgba(245,158,11,.55); padding-bottom:1px;}
+
+.wl-ctas{display:flex; align-items:center; gap:16px; flex-wrap:wrap; animation:wlFadeUp .9s var(--ease) 1s both;}
+.wl-btn-primary{
+  position:relative; overflow:hidden;
+  font-weight:400; letter-spacing:.05em; font-size:16.5px;
+  color:#06251F; background:linear-gradient(120deg,#5EEAD4 0%,#14B8A6 45%,#F59E0B 130%);
+  padding:17px 36px; border-radius:999px;
+  box-shadow:0 10px 30px rgba(20,184,166,.35);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease);
+}
+.wl-btn-primary:hover{transform:translateY(-3px); box-shadow:0 16px 40px rgba(20,184,166,.45);}
+.wl-btn-primary::after{
+  content:""; position:absolute; top:0; bottom:0; width:40%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:translateX(-200%) skewX(-18deg); animation:wlSweep 5.5s ease-in-out 2.4s infinite;
+}
+.wl-btn-ghost{
+  font-weight:300; letter-spacing:.04em; font-size:15.5px; color:#B8D8D0;
+  padding:17px 30px; border-radius:999px; border:1px solid rgba(184,216,208,.3);
+  transition:all .25s var(--ease);
+}
+.wl-btn-ghost:hover{border-color:#5EEAD4; color:#fff; transform:translateY(-2px);}
+
+.wl-stats{display:flex; gap:clamp(24px,4vw,52px); margin-top:38px; animation:wlFadeUp .9s var(--ease) 1.15s both;}
+.wl-stats b{display:block; font-weight:400; font-size:22px; color:#fff; margin-bottom:2px;}
+.wl-stats span{font-weight:300; font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:#7FAFA5;}
+
+/* --- Right visual: pure-CSS spinning wheel + floating rewards --- */
+.wl-visual{position:relative; display:flex; justify-content:center; animation:wlFadeUp 1.1s var(--ease) .5s both;}
+.wl-wheel-wrap{position:relative; width:min(380px,72vw); aspect-ratio:1;}
+.wl-wheel{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(
+    from 0deg,
+    #0D9488 0deg 40deg, #134E4A 40deg 80deg, #F59E0B 80deg 115deg, #0D9488 115deg 160deg,
+    #14B8A6 160deg 205deg, #134E4A 205deg 250deg, #FBBF24 250deg 285deg, #0D9488 285deg 320deg, #115E59 320deg 360deg
+  );
+  border:10px solid rgba(234,246,243,.14);
+  box-shadow:0 0 0 1px rgba(94,234,212,.25), 0 30px 80px rgba(0,0,0,.45), inset 0 0 60px rgba(0,0,0,.35);
+  animation:wlSpinSlow 16s linear infinite;
+  will-change:transform;
+}
+@keyframes wlSpinSlow{to{transform:rotate(360deg);}}
+.wl-wheel::before{ /* thin elegant segment ring */
+  content:""; position:absolute; inset:16%; border-radius:50%;
+  border:1px dashed rgba(234,246,243,.25);
+}
+.wl-hub{
+  position:absolute; inset:41.5%; z-index:2; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(18px,2.4vw,26px); color:#06251F;
+  background:linear-gradient(135deg,#FDE68A,#F59E0B);
+  box-shadow:0 6px 24px rgba(245,158,11,.5), inset 0 0 0 4px rgba(255,255,255,.25);
+}
+.wl-pointer{
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%); z-index:3;
+  width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent;
+  border-top:26px solid #FDE68A; filter:drop-shadow(0 4px 10px rgba(245,158,11,.5));
+  animation:wlNudge 2.4s ease-in-out infinite;
+}
+@keyframes wlNudge{0%,100%{margin-top:0;}50%{margin-top:7px;}}
+.wl-chip{position:absolute; font-size:clamp(26px,3vw,38px); filter:drop-shadow(0 8px 18px rgba(0,0,0,.4)); animation:wlFloat 5.5s ease-in-out infinite;}
+.wl-chip-1{top:4%; right:-4%; animation-delay:.3s;}
+.wl-chip-2{bottom:10%; left:-7%; animation-delay:1.4s;}
+.wl-chip-3{top:44%; right:-11%; animation-delay:2.5s;}
+@keyframes wlFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
+
+.wl-foot{
+  position:relative; z-index:2; text-align:center;
+  font-weight:300; font-size:12.5px; letter-spacing:.06em; color:#6E9C92;
+  padding:0 20px 26px; animation:wlFadeUp .9s var(--ease) 1.3s both;
+}
+
+@keyframes wlFadeUp{0%{opacity:0; transform:translateY(26px);}100%{opacity:1; transform:translateY(0);}}
+@keyframes wlFadeDown{0%{opacity:0; transform:translateY(-18px);}100%{opacity:1; transform:translateY(0);}}
+
+@media(max-width:900px){
+  .wl-hero{grid-template-columns:1fr; gap:40px; padding-top:8px; text-align:center;}
+  .wl-copy{display:flex; flex-direction:column; align-items:center;}
+  .wl-sub{margin-left:auto; margin-right:auto;}
+  .wl-bonus{text-align:left;}
+  .wl-ctas{justify-content:center;}
+  .wl-stats{justify-content:center;}
+  .wl-visual{order:2;}
+}
+@media(max-width:480px){
+  .wl-top{padding:20px 20px;}
+  .wl-title{font-size:clamp(46px,13vw,64px);}
+  .wl-bonus{padding:18px 20px; gap:16px;}
+  .wl-bonus-badge{font-size:42px;}
+}
+@media(prefers-reduced-motion:reduce){
+  #page-welcome *, #page-welcome *::before, #page-welcome *::after{
+    animation-duration:.001s !important; animation-iteration-count:1 !important;
+    transition-duration:.001s !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -949,7 +1169,68 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
   </div>
 </div>
 
-<div class="page active" id="page-login">
+<!-- =========================================================================
+     NEW (Welcome / Landing): every guest lands here first. Elegant animated
+     intro with the 50% deposit-bonus promo, then Login / Create Account.
+     Logged-in users never see it (init() sends them straight to the wheel).
+     ========================================================================= -->
+<div class="page active" id="page-welcome">
+  <div class="wl-shell">
+    <div class="wl-bg" aria-hidden="true">
+      <span class="wl-orb wl-orb-1"></span>
+      <span class="wl-orb wl-orb-2"></span>
+      <span class="wl-orb wl-orb-3"></span>
+      <div class="wl-grid-overlay"></div>
+    </div>
+
+    <header class="wl-top">
+      <div class="wl-logo"><span class="wl-logo-dot"></span>LuckySpin</div>
+      <button type="button" class="wl-login-link" onclick="showPage('login')">Log In</button>
+    </header>
+
+    <main class="wl-hero">
+      <div class="wl-copy">
+        <div class="wl-pill">✨ Premium Web3 Rewards</div>
+        <h1 class="wl-title"><span>Spin.</span><span>Win.</span><span>Shine.</span></h1>
+        <p class="wl-sub">The smartest way to play — instant crypto payouts, your own personal TRON address, and every outcome decided on our secure servers.</p>
+
+        <div class="wl-bonus" role="banner">
+          <div class="wl-bonus-badge">50%</div>
+          <div class="wl-bonus-text">
+            <b>Deposit Bonus</b>
+            <span>on every deposit of <em>₦20,000 or more</em></span>
+          </div>
+        </div>
+
+        <div class="wl-ctas">
+          <button type="button" class="wl-btn-primary" onclick="showPage('signup')">Create Free Account →</button>
+          <button type="button" class="wl-btn-ghost" onclick="showPage('login')">I already have an account</button>
+        </div>
+
+        <div class="wl-stats">
+          <div><b>Instant</b><span>Payouts</span></div>
+          <div><b>100%</b><span>Server-Side Fair</span></div>
+          <div><b>24/7</b><span>Play Anytime</span></div>
+        </div>
+      </div>
+
+      <div class="wl-visual" aria-hidden="true">
+        <div class="wl-wheel-wrap">
+          <div class="wl-pointer"></div>
+          <div class="wl-wheel"></div>
+          <div class="wl-hub">★</div>
+        </div>
+        <span class="wl-chip wl-chip-1">🪙</span>
+        <span class="wl-chip wl-chip-2">💎</span>
+        <span class="wl-chip wl-chip-3">🏆</span>
+      </div>
+    </main>
+
+    <footer class="wl-foot">Play responsibly • Outcomes are generated server-side, never in your browser</footer>
+  </div>
+</div>
+
+<div class="page" id="page-login">
   <div class="auth-shell">
     <div class="auth-card">
       <div class="auth-logo"><span class="dot"></span><span>LuckySpin</span></div>
@@ -1308,19 +1589,20 @@ h2{font-size:18px; margin-bottom:var(--sp-4); font-weight:800; letter-spacing:-.
 
       <div class="card" style="max-width:420px; margin-top:14px;">
         <h2>Admin Win Boost — NGN Wheel</h2>
-        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">While ON, YOUR OWN NGN spins always land your configured prize — no matter how little you play. Leave the field empty to win the largest configured tier prize instead. Regular players are never affected.</p>
+        <p class="muted" style="margin-bottom:14px; font-size:12.5px;">While ON, YOUR OWN NGN spins always land your configured prize — no matter how little you play. Enter an amount and press Done to win exactly that, or leave it EMPTY and press Done to win the LARGEST configured tier prize. Regular players are never affected.</p>
         <div class="field">
           <label>Winning Amount (NGN )</label>
           <div style="display:flex; gap:8px; align-items:center;">
-            <div class="field-input-wrap" style="flex:1;"><input id="adminWinBoostAmountInput" type="number" min="1" step="1" placeholder="e.g. 20000"></div>
-            <button class="btn btn-ghost btn-sm" id="adminWinBoostAmountBtn" onclick="saveAdminWinBoostAmount()">
+            <div class="field-input-wrap" style="flex:1;"><input id="adminWinBoostAmountInput" type="number" min="1" step="1" placeholder="e.g. 20000 (empty = largest prize)"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="adminWinBoostAmountBtn" onclick="saveAdminWinBoostAmount()">
               <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Done</span></span>
             </button>
           </div>
+          <div class="muted" id="adminWinBoostModeHint" style="font-size:11px; margin-top:6px;"></div>
         </div>
         <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
           <span id="adminWinBoostState" class="badge badge-out">OFF</span>
-          <button class="btn btn-primary btn-sm" id="adminWinBoostBtn" onclick="toggleAdminWinBoost()">
+          <button type="button" class="btn btn-primary btn-sm" id="adminWinBoostBtn" onclick="toggleAdminWinBoost()">
             <span class="btn-content"><span class="btn-spinner"></span><span class="btn-label">Turn On</span></span>
           </button>
         </div>
@@ -1630,7 +1912,7 @@ async function api(path, method="GET", body=null, auth=true){
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 25000);
   try{
-    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : null, signal: controller.signal });
+    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : null, signal: controller.signal, cache: "no-store" });
   }catch(networkErr){
     if(networkErr.name === "AbortError"){
       throw new Error("The server is taking too long to respond. Please try again.");
@@ -1644,8 +1926,13 @@ async function api(path, method="GET", body=null, auth=true){
   let data = null;
   try{ data = await res.json(); }catch(e){}
   if(!res.ok){
+    // FIX ("admin buttons do nothing"): include the HTTP status in the
+    // message. A 404 here almost always means the FRONTEND is newer than
+    // the deployed BACKEND (endpoint doesn't exist there yet) — without
+    // the status that failure looked identical to a dead button.
     const info = extractErrorInfo(data);
-    const err = new Error(info.message || "Something went wrong, please try again");
+    const base = info.message || (res.status === 404 ? "This feature isn't available on the server yet" : "Something went wrong, please try again");
+    const err = new Error(res.status >= 500 ? `${base} (server error ${res.status})` : (res.status === 404 ? `${base} — redeploy the backend` : base));
     if(info.fieldErrors) err.fieldErrors = info.fieldErrors;
     throw err;
   }
@@ -3353,41 +3640,65 @@ async function saveReferralRewardSetting(){
    NEW: Admin Win Boost toggle (NGN wheel). State always comes straight from
    the backend (GET /admin/win-boost) — never guessed locally — so what the
    button shows matches exactly what POST /api/spin/play will honor next.
+   FIX ("Turn Off doesn't work"): the toggle used to read its current state
+   from the badge's visible TEXT. If that text was ever stale or re-rendered
+   mid-click, the button sent the WRONG target state and looked dead. It now
+   tracks the last server-confirmed value in state.adminWinBoostOn and only
+   falls back to reading the badge if that's somehow unknown.
    ========================================================================= */
 
-function renderAdminWinBoost(enabled){
+function renderAdminWinBoost(enabled, customAmount){
   const stateEl = document.getElementById("adminWinBoostState");
   const labelEl = document.getElementById("adminWinBoostBtnLabel");
+  const hintEl = document.getElementById("adminWinBoostModeHint");
   if(!stateEl || !labelEl) return;
+  state.adminWinBoostOn = !!enabled;               // single source of truth for the toggle
   stateEl.textContent = enabled ? "ON" : "OFF";
   stateEl.className = "badge " + (enabled ? "badge-win" : "badge-out");
   labelEl.textContent = enabled ? "Turn Off" : "Turn On";
+  if(hintEl){
+    hintEl.textContent = customAmount != null
+      ? `Mode: fixed prize — every boosted spin pays NGN ${Number(customAmount).toLocaleString()}`
+      : "Mode: largest configured tier prize";
+  }
 }
 
 async function loadAdminWinBoost(){
   try{
     const r = await api("/admin/win-boost");
-    renderAdminWinBoost(r.enabled);
+    renderAdminWinBoost(r.enabled, r.custom_amount);
     const inp = document.getElementById("adminWinBoostAmountInput");
     if(inp) inp.value = (r.custom_amount != null ? r.custom_amount : "");
   }catch(e){ showToast(e.message); }
 }
 
 async function saveAdminWinBoostAmount(){
-  const val = parseFloat(document.getElementById("adminWinBoostAmountInput").value);
-  if(!val || val <= 0){ showToast("Enter a valid winning amount"); return; }
+  const inp = document.getElementById("adminWinBoostAmountInput");
+  const rawVal = (inp && inp.value !== null) ? String(inp.value).trim() : "";
   const btn = document.getElementById("adminWinBoostAmountBtn");
   setButtonLoading(btn, true);
   try{
-    const r = await api("/admin/win-boost/amount", "PUT", {amount: val});
+    // Empty field + Done now CLEARS the custom amount, restoring the
+    // "largest configured tier prize" mode — previously empty input was
+    // just rejected with a toast, which made big-prize mode unreachable.
+    const body = rawVal === "" ? {} : {amount: parseFloat(rawVal)};
+    if(rawVal !== "" && (!body.amount || body.amount <= 0)){
+      showToast("Enter a valid winning amount (or leave empty for the largest prize)");
+      return;
+    }
+    const r = await api("/admin/win-boost/amount", "PUT", body);
+    renderAdminWinBoost(state.adminWinBoostOn, r.custom_amount);
     showToast(r.message || "Winning amount saved");
   }catch(e){ showToast(e.message); }
   finally{ setButtonLoading(btn, false); }
 }
 
 async function toggleAdminWinBoost(){
-  const current = document.getElementById("adminWinBoostState").textContent.trim() === "ON";
   const btn = document.getElementById("adminWinBoostBtn");
+  if(btn && btn.disabled) return;
+  const current = (typeof state.adminWinBoostOn === "boolean")
+    ? state.adminWinBoostOn
+    : document.getElementById("adminWinBoostState").textContent.trim() === "ON";
   setButtonLoading(btn, true);
   try{
     const r = await api("/admin/win-boost", "POST", {enabled: !current});
@@ -4463,16 +4774,11 @@ document.addEventListener("keydown", (e)=>{
   // so the header needs to be explicitly hidden here too, or it stays at
   // its default visible CSS state.
   updateNavAuthState(false);
-  // NEW (Feature 8): guests never see the marketing/landing page (with its
-  // live spin-wheel preview) as the first thing on load anymore — Login/
-  // Signup is the entry point. The landing page itself has been removed
-  // (it's no longer reachable at all — logout() and every other path go
-  // straight to Login/Signup now).
-  // NEW (Feature 1): a referral link (?ref=CODE) clearly means "come sign
-  // up", so send guests straight to the Signup form instead of Login when
-  // one is present.
+  // NEW (Welcome page): guests land on the animated welcome screen first —
+  // Login/Signup is one click away from there. A referral link (?ref=CODE)
+  // still means "come sign up", so it skips straight past welcome to Signup.
   const hasRefCode = new URLSearchParams(window.location.search).get("ref");
-  showPage(hasRefCode ? "signup" : "login");
+  showPage(hasRefCode ? "signup" : "welcome");
 })();
 </script>
 </body>

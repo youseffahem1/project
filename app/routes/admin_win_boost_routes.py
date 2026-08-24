@@ -16,6 +16,7 @@ touch any other route file; spin_routes.py only READS what's written here
 """
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -26,6 +27,7 @@ from ..ledger_service import (
     set_admin_win_boost_enabled,
     get_admin_win_boost_amount,
     set_admin_win_boost_amount,
+    clear_admin_win_boost_amount,
 )
 
 router = APIRouter(prefix="/api/admin/win-boost", tags=["admin-win-boost"])
@@ -36,7 +38,9 @@ class WinBoostToggle(BaseModel):
 
 
 class WinBoostAmount(BaseModel):
-    amount: float = Field(gt=0)
+    # amount is OPTIONAL: omitted/null means "clear the custom amount" —
+    # boosted spins then fall back to the largest configured tier prize.
+    amount: Optional[float] = Field(default=None, gt=0)
 
 
 @router.get("")
@@ -73,8 +77,15 @@ def update_win_boost_amount(
     db: Session = Depends(get_db),
     admin: models.User = Depends(get_current_admin),
 ):
-    """Saves the exact NGN amount the admin wins per boosted spin (the
-    dashboard field's 'Done' button). Takes effect on the next spin while
-    the boost toggle is ON — it never flips the toggle itself."""
+    """Saves (or clears) the exact NGN amount the admin wins per boosted
+    spin — the dashboard field's 'Done' button. Sending a positive amount
+    stores it; sending no/null amount CLEARS it, restoring the 'largest
+    configured tier prize' behavior. Never flips the toggle itself."""
+    if payload.amount is None:
+        clear_admin_win_boost_amount(db)
+        return {
+            "custom_amount": None,
+            "message": "Custom amount cleared — boosted spins win the largest configured prize again",
+        }
     amount = set_admin_win_boost_amount(db, payload.amount)
     return {"custom_amount": amount, "message": f"Winning amount saved: ₦{amount:,.2f}"}
