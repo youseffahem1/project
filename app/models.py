@@ -441,3 +441,27 @@ class SpinPrizeValue(Base):
     weight = Column(Float, nullable=False, default=1.0)
 
     tier = relationship("SpinPrizeTier", back_populates="prizes")
+
+
+class AdminWinBoostSetting(Base):
+    """Singleton row (admin-only, additive, NGN wheel only).
+
+    When enabled, admin accounts — and ONLY admin accounts — bypass the
+    normal "prize can never exceed play_amount" hard cap on the NGN Smart
+    Dynamic Wheel, so an admin can test/demo winning more than they
+    played. This scope guarantee is enforced entirely in spin_routes.py
+    (checking user.is_admin before ever consulting this row) — a non-admin
+    player's spin never even queries this table, regardless of its value.
+    Turning it back OFF makes the admin's own spins go through the exact
+    same spin_tier_service.resolve_tiered_spin() path every normal player
+    always uses — no special-casing left active anywhere.
+    """
+    __tablename__ = "admin_win_boost_settings"
+
+    id = Column(String, primary_key=True, default=gen_id)
+    enabled = Column(Boolean, default=False, nullable=False)
+    # None -> resolve_admin_boosted_spin() falls back to "largest prize
+    # configured anywhere". Set -> that exact amount is awarded every time.
+    custom_amount = Column(Float, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by_admin_id = Column(String, ForeignKey("users.id"), nullable=True)

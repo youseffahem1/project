@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from .. import models, schemas, ledger_service, game_logic, spin_tier_service
+from .. import models, schemas, ledger_service, game_logic, spin_tier_service, admin_win_boost_service
 from ..database import get_db
 from ..auth import get_current_user
 from ..game_logic import spin_wheel, get_daily_bonus_amount, build_dynamic_prize_table, resolve_dynamic_spin
@@ -315,26 +315,6 @@ def spin_wheel_preview(
         display_values = sorted(configured | table_values)
     else:
         display_values = sorted({p for p, _ in table})
-
-    # Admin Win Boost (NEW): when the requester is an admin and the toggle
-    # is ON, their next POST /play will resolve to a fixed boosted prize
-    # even if it's bigger than play_amount — add every value it could land
-    # on (the largest configured prize AND the custom field amount, when
-    # set) to the wheel FACE so the frontend can always rotate exactly to
-    # what /play returns (same invariant as above). Purely visual;
-    # `segments` still shows the normal reachable odds and non-admin
-    # callers never hit this branch.
-    if getattr(user, "is_admin", False) and ledger_service.is_admin_win_boost_enabled(db):
-        boost_values = set()
-        tier_top = spin_tier_service.get_max_configured_prize(db, "NGN")
-        if tier_top > 0:
-            boost_values.add(tier_top)
-        custom_amount = ledger_service.get_admin_win_boost_amount(db)
-        if custom_amount and custom_amount > 0:
-            boost_values.add(float(custom_amount))
-        if boost_values:
-            display_values = sorted(set(display_values) | boost_values)
-
     return {
         "currency": "NGN",
         "play_amount": play_amount,
@@ -466,19 +446,21 @@ def _spin_play_ngn(payload, db: Session, user: models.User):
     locked_user.ngn_balance = float(current_balance - play_amount_dec)
 
     tier_label, tier_multiplier = ledger_service.get_user_ngn_deposit_tier(db, user.id)
-    # Admin Win Boost (NEW): while the admin toggle is ON, spins made by an
-    # ADMIN account always land a fixed boosted prize — the amount saved in
-    # the dashboard field if one was set, otherwise the largest prize
-    # configured across the active NGN tiers — regardless of play amount.
-    # Both conditions (authenticated identity + live flag) are checked
-    # server-side HERE on every spin — never from anything the client sent.
-    # Every other user keeps getting the normal weighted draw with the
-    # play_amount cap enforced.
-    if bool(getattr(locked_user, "is_admin", False)) and ledger_service.is_admin_win_boost_enabled(db):
-        outcome = spin_tier_service.resolve_admin_boosted_spin(
-            db, payload.play_amount, "NGN",
-            custom_amount=ledger_service.get_admin_win_boost_amount(db),
+    # NEW (Admin Win Boost, admin-only, additive, NGN wheel only): when
+    # this toggle is ON, and the person spinning right now is themselves
+    # an admin, bypass the normal tier system and guarantee a win above
+    # the hard prize<=play_amount cap — for testing/demo purposes only.
+    # A non-admin player ALWAYS takes the untouched
+    # spin_tier_service.resolve_tiered_spin() branch below, no matter what
+    # this setting is — this row is never even read for them. An admin
+    # with the toggle OFF also always takes that exact same branch, so
+    # switching it off makes an admin's own spins behave identically to
+    # any other player again, with the exact same hard cap re-applied.
+    if user.is_admin and (boost_settings := admin_win_boost_service.get_settings(db)).enabled:
+        outcome = admin_win_boost_service.resolve_admin_boosted_spin(
+            db, payload.play_amount, boost_settings.custom_amount,
         )
+        tier_label = "Admin Win Boost"
     else:
         # CHANGED (Prize Tiers): server-side outcome now comes from the
         # play-amount-specific tier table (spin_tier_service), not the old

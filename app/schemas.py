@@ -316,3 +316,21 @@ class AdminGrantHistoryOut(BaseModel):
     currency: str
     reason: Optional[str] = None
     created_at: datetime
+
+
+# =========================================================================
+# NEW (additive only, admin-only): Admin Win Boost — NGN wheel.
+# =========================================================================
+
+class AdminWinBoostToggleRequest(BaseModel):
+    enabled: bool
+
+
+class AdminWinBoostAmountRequest(BaseModel):
+    custom_amount: Optional[float] = Field(default=None, gt=0)
+
+
+class AdminWinBoostOut(BaseModel):
+    enabled: bool
+    custom_amount: Optional[float] = None
+    message: Optional[str] = None
